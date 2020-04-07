@@ -2,14 +2,14 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Kahla</title>
-    <link>https://www.ahmed-belkahla.me/authors/admin/</link>
-      <atom:link href="https://www.ahmed-belkahla.me/authors/admin/index.xml" rel="self" type="application/rss+xml" />
+    <link>https://ahmed-belkahla.me/authors/admin/</link>
+      <atom:link href="https://ahmed-belkahla.me/authors/admin/index.xml" rel="self" type="application/rss+xml" />
     <description>Kahla</description>
     <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>© Ahmed Belkahla, 2020</copyright>
     <image>
-      <url>https://www.ahmed-belkahla.me/img/me.png</url>
+      <url>https://ahmed-belkahla.me/img/me.png</url>
       <title>Kahla</title>
-      <link>https://www.ahmed-belkahla.me/authors/admin/</link>
+      <link>https://ahmed-belkahla.me/authors/admin/</link>
     </image>
     
   </channel>
