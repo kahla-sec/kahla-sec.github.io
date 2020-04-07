@@ -3,50 +3,99 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>/post/empire-total-securinetsquals20/</loc>
+    <loc>https://ahmed-belkahla.me/post/midnight-sun-ctfquals/</loc>
+    <lastmod>2020-04-04T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://ahmed-belkahla.me/post/</loc>
+    <lastmod>2020-04-04T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://ahmed-belkahla.me/post/tamuctfpwn/</loc>
+    <lastmod>2020-03-30T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://ahmed-belkahla.me/post/the-after-prequalsecurinetsquals/</loc>
+    <lastmod>2020-03-23T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://ahmed-belkahla.me/post/empire-total-securinetsquals20/</loc>
     <lastmod>2020-03-21T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/</loc>
+    <loc>https://ahmed-belkahla.me/</loc>
     <lastmod>2020-03-21T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/</loc>
-    <lastmod>2020-03-21T00:00:00+00:00</lastmod>
+    <loc>https://ahmed-belkahla.me/post/angstromctf20/</loc>
+    <lastmod>2020-03-19T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/authors/admin/</loc>
+    <loc>https://ahmed-belkahla.me/post/jwt-in-a-new-way/</loc>
+    <lastmod>2020-01-22T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/authors/kahla/</loc>
+    <loc>https://ahmed-belkahla.me/authors/kahla/</loc>
+    <lastmod>2019-08-20T22:31:41+02:00</lastmod>
   </url>
   
   <url>
-    <loc>/authors/</loc>
+    <loc>https://ahmed-belkahla.me/authors/</loc>
+    <lastmod>2019-08-20T22:31:41+02:00</lastmod>
   </url>
   
   <url>
-    <loc>/categories/</loc>
+    <loc>https://ahmed-belkahla.me/categories/</loc>
+    <lastmod>2019-08-20T22:31:41+02:00</lastmod>
   </url>
   
   <url>
-    <loc>/publication_types/</loc>
+    <loc>https://ahmed-belkahla.me/tags/cybersecurity/</loc>
+    <lastmod>2019-08-20T22:31:41+02:00</lastmod>
   </url>
   
   <url>
-    <loc>/publication/</loc>
+    <loc>https://ahmed-belkahla.me/categories/cybersecurity/</loc>
+    <lastmod>2019-08-20T22:31:41+02:00</lastmod>
   </url>
   
   <url>
-    <loc>/talk/</loc>
+    <loc>https://ahmed-belkahla.me/project/networking-and-security/</loc>
+    <lastmod>2019-08-20T22:31:41+02:00</lastmod>
   </url>
   
   <url>
-    <loc>/tags/</loc>
+    <loc>https://ahmed-belkahla.me/project/</loc>
+    <lastmod>2019-08-20T22:31:41+02:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://ahmed-belkahla.me/tags/</loc>
+    <lastmod>2019-08-20T22:31:41+02:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://ahmed-belkahla.me/authors/admin/</loc>
+  </url>
+  
+  <url>
+    <loc>https://ahmed-belkahla.me/publication_types/</loc>
+  </url>
+  
+  <url>
+    <loc>https://ahmed-belkahla.me/publication/</loc>
+  </url>
+  
+  <url>
+    <loc>https://ahmed-belkahla.me/talk/</loc>
   </url>
   
 </urlset>

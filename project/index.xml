@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Projects | Kahla</title>
+    <link>https://ahmed-belkahla.me/project/</link>
+      <atom:link href="https://ahmed-belkahla.me/project/index.xml" rel="self" type="application/rss+xml" />
+    <description>Projects</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>© Ahmed Belkahla, 2020</copyright><lastBuildDate>Tue, 20 Aug 2019 22:31:41 +0200</lastBuildDate>
+    <image>
+      <url>https://ahmed-belkahla.me/img/me.jpg</url>
+      <title>Projects</title>
+      <link>https://ahmed-belkahla.me/project/</link>
+    </image>
+    
+    <item>
+      <title>Networking and Security Tools</title>
+      <link>https://ahmed-belkahla.me/project/networking-and-security/</link>
+      <pubDate>Tue, 20 Aug 2019 22:31:41 +0200</pubDate>
+      <guid>https://ahmed-belkahla.me/project/networking-and-security/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>
