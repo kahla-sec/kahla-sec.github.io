@@ -50,7 +50,7 @@ payload=OFFSET+RET+POP_RDI_RET+BINSH+SYSTEM
 p.sendline(payload)
 p.interactive()
 &lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;** NOTE: ** Check Task files ** 
+&lt;p&gt;&lt;strong&gt;NOTE:&lt;/strong&gt; Check Task files ** 
 &lt;a href=&#34;https://github.com/kahla-sec/CTF-Writeups/tree/master/Midnight%20Sun%20CTF%202020%20Quals/pwn1&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HERE&lt;/a&gt; **&lt;/p&gt;
 &lt;h1 id=&#34;pwn280pts-&#34;&gt;&lt;strong&gt;pwn2(80pts)&lt;/strong&gt;&lt;/h1&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/lYjuGsS.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
@@ -108,7 +108,7 @@ p.interactive()
 # 7 stack adress
 
 &lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;** NOTE: ** Task files ** 
+&lt;p&gt;&lt;strong&gt;NOTE:&lt;/strong&gt; Task files ** 
 &lt;a href=&#34;https://github.com/kahla-sec/CTF-Writeups/tree/master/Midnight%20Sun%20CTF%202020%20Quals/pwn2&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HERE&lt;/a&gt; **&lt;/p&gt;
 &lt;p&gt;These tasks were really fun, i&amp;rsquo;m sorry for the lack of details because i&amp;rsquo;m really busy this period :(&lt;/p&gt;
 </description>
@@ -150,7 +150,7 @@ p.interactive()
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;And Bingo we got our shell :D&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/jd78uIm.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
-&lt;p&gt;** NOTE: ** Task files ** 
+&lt;p&gt;&lt;strong&gt;NOTE:&lt;/strong&gt; Task files ** 
 &lt;a href=&#34;https://github.com/kahla-sec/CTF-Writeups/tree/master/TAMU%20CTF/B64DECODER&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HERE&lt;/a&gt; **&lt;/p&gt;
 &lt;h2 id=&#34;troll-50pts-&#34;&gt;&lt;strong&gt;TROLL (50pts)&lt;/strong&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/AgJ7rGR.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
@@ -199,7 +199,7 @@ p.interactive()
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Note: the offset in the remote server is different, so i had to guess it xD However we got our flag :&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/QjwTHDR.png&#34; alt=&#34;MAIN&#34;&gt;&lt;/p&gt;
-&lt;p&gt;** NOTE: ** Task files ** 
+&lt;p&gt;&lt;strong&gt;NOTE:&lt;/strong&gt; Task files ** 
 &lt;a href=&#34;https://github.com/kahla-sec/CTF-Writeups/tree/master/TAMU%20CTF/TROLL&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HERE&lt;/a&gt; **&lt;/p&gt;
 &lt;p&gt;This is the first time writing a pwn writeup so i hope you enjoyed it , any questions you can find me on twitter @BelkahlaAhmed1&lt;/p&gt;
 </description>
