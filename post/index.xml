@@ -108,8 +108,8 @@ p.interactive()
 # 7 stack adress
 
 &lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;strong&gt;NOTE:&lt;/strong&gt; Task files ** 
-&lt;a href=&#34;https://github.com/kahla-sec/CTF-Writeups/tree/master/Midnight%20Sun%20CTF%202020%20Quals/pwn2&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HERE&lt;/a&gt; **&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;NOTE:&lt;/strong&gt; Task files &lt;strong&gt;
+&lt;a href=&#34;https://github.com/kahla-sec/CTF-Writeups/tree/master/Midnight%20Sun%20CTF%202020%20Quals/pwn2&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HERE&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;These tasks were really fun, i&amp;rsquo;m sorry for the lack of details because i&amp;rsquo;m really busy this period :(&lt;/p&gt;
 </description>
     </item>
@@ -150,8 +150,8 @@ p.interactive()
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;And Bingo we got our shell :D&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/jd78uIm.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;NOTE:&lt;/strong&gt; Task files ** 
-&lt;a href=&#34;https://github.com/kahla-sec/CTF-Writeups/tree/master/TAMU%20CTF/B64DECODER&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HERE&lt;/a&gt; **&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;NOTE:&lt;/strong&gt; Task files &lt;strong&gt;
+&lt;a href=&#34;https://github.com/kahla-sec/CTF-Writeups/tree/master/TAMU%20CTF/B64DECODER&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HERE&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
 &lt;h2 id=&#34;troll-50pts-&#34;&gt;&lt;strong&gt;TROLL (50pts)&lt;/strong&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/AgJ7rGR.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;In this task we are supposed to win a game by guessing the next 100 random numbers , looking at the source code we can see the vulnerable gets function , after that we are setting the seed
@@ -199,8 +199,8 @@ p.interactive()
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Note: the offset in the remote server is different, so i had to guess it xD However we got our flag :&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/QjwTHDR.png&#34; alt=&#34;MAIN&#34;&gt;&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;NOTE:&lt;/strong&gt; Task files ** 
-&lt;a href=&#34;https://github.com/kahla-sec/CTF-Writeups/tree/master/TAMU%20CTF/TROLL&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HERE&lt;/a&gt; **&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;NOTE:&lt;/strong&gt; Task files &lt;strong&gt;
+&lt;a href=&#34;https://github.com/kahla-sec/CTF-Writeups/tree/master/TAMU%20CTF/TROLL&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HERE&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;This is the first time writing a pwn writeup so i hope you enjoyed it , any questions you can find me on twitter @BelkahlaAhmed1&lt;/p&gt;
 </description>
     </item>
