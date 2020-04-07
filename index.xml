@@ -2,21 +2,21 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Empire Total - Securinets Quals20 | Kahla</title>
-    <link>https://ahmed-belkahla.me/</link>
-      <atom:link href="https://ahmed-belkahla.me/index.xml" rel="self" type="application/rss+xml" />
+    <link>https://www.ahmed-belkahla.me/</link>
+      <atom:link href="https://www.ahmed-belkahla.me/index.xml" rel="self" type="application/rss+xml" />
     <description>Empire Total - Securinets Quals20</description>
     <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>© Ahmed Belkahla, 2020</copyright><lastBuildDate>Sat, 21 Mar 2020 00:00:00 +0000</lastBuildDate>
     <image>
-      <url>https://ahmed-belkahla.me/img/quals.jpg</url>
+      <url>https://www.ahmed-belkahla.me/img/quals.jpg</url>
       <title>Empire Total - Securinets Quals20</title>
-      <link>https://ahmed-belkahla.me/</link>
+      <link>https://www.ahmed-belkahla.me/</link>
     </image>
     
     <item>
       <title>Midnight Sun CTF Quals 2020 - Pwn Writeups</title>
-      <link>https://ahmed-belkahla.me/post/midnight-sun-ctfquals/</link>
+      <link>https://www.ahmed-belkahla.me/post/midnight-sun-ctfquals/</link>
       <pubDate>Sat, 04 Apr 2020 00:00:00 +0000</pubDate>
-      <guid>https://ahmed-belkahla.me/post/midnight-sun-ctfquals/</guid>
+      <guid>https://www.ahmed-belkahla.me/post/midnight-sun-ctfquals/</guid>
       <description>&lt;h1 id=&#34;pwn170pts-&#34;&gt;&lt;strong&gt;pwn1(70pts)&lt;/strong&gt;&lt;/h1&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/4fbyzFx.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;It was a ret2libc task , but we had firstly to leak the libc base address using BOF (i leaked it through printf address) than we will return to main and perform our ret2 System :D
@@ -116,9 +116,9 @@ p.interactive()
     
     <item>
       <title>TAMU CTF 2020 - Pwn Writeups</title>
-      <link>https://ahmed-belkahla.me/post/tamuctfpwn/</link>
+      <link>https://www.ahmed-belkahla.me/post/tamuctfpwn/</link>
       <pubDate>Mon, 30 Mar 2020 00:00:00 +0000</pubDate>
-      <guid>https://ahmed-belkahla.me/post/tamuctfpwn/</guid>
+      <guid>https://www.ahmed-belkahla.me/post/tamuctfpwn/</guid>
       <description>&lt;h2 id=&#34;b64decoder-244pts-&#34;&gt;&lt;strong&gt;B64DECODER (244pts)&lt;/strong&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/ZVHG4PA.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;This is wont be a detailed writeup , however in this task we have a clear format string vulnerability (line 23) and a leak of a64l function address&lt;/p&gt;
@@ -207,9 +207,9 @@ p.interactive()
     
     <item>
       <title>The After Prequal - Securinets Quals 2k20</title>
-      <link>https://ahmed-belkahla.me/post/the-after-prequalsecurinetsquals/</link>
+      <link>https://www.ahmed-belkahla.me/post/the-after-prequalsecurinetsquals/</link>
       <pubDate>Mon, 23 Mar 2020 00:00:00 +0000</pubDate>
-      <guid>https://ahmed-belkahla.me/post/the-after-prequalsecurinetsquals/</guid>
+      <guid>https://www.ahmed-belkahla.me/post/the-after-prequalsecurinetsquals/</guid>
       <description>&lt;h1 id=&#34;the-after-prequal-971pts-19-solves-&#34;&gt;&lt;strong&gt;The after-Prequal (971pts) (19 Solves)&lt;/strong&gt;&lt;/h1&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/pXLjH4n.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;This task was so fun and i learned new things from it , we are given a website with a search functionality and after testing a single quote injection we had an SQL error , so let&amp;rsquo;s start the exploitation of the famous SQL injection :D&lt;/p&gt;
@@ -268,9 +268,9 @@ i checked the privileges of the current user and the FILE permission was not gra
     
     <item>
       <title>Empire Total - Securinets Quals 20</title>
-      <link>https://ahmed-belkahla.me/post/empire-total-securinetsquals20/</link>
+      <link>https://www.ahmed-belkahla.me/post/empire-total-securinetsquals20/</link>
       <pubDate>Sat, 21 Mar 2020 00:00:00 +0000</pubDate>
-      <guid>https://ahmed-belkahla.me/post/empire-total-securinetsquals20/</guid>
+      <guid>https://www.ahmed-belkahla.me/post/empire-total-securinetsquals20/</guid>
       <description>&lt;h1 id=&#34;empire-total-1000pts-7-solves-&#34;&gt;&lt;strong&gt;Empire Total (1000pts) (7 Solves)&lt;/strong&gt;&lt;/h1&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/rGcoI7o.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;This task was really so creative and i had so fun solving it , but i can&amp;rsquo;t deny that it was painful :( after reading the description we can say that we aim to dump the database of the website (maybe SQL injection who knows) and fortunately we have the source code so let&amp;rsquo;s download it and begin our trip xD&lt;/p&gt;
@@ -399,9 +399,9 @@ we will find that the url we scanned in VirusTotal website will appear , it&amp;
     
     <item>
       <title>ångstrom CTF 2k20 - Web Exploitation</title>
-      <link>https://ahmed-belkahla.me/post/angstromctf20/</link>
+      <link>https://www.ahmed-belkahla.me/post/angstromctf20/</link>
       <pubDate>Thu, 19 Mar 2020 00:00:00 +0000</pubDate>
-      <guid>https://ahmed-belkahla.me/post/angstromctf20/</guid>
+      <guid>https://www.ahmed-belkahla.me/post/angstromctf20/</guid>
       <description>&lt;h1 id=&#34;a-peculiar-query-180pts-73-solves-&#34;&gt;&lt;strong&gt;A Peculiar Query (180pts) (73 Solves)&lt;/strong&gt;&lt;/h1&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/A6EHPkW.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;I really liked this web task , we are given this web page that have a search functionality&lt;/p&gt;
@@ -543,9 +543,9 @@ For example :&lt;/p&gt;
     
     <item>
       <title>Shinobis World - Web Exploitation NCSC 2.0 CTF</title>
-      <link>https://ahmed-belkahla.me/post/shinobisworld/</link>
+      <link>https://www.ahmed-belkahla.me/post/shinobisworld/</link>
       <pubDate>Thu, 23 Jan 2020 00:00:00 +0000</pubDate>
-      <guid>https://ahmed-belkahla.me/post/shinobisworld/</guid>
+      <guid>https://www.ahmed-belkahla.me/post/shinobisworld/</guid>
       <description>&lt;h1 id=&#34;shinobis-world-1000pts-1-solves-&#34;&gt;&lt;strong&gt;Shinobis World (1000pts) (1 Solves)&lt;/strong&gt;&lt;/h1&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/7X3dgtW.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;Hello guys again , in this task we are give the Settings.py of a django Web application , we can notice that the website is using caching with redis that is listening on port 6379 locally !&lt;/p&gt;
@@ -591,9 +591,9 @@ If you have any questions dont forget to contact me and if you liked this writeu
     
     <item>
       <title>JWT In A New Way - NCSC 2.0 CTF</title>
-      <link>https://ahmed-belkahla.me/post/jwt-in-a-new-way/</link>
+      <link>https://www.ahmed-belkahla.me/post/jwt-in-a-new-way/</link>
       <pubDate>Wed, 22 Jan 2020 00:00:00 +0000</pubDate>
-      <guid>https://ahmed-belkahla.me/post/jwt-in-a-new-way/</guid>
+      <guid>https://www.ahmed-belkahla.me/post/jwt-in-a-new-way/</guid>
       <description>&lt;h1 id=&#34;jwt-in-a-new-way-1000pts-0-solves-&#34;&gt;&lt;strong&gt;JWT In a new way (1000pts) (0 Solves)&lt;/strong&gt;&lt;/h1&gt;
 &lt;p&gt;&lt;img src=&#34;https://i.imgur.com/YuMeMZE.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;And finally i&amp;rsquo;m writing a writeup for this task xD i published this task in Securinets Mini CTF and NCSC2.0_CTF but unfortunately it had 0 solves (in fact no one managed to pass the first step) , it took me a lot of time to prepare this task so i hope you enjoy it :D
@@ -699,9 +699,9 @@ that automates this and FINALLY we got The flag :&lt;/p&gt;
     
     <item>
       <title>Networking and Security Tools</title>
-      <link>https://ahmed-belkahla.me/project/networking-and-security/</link>
+      <link>https://www.ahmed-belkahla.me/project/networking-and-security/</link>
       <pubDate>Tue, 20 Aug 2019 22:31:41 +0200</pubDate>
-      <guid>https://ahmed-belkahla.me/project/networking-and-security/</guid>
+      <guid>https://www.ahmed-belkahla.me/project/networking-and-security/</guid>
       <description></description>
     </item>
     
