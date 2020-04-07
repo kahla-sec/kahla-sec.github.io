@@ -2,14 +2,14 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Publications | Kahla</title>
-    <link>https://kahla-sec.github.io/publication/</link>
-      <atom:link href="https://kahla-sec.github.io/publication/index.xml" rel="self" type="application/rss+xml" />
+    <link>/publication/</link>
+      <atom:link href="/publication/index.xml" rel="self" type="application/rss+xml" />
     <description>Publications</description>
     <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>© Ahmed Belkahla, 2020</copyright>
     <image>
-      <url>https://kahla-sec.github.io/img/me.jpg</url>
+      <url>/img/me.jpg</url>
       <title>Publications</title>
-      <link>https://kahla-sec.github.io/publication/</link>
+      <link>/publication/</link>
     </image>
     
   </channel>

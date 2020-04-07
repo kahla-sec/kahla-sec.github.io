@@ -2,14 +2,14 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Authors | Kahla</title>
-    <link>https://kahla-sec.github.io/authors/</link>
-      <atom:link href="https://kahla-sec.github.io/authors/index.xml" rel="self" type="application/rss+xml" />
+    <link>/authors/</link>
+      <atom:link href="/authors/index.xml" rel="self" type="application/rss+xml" />
     <description>Authors</description>
     <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>© Ahmed Belkahla, 2020</copyright>
     <image>
-      <url>https://kahla-sec.github.io/img/me.jpg</url>
+      <url>/img/me.jpg</url>
       <title>Authors</title>
-      <link>https://kahla-sec.github.io/authors/</link>
+      <link>/authors/</link>
     </image>
     
   </channel>

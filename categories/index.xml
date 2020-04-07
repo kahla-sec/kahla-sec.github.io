@@ -2,14 +2,14 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Categories | Kahla</title>
-    <link>https://kahla-sec.github.io/categories/</link>
-      <atom:link href="https://kahla-sec.github.io/categories/index.xml" rel="self" type="application/rss+xml" />
+    <link>/categories/</link>
+      <atom:link href="/categories/index.xml" rel="self" type="application/rss+xml" />
     <description>Categories</description>
     <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>© Ahmed Belkahla, 2020</copyright>
     <image>
-      <url>https://kahla-sec.github.io/img/me.jpg</url>
+      <url>/img/me.jpg</url>
       <title>Categories</title>
-      <link>https://kahla-sec.github.io/categories/</link>
+      <link>/categories/</link>
     </image>
     
   </channel>

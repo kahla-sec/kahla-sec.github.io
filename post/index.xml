@@ -2,21 +2,21 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Posts | Kahla</title>
-    <link>https://kahla-sec.github.io/post/</link>
-      <atom:link href="https://kahla-sec.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    <link>/post/</link>
+      <atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
     <description>Posts</description>
     <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>© Ahmed Belkahla, 2020</copyright><lastBuildDate>Sat, 21 Mar 2020 00:00:00 +0000</lastBuildDate>
     <image>
-      <url>https://kahla-sec.github.io/img/me.jpg</url>
+      <url>/img/me.jpg</url>
       <title>Posts</title>
-      <link>https://kahla-sec.github.io/post/</link>
+      <link>/post/</link>
     </image>
     
     <item>
       <title>Empire Total - Securinets Quals 20</title>
-      <link>https://kahla-sec.github.io/post/empire-total-securinetsquals20/</link>
+      <link>/post/empire-total-securinetsquals20/</link>
       <pubDate>Sat, 21 Mar 2020 00:00:00 +0000</pubDate>
-      <guid>https://kahla-sec.github.io/post/empire-total-securinetsquals20/</guid>
+      <guid>/post/empire-total-securinetsquals20/</guid>
       <description>&lt;h1 id=&#34;empire-total-1000pts-7-solves-&#34;&gt;&lt;strong&gt;Empire Total (1000pts) (7 Solves)&lt;/strong&gt;&lt;/h1&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/rGcoI7o.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;This task was really so creative and i had so fun solving it , but i can&amp;rsquo;t deny that it was painful :( after reading the description we can say that we aim to dump the database of the website (maybe SQL injection who knows) and fortunately we have the source code so let&amp;rsquo;s download it and begin our trip xD&lt;/p&gt;
