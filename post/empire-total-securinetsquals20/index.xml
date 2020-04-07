@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Empire Total - Securinets Quals20 | Kahla</title>
+    <link>https://kahla-sec.github.io/post/empire-total-securinetsquals20/</link>
+      <atom:link href="https://kahla-sec.github.io/post/empire-total-securinetsquals20/index.xml" rel="self" type="application/rss+xml" />
+    <description>Empire Total - Securinets Quals20</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>© Ahmed Belkahla, 2020</copyright><lastBuildDate>Sat, 21 Mar 2020 00:00:00 +0000</lastBuildDate>
+    <image>
+      <url>https://kahla-sec.github.io/img/quals.jpg</url>
+      <title>Empire Total - Securinets Quals20</title>
+      <link>https://kahla-sec.github.io/post/empire-total-securinetsquals20/</link>
+    </image>
+    
+  </channel>
+</rss>
