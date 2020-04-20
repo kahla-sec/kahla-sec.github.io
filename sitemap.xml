@@ -3,12 +3,17 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>https://ahmed-belkahla.me/post/hackzone-viii/</loc>
-    <lastmod>2020-04-12T00:10:44+00:00</lastmod>
+    <loc>https://ahmed-belkahla.me/post/detailed-pwn-writeups/</loc>
+    <lastmod>2020-04-20T20:00:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>https://ahmed-belkahla.me/post/</loc>
+    <lastmod>2020-04-20T20:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://ahmed-belkahla.me/post/hackzone-viii/</loc>
     <lastmod>2020-04-12T00:10:44+00:00</lastmod>
   </url>
   
