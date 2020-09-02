@@ -17,8 +17,7 @@
       <link>https://ahmed-belkahla.me/post/fword-ctf2020/</link>
       <pubDate>Wed, 02 Sep 2020 00:08:00 +0000</pubDate>
       <guid>https://ahmed-belkahla.me/post/fword-ctf2020/</guid>
-      <description>&lt;h1 id=&#34;fwordctf-2020-webbash-writeups-&#34;&gt;FwordCTF 2020 Web+Bash writeups&lt;/h1&gt;
-&lt;p&gt;Our team Fword organized FwordCTF 2020 with more than 900 teams and 1900 participants , I&amp;rsquo;ve been in charge of managing the infrastructure and Web + Bash categories, we will discuss infrastructure stuffs in future articles and how to  deploy things as our platform got a maximum of 2mins down and tasks had 0 down time.&lt;/p&gt;
+      <description>&lt;p&gt;Our team Fword organized FwordCTF 2020 with more than 900 teams and 1900 participants , I&amp;rsquo;ve been in charge of managing the infrastructure and Web + Bash categories, we will discuss infrastructure stuffs in future articles and how to  deploy things as our platform got a maximum of 2mins down and tasks had 0 down time.&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://i.imgur.com/Mw8OoKF.png&#34; alt=&#34;STATS&#34;&gt;&lt;/p&gt;
 &lt;p&gt;However in this article we will discuss the possible ways of solving my Web / Bash tasks.&lt;/p&gt;
 &lt;h2 id=&#34;pastaxss-5-solves-500pts-&#34;&gt;PastaXSS (5 solves) 500pts&lt;/h2&gt;
