@@ -13,6 +13,69 @@
     </image>
     
     <item>
+      <title>CSAW CTF2020 - Web RTC Writeup</title>
+      <link>https://ahmed-belkahla.me/post/csaw2020-webrtc/</link>
+      <pubDate>Mon, 14 Sep 2020 00:00:00 +0000</pubDate>
+      <guid>https://ahmed-belkahla.me/post/csaw2020-webrtc/</guid>
+      <description>&lt;h1 id=&#34;web-rtc-450pts-39-solves-&#34;&gt;Web RTC (450pts) 39 solves&lt;/h1&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/KJrEEZl.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Last weekend,we have been a part  of the CSAW CTF 2020 and our team Fword ranked 4th in MENA region.
+We managed to solve all web challenges with my awesome teammates 
+&lt;a href=&#34;https://twitter.com/Hera14165735&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;@Hera&lt;/a&gt; and 
+&lt;a href=&#34;https://twitter.com/BahaBaghdadi&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;@Noxious&lt;/a&gt; and we have particularly enjoyed &lt;strong&gt;Web RTC&lt;/strong&gt; .&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/X0z8wys.png&#34; alt=&#34;SCOREBOARD&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;tldl-&#34;&gt;TL;DL&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Exploiting CoTurn server in order to gain SSRF.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Escalating SSRF to RCE using Redis.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;overview-&#34;&gt;Overview&lt;/h2&gt;
+&lt;p&gt;We have a Real Time Chat web app and we were provided with the source code / Dockerfile / supervisor.conf.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/cBI0d2H.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Examining the source code didn&amp;rsquo;t really bring something to the table.But we got some juicy stuff ,reading the Dockerfile / supervisor.conf.
+It turned out that the application is using TURN protocol to relay the network traffic between peers and Redis as a caching system.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/thalPtZ.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;exploitation-&#34;&gt;Exploitation&lt;/h2&gt;
+&lt;p&gt;Since the application didn&amp;rsquo;t seem vulnreable, we decide to focus basically on CoTURN server exploitation.
+After searching around we found the following 
+&lt;a href=&#34;https://hackerone.com/reports/333419&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HackerOne report&lt;/a&gt; which claims that it&amp;rsquo;s possible to abuse the TURN Protocol to gain SSRF. In fact,
+the attacker may proxy TCP connections to the internal network by setting the &lt;strong&gt;XOR-PEER-ADDRESS&lt;/strong&gt; of the TURN connect message (method 0x000A, &lt;a href=&#34;https://tools.ietf.org/html/rfc6062#section-4.3&#34;&gt;https://tools.ietf.org/html/rfc6062#section-4.3&lt;/a&gt;) to a private IPv4 address.&lt;/p&gt;
+&lt;p&gt;We used the following &lt;strong&gt;
+&lt;a href=&#34;https://github.com/staaldraad/turner&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;tool&lt;/a&gt;&lt;/strong&gt; to exploit that issue.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/M6NaeIz.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;We can notice that the Coturn server IP is returned to confirm the SSRF.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/L2aCve1.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Unfortunately fetching localhost ip didn&amp;rsquo;t work for us so we fired up wireshark to monitor the STUN (TURN Protocol is an extension of STUN protocol) packets.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/PmES4dZ.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;We can confirm that the coTurn server has some protections blacklisting local ips. We first tried to bruteforce the internal ip but in vain , finally we managed  to bypass this protection
+using &lt;strong&gt;0.0.0.0&lt;/strong&gt; ip:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/zQYbXit.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/gAqT0pL.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;And Bingo we achieved the first part!&lt;/p&gt;
+&lt;h3 id=&#34;escalating-ssrf-to-rce-using-redis-&#34;&gt;Escalating SSRF to RCE using Redis&lt;/h3&gt;
+&lt;p&gt;This part was somehow trivial but it took us some time to exploit Redis properly, we used  some instructions from this &lt;strong&gt;
+&lt;a href=&#34;https://github.com/jas502n/Redis-RCE&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;tool&lt;/a&gt;&lt;/strong&gt; ( we fired a Rogue server from it) and executed the following commands:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/jUFM1jt.jpg&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;And Voilaa We got our beloved flag :D It was our first time dealing with RTC website and exploiting and it was really fun!&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;References:&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://www.rtcsec.com/2020/04/01-slack-webrtc-turn-compromise/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Article About the vulnerability&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;
+&lt;a href=&#34;https://hackerone.com/reports/333419&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HackerOne Article&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
       <title>FwordCTF 2020 - Web/Bash Writeups</title>
       <link>https://ahmed-belkahla.me/post/fword-ctf2020/</link>
       <pubDate>Wed, 02 Sep 2020 00:08:00 +0000</pubDate>
