@@ -5,12 +5,157 @@
     <link>https://ahmed-belkahla.me/post/</link>
       <atom:link href="https://ahmed-belkahla.me/post/index.xml" rel="self" type="application/rss+xml" />
     <description>Posts</description>
-    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>© Ahmed Belkahla, 2020</copyright><lastBuildDate>Mon, 14 Sep 2020 00:00:00 +0000</lastBuildDate>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>© Ahmed Belkahla, 2020</copyright><lastBuildDate>Tue, 22 Sep 2020 00:08:00 +0000</lastBuildDate>
     <image>
       <url>https://ahmed-belkahla.me/img/me.jpg</url>
       <title>Posts</title>
       <link>https://ahmed-belkahla.me/post/</link>
     </image>
+    
+    <item>
+      <title>International CTF Infrastructure Management</title>
+      <link>https://ahmed-belkahla.me/post/fwordctf_infrastructure/</link>
+      <pubDate>Tue, 22 Sep 2020 00:08:00 +0000</pubDate>
+      <guid>https://ahmed-belkahla.me/post/fwordctf_infrastructure/</guid>
+      <description>&lt;p&gt;Last month our team organized &lt;strong&gt;FwordCTF 2020&lt;/strong&gt;  and we got very positive feedbacks and fortunately most of the players enjoyed their journey. More than 1900 participants and 980 teams took part of this first edition, as I was responsible of managing the infrastructure it was a great challenge to deal with this great number and create a secure environment for unsecure challenges :v so i&amp;rsquo;ll share with you my experience maybe it can inspire you.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;NOTE:&lt;/strong&gt; This is not a step by step tutorial, it&amp;rsquo;s my way to document things so I can remember them next year.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/Mw8OoKF.png&#34; alt=&#34;STATS&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Cloudflare Stats:&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/uTuxI3U.png&#34; alt=&#34;STATS&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;sections-&#34;&gt;Sections&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Platform Infrastructure&lt;/li&gt;
+&lt;li&gt;Issues We faced&lt;/li&gt;
+&lt;li&gt;Challenges Management and health check&lt;/li&gt;
+&lt;li&gt;Isolated Container for each participant in Bash category&lt;/li&gt;
+&lt;li&gt;Next edition ?&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;platform-infrastructure-&#34;&gt;Platform Infrastructure&lt;/h2&gt;
+&lt;p&gt;We have mainly used AWS services, there is no special reason for this choice but I was more familiar with AWS and every member in our team had free 100$ credits in AWS Educate xD
+For impatient people here is the global architecture we used at the beginning of the CTF, it was the ideal choice for us but we faced some problems that obliged us to switch to an another alternative.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/OFQnrbj.jpg&#34; alt=&#34;PLATFORM&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Details:&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;4 * CTFD Instance: Ubuntu Server 20.04 LTS t2.medium (&lt;strong&gt;4Gb Memory / 2 * Vcpus&lt;/strong&gt;) : a docker swarm Master Node + 3 * Worker nodes (more details later)&lt;/li&gt;
+&lt;li&gt;Redis caching instance: Ubuntu Server 20.04 LTS t2.small (&lt;strong&gt;2Gb Memory / 1 * Vcpus&lt;/strong&gt;) : A separate instance for Redis ( caching system )&lt;/li&gt;
+&lt;li&gt;Bastion: Ubuntu Server 20.04 LTS t2.small (&lt;strong&gt;2Gb Memory / 1 * Vcpus&lt;/strong&gt;): As you can notice all CTFD and redis instances are in a private subnet so we can&amp;rsquo;t SSH to them that&amp;rsquo;s why we need a bastion that is in a public subnet, and as all the subnets are in the same VPC so we can SSH from Bastion to the servers in the private subnet.&lt;/li&gt;
+&lt;li&gt;Amazon RDS Instance: db.t2.small at the beginning then upgraded it to db.t2.medium: Amazon RDS is a nice way to set up, operate, and scale a relational database in the cloud. It has also a nice automated backup system.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/VDq02s8.png&#34; alt=&#34;RDS&#34;&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Cloudflare free plan: Cloudflare really saved us a lot , we faced more than DDOS attacks and some of them were really serious attacks but hackers can&amp;rsquo;t be hacked easily :p&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/NQr71W6.png&#34; alt=&#34;ATTACKS&#34;&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Sendgrid free account (25k free emails): We used Sendgrid for email verification and for sending the certificates after the CTF.&lt;/li&gt;
+&lt;li&gt;AWS Network Load Balancer&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/zkGzWBn.png&#34; alt=&#34;LOADBALANCER&#34;&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;AWS S3 bucket to serve the files to download.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/Znt636a.png&#34; alt=&#34;S3&#34;&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;NAT Gateway: NAT gateway is important to enable internet connection for the private subnets.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/sKI36vv.png&#34; alt=&#34;NAT&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;VPC:&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/7jcwuKM.jpg&#34; alt=&#34;VPC&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Subnets:&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/pcNCzJe.png&#34; alt=&#34;SUBNETS&#34;&gt;&lt;/p&gt;
+&lt;p&gt;We used docker swarm for orchestration and it was really helpful , we created 4 replicas in each node ( learn more about Docker Swarm 
+&lt;a href=&#34;https://www.ionos.fr/digitalguide/serveur/know-how/docker-orchestration-avec-swarm-et-compose/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;here&lt;/a&gt; ) but after some time we decided to change our strategy , docker swarm had a weakness which is sharing &lt;strong&gt;volumes&lt;/strong&gt; ; every volume mount is local to that node, this was not something critical and there are some solutions available but as it was something unpredictable for us and we didn&amp;rsquo;t test it before, we decided to choose the safest option and replaced the 4 CTFD instances with a single t2.xlarge instance ( &lt;strong&gt;16GB Memory/4 Vcpus&lt;/strong&gt; ) that contains also 4 replicas of CTFD . The result is the following:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/WVm0KA5.jpg&#34; alt=&#34;ARCH&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;issues-we-faced-&#34;&gt;Issues We faced&lt;/h2&gt;
+&lt;h3 id=&#34;aws-rds-&#34;&gt;AWS RDS&lt;/h3&gt;
+&lt;p&gt;We are really thankful that this error occured 5 days before the CTF. Only 1 hour after the we launched the platform, we kept having internal server errors , after some debugging we discovered AWS RDS (mysql DBs in general) has an attribute &lt;strong&gt;max_connections&lt;/strong&gt; which is set by default to a low value and once we exceeded that value CTFD couldn&amp;rsquo;t connect to the database, but after changing the max_connections value and restarting things we kept having the 500 internal errors :( . After a lot of debugging and analysis I discovered that the containers couldn&amp;rsquo;t resolve the database domain name which is really strange because AWS DNS server was running flawlessly. To make things shorter, docker swarm overlay network&amp;rsquo;s IP range was overlapping with the physical network, so when the container try to resolve the DB domain name it didn&amp;rsquo;t really send a request to AWS DNS , the solution was to launch the swarm with the following command:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;sudo docker swarm init --default-addr-pool 192.168.0.0/16
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;it took us only 35 minutes to discover the problem and solve it, but it was the most stressful minutes in my life xD&lt;/p&gt;
+&lt;h3 id=&#34;common-problems-&#34;&gt;Common problems&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;Docker Swarm sticky sessions&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Docker swarm doesn&amp;rsquo;t have by default a layer 7  load balancer , so we had faced some problems related to sessions, the solution was easy, we only needed to add our own load balancer that supports sticky sessions (we used traefik instead of nginx and it did really great )&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Other Issues&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;I needed to set &lt;strong&gt;SQLALCHEMY_MAX_OVERFLOW&lt;/strong&gt; in CTFD to a high value in order to avoid some DB problems and I also had to add some code to CTFD in order to connect successfully to my S3 bucket (AWS Educate accounts have an extra parameter that need to be used and CTFD doesn&amp;rsquo;t handle this case).&lt;/p&gt;
+&lt;h2 id=&#34;challenges-management-and-health-check-&#34;&gt;Challenges Management and health check&lt;/h2&gt;
+&lt;p&gt;For Web tasks every framework needs a custom docker-compose.yml file so every author took care of his task.
+For the other categories we used a t2.medium instance for each task and docker swarm to orchestrate the containers ( each task has 3 replicas) and to make sure that we will have no down time (if a container failed there is always two other containers running). this is an automated version where you only have to create a Dockerfile for the task (take a look at my github repo for examples):&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Steps:&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Put the following docker-compose.yml file in the same directory with the task:&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;version: &amp;quot;3.8&amp;quot;
+services:
+  task:
+    image: 127.0.0.1:5000/task
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: taskName
+    deploy:
+      mode: replicated
+      replicas: 3
+    networks:
+      - isolated
+    ports:
+      - &amp;quot;9999:1234&amp;quot; #ToChange
+networks:
+  isolated:
+&lt;/code&gt;&lt;/pre&gt;
+&lt;ul&gt;
+&lt;li&gt;Choose the port you want&lt;/li&gt;
+&lt;li&gt;Run the following start.sh with root privileges&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;#!/bin/bash
+echo &amp;quot;[!] Run me with sudo pleaaaaase!&amp;quot;
+docker run -it --name registry -p 127.0.0.1:5000:5000 -d registry:2
+if [ $? -eq 0 ]; then
+echo &amp;quot;[+] registry done!&amp;quot;
+else
+    echo &amp;quot;Failed&amp;quot;
+fi
+docker-compose -f docker-compose.yml build
+docker-compose -f docker-compose.yml push
+if [ $? -eq 0 ]; then
+  echo &amp;quot;[+] Image pushed!&amp;quot;
+else
+    echo FAILED
+fi
+docker swarm init
+docker stack deploy --compose-file docker-compose-sample.yml task
+if [ $? -eq 0 ]; then
+echo &amp;quot;[+] Done, Fword FTW&amp;quot;
+else
+    echo FAILED
+fi
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;NOTE:&lt;/strong&gt; In case you faced any errors you have to leave the swarm and retry again (don&amp;rsquo;t forget to use the last version of docker-compose)&lt;/p&gt;
+&lt;p&gt;This was a quick solution to facilitate things during the CTF and it may be optimized, in fact I&amp;rsquo;m thinking of releasing a tool that do everything for us but I&amp;rsquo;m just too lazy.&lt;/p&gt;
+&lt;h3 id=&#34;mangement-&#34;&gt;Mangement:&lt;/h3&gt;
+&lt;p&gt;Some of you may be wondering how we could manage more than 22 servers, we used an awesome tool called &lt;strong&gt;
+&lt;a href=&#34;https://termius.com/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Termius&lt;/a&gt;&lt;/strong&gt; (it&amp;rsquo;s free in Github Student Pack) which is an SSH client with a lot of awesome features, it lets you organize the servers in groups and ssh to them with just a double click.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/PFWeLl2.png&#34; alt=&#34;TERMIUS&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Platform:&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/6KvLoHv.png&#34; alt=&#34;TERMIUS&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;isolated-container-for-each-participant-in-bash-category-&#34;&gt;Isolated Container for each participant in Bash category&lt;/h2&gt;
+&lt;p&gt;I think that many people are waiting for this section, in bash category there were some tasks that required an SSH connection so to provide a better environment we came up with this solution and every player will be assigned to an isolated container.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Technical details:&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;The idea is simple, we firstly instanciate a manager which is a container running the SSH server and for each connection it will instanciates a new container (from the image of the task) and connects to it (docker inside docker).&lt;/p&gt;
+&lt;p&gt;It may look simple but it took me a little bit of time to implement it and test it. Please take a look at this &lt;strong&gt;
+&lt;a href=&#34;https://github.com/kahla-sec/FwordCTF-2020/tree/master/Bash/CapiCapi&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;sample&lt;/a&gt;&lt;/strong&gt; if you want to adapt this method.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Steps:&lt;/strong&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Run &lt;code&gt;docker-compose -f docker-compose-task.yml build&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Run &lt;code&gt;docker-compose -f docker-compose.yml up&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;And Bingo you will have SSH listening on port 10000, you can create a cron job to kill the participants containers every period of time or optimize manage.sh script. Please feel free to contact me if you have any questions or optimizations.&lt;/p&gt;
+&lt;h2 id=&#34;next-edition--&#34;&gt;Next edition ?&lt;/h2&gt;
+&lt;p&gt;Personally, I prefer using kubernetes in the next edition and automate health checks for each task. Finding a solution to enable a separate environment for every participant in all categories is also a nice idea and finally develop our custom platform.&lt;/p&gt;
+&lt;h2 id=&#34;conclusion-&#34;&gt;Conclusion&lt;/h2&gt;
+&lt;p&gt;I&amp;rsquo;m so happy this edition was concluded successfully and we got great feedbacks, I have definitely learned a lot from this opportunity, can&amp;rsquo;t wait for the next edition ; it will be  more exciting !!
+For any questions you can contact me on twitter or facebook!&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>CSAW CTF2020 - Web RTC Writeup</title>

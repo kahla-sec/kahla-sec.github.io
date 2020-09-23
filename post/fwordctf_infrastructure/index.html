@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="generator" content="Source Themes Academic 4.8.0">
+
+  
+
+  
+  
+  
+  
+  
+    
+    
+    
+  
+  
+
+  <meta name="author" content="Belkahla Ahmed">
+
+  
+  
+  
+    
+  
+  <meta name="description" content="How to deploy a scalable and robust CTF infrastructure and the different issues we faced in FwordCTF 2020">
+
+  
+  <link rel="alternate" hreflang="en-us" href="https://ahmed-belkahla.me/post/fwordctf_infrastructure/">
+
+  
+
+
+  
+  
+  
+  <meta name="theme-color" content="rgb(0, 136, 204)">
+  
+
+  
+  
+
+  
+  
+  
+  
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.8.6/css/academicons.min.css" integrity="sha256-uFVgMKfistnJAfoCUQigIl+JfUaP47GrRKjf6CTPVmw=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-1/css/all.min.css" integrity="sha256-4w9DunooKSr3MFXHXWyFER38WmPdm361bQS/2KUWZbU=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+    
+    
+    
+      
+    
+    
+      
+      
+        
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin="anonymous" title="hl-light" disabled>
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/dracula.min.css" crossorigin="anonymous" title="hl-dark">
+        
+      
+    
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.css" integrity="sha256-SHMGCYmST46SoyGgo4YR/9AlK1vf3ff84Aq9yK4hdqM=" crossorigin="anonymous">
+    
+
+    
+
+    
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.1.2/lazysizes.min.js" integrity="sha256-Md1qLToewPeKjfAHU1zyPwOutccPAm5tahnaw7Osw0A=" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+        
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+
+  
+
+  
+  
+  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CRoboto:400,400italic,700%7CRoboto+Mono&display=swap">
+  
+
+  
+  
+  
+  
+  <link rel="stylesheet" href="/css/academic.css">
+
+  
+
+
+
+
+  
+
+
+  
+
+  <link rel="manifest" href="/index.webmanifest">
+  <link rel="icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
+  <link rel="apple-touch-icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+
+  <link rel="canonical" href="https://ahmed-belkahla.me/post/fwordctf_infrastructure/">
+
+  
+  
+  
+  
+  
+    
+  
+  
+  <meta property="twitter:card" content="summary_large_image">
+  
+  <meta property="twitter:site" content="@BelkahlaAhmed1">
+  <meta property="twitter:creator" content="@BelkahlaAhmed1">
+  
+  <meta property="og:site_name" content="Ahmed Belkahla">
+  <meta property="og:url" content="https://ahmed-belkahla.me/post/fwordctf_infrastructure/">
+  <meta property="og:title" content="International CTF Infrastructure Management | Ahmed Belkahla">
+  <meta property="og:description" content="How to deploy a scalable and robust CTF infrastructure and the different issues we faced in FwordCTF 2020"><meta property="og:image" content="https://ahmed-belkahla.me/img/arch.jpg">
+  <meta property="twitter:image" content="https://ahmed-belkahla.me/img/arch.jpg"><meta property="og:locale" content="en-us">
+  
+    
+      <meta property="article:published_time" content="2020-09-22T00:08:00&#43;00:00">
+    
+    <meta property="article:modified_time" content="2020-09-22T00:08:00&#43;00:00">
+  
+
+  
+
+
+    
+
+
+
+
+
+
+  
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://ahmed-belkahla.me/post/fwordctf_infrastructure/"
+  },
+  "headline": "International CTF Infrastructure Management",
+  
+  "datePublished": "2020-09-22T00:08:00Z",
+  "dateModified": "2020-09-22T00:08:00Z",
+  
+  "author": {
+    "@type": "Person",
+    "name": "Belkahla Ahmed"
+  },
+  
+  "publisher": {
+    "@type": "Organization",
+    "name": "Ahmed Belkahla",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ahmed-belkahla.me/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
+    }
+  },
+  "description": "How to deploy a scalable and robust CTF infrastructure and the different issues we faced in FwordCTF 2020"
+}
+</script>
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+
+  <title>International CTF Infrastructure Management | Ahmed Belkahla</title>
+
+</head>
+
+<body id="top" data-spy="scroll" data-offset="70" data-target="#TableOfContents" class="dark">
+
+  <aside class="search-results" id="search">
+  <div class="container">
+    <section class="search-header">
+
+      <div class="row no-gutters justify-content-between mb-3">
+        <div class="col-6">
+          <h1>Search</h1>
+        </div>
+        <div class="col-6 col-search-close">
+          <a class="js-search" href="#"><i class="fas fa-times-circle text-muted" aria-hidden="true"></i></a>
+        </div>
+      </div>
+
+      <div id="search-box">
+        
+        <input name="q" id="search-query" placeholder="Search..." autocapitalize="off"
+        autocomplete="off" autocorrect="off" spellcheck="false" type="search">
+        
+      </div>
+
+    </section>
+    <section class="section-search-results">
+
+      <div id="search-hits">
+        
+      </div>
+
+    </section>
+  </div>
+</aside>
+
+
+  
+
+
+
+
+
+
+
+<nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="d-none d-lg-inline-flex">
+      <a class="navbar-brand" href="/">Ahmed Belkahla</a>
+    </div>
+    
+
+    
+    <button type="button" class="navbar-toggler" data-toggle="collapse"
+            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span><i class="fas fa-bars"></i></span>
+    </button>
+    
+
+    
+    <div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none">
+      <a class="navbar-brand" href="/">Ahmed Belkahla</a>
+    </div>
+    
+
+    
+    
+    <div class="navbar-collapse main-menu-item collapse justify-content-start" id="navbar-content">
+
+      
+      <ul class="navbar-nav d-md-inline-flex">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#about"><span>Home</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#posts"><span>Posts</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#projects"><span>Projects</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#contact"><span>Contact</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/files/cv.pdf"><span>CV</span></a>
+        </li>
+
+        
+        
+
+      
+
+        
+      </ul>
+    </div>
+
+    <ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2">
+      
+      <li class="nav-item">
+        <a class="nav-link js-search" href="#"><i class="fas fa-search" aria-hidden="true"></i></a>
+      </li>
+      
+
+      
+      <li class="nav-item dropdown theme-dropdown">
+        <a href="#" class="nav-link js-theme-selector" data-toggle="dropdown" aria-haspopup="true">
+          <i class="fas fa-palette" aria-hidden="true"></i>
+        </a>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item js-set-theme-light">
+            <span>Light</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-dark">
+            <span>Dark</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-auto">
+            <span>Automatic</span>
+          </a>
+        </div>
+      </li>
+      
+
+      
+
+    </ul>
+
+  </div>
+</nav>
+
+
+  <article class="article">
+
+  
+
+
+
+
+
+
+
+
+
+<div class="article-header">
+  
+  
+  <img src="/img/arch.jpg" class="article-banner" alt="">
+  
+
+  
+</div>
+
+
+
+
+  
+
+  
+  
+  
+<div class="article-container pt-3">
+  <h1>International CTF Infrastructure Management</h1>
+
+  
+
+  
+    
+
+
+<div class="article-metadata">
+
+  
+  
+
+  
+  <span class="article-date">
+    
+    
+      
+    
+    Sep 22, 2020
+  </span>
+  
+
+  
+
+  
+  <span class="middot-divider"></span>
+  <span class="article-reading-time">
+    7 min read
+  </span>
+  
+
+  
+  
+  
+
+  
+  
+
+</div>
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+</div>
+
+
+
+  <div class="article-container">
+
+    <div class="article-style">
+      <p>Last month our team organized <strong>FwordCTF 2020</strong>  and we got very positive feedbacks and fortunately most of the players enjoyed their journey. More than 1900 participants and 980 teams took part of this first edition, as I was responsible of managing the infrastructure it was a great challenge to deal with this great number and create a secure environment for unsecure challenges :v so i&rsquo;ll share with you my experience maybe it can inspire you.</p>
+<p><strong>NOTE:</strong> This is not a step by step tutorial, it&rsquo;s my way to document things so I can remember them next year.</p>
+<p><img src="https://i.imgur.com/Mw8OoKF.png" alt="STATS"></p>
+<p><strong>Cloudflare Stats:</strong></p>
+<p><img src="https://i.imgur.com/uTuxI3U.png" alt="STATS"></p>
+<h2 id="sections-">Sections</h2>
+<ul>
+<li>Platform Infrastructure</li>
+<li>Issues We faced</li>
+<li>Challenges Management and health check</li>
+<li>Isolated Container for each participant in Bash category</li>
+<li>Next edition ?</li>
+</ul>
+<h2 id="platform-infrastructure-">Platform Infrastructure</h2>
+<p>We have mainly used AWS services, there is no special reason for this choice but I was more familiar with AWS and every member in our team had free 100$ credits in AWS Educate xD
+For impatient people here is the global architecture we used at the beginning of the CTF, it was the ideal choice for us but we faced some problems that obliged us to switch to an another alternative.</p>
+<p><img src="https://i.imgur.com/OFQnrbj.jpg" alt="PLATFORM"></p>
+<p><strong>Details:</strong></p>
+<ul>
+<li>4 * CTFD Instance: Ubuntu Server 20.04 LTS t2.medium (<strong>4Gb Memory / 2 * Vcpus</strong>) : a docker swarm Master Node + 3 * Worker nodes (more details later)</li>
+<li>Redis caching instance: Ubuntu Server 20.04 LTS t2.small (<strong>2Gb Memory / 1 * Vcpus</strong>) : A separate instance for Redis ( caching system )</li>
+<li>Bastion: Ubuntu Server 20.04 LTS t2.small (<strong>2Gb Memory / 1 * Vcpus</strong>): As you can notice all CTFD and redis instances are in a private subnet so we can&rsquo;t SSH to them that&rsquo;s why we need a bastion that is in a public subnet, and as all the subnets are in the same VPC so we can SSH from Bastion to the servers in the private subnet.</li>
+<li>Amazon RDS Instance: db.t2.small at the beginning then upgraded it to db.t2.medium: Amazon RDS is a nice way to set up, operate, and scale a relational database in the cloud. It has also a nice automated backup system.</li>
+</ul>
+<p><img src="https://imgur.com/VDq02s8.png" alt="RDS"></p>
+<ul>
+<li>Cloudflare free plan: Cloudflare really saved us a lot , we faced more than DDOS attacks and some of them were really serious attacks but hackers can&rsquo;t be hacked easily :p</li>
+</ul>
+<p><img src="https://imgur.com/NQr71W6.png" alt="ATTACKS"></p>
+<ul>
+<li>Sendgrid free account (25k free emails): We used Sendgrid for email verification and for sending the certificates after the CTF.</li>
+<li>AWS Network Load Balancer</li>
+</ul>
+<p><img src="https://imgur.com/zkGzWBn.png" alt="LOADBALANCER"></p>
+<ul>
+<li>AWS S3 bucket to serve the files to download.</li>
+</ul>
+<p><img src="https://imgur.com/Znt636a.png" alt="S3"></p>
+<ul>
+<li>NAT Gateway: NAT gateway is important to enable internet connection for the private subnets.</li>
+</ul>
+<p><img src="https://imgur.com/sKI36vv.png" alt="NAT"></p>
+<p><strong>VPC:</strong></p>
+<p><img src="https://i.imgur.com/7jcwuKM.jpg" alt="VPC"></p>
+<p><strong>Subnets:</strong></p>
+<p><img src="https://imgur.com/pcNCzJe.png" alt="SUBNETS"></p>
+<p>We used docker swarm for orchestration and it was really helpful , we created 4 replicas in each node ( learn more about Docker Swarm 
+<a href="https://www.ionos.fr/digitalguide/serveur/know-how/docker-orchestration-avec-swarm-et-compose/" target="_blank" rel="noopener">here</a> ) but after some time we decided to change our strategy , docker swarm had a weakness which is sharing <strong>volumes</strong> ; every volume mount is local to that node, this was not something critical and there are some solutions available but as it was something unpredictable for us and we didn&rsquo;t test it before, we decided to choose the safest option and replaced the 4 CTFD instances with a single t2.xlarge instance ( <strong>16GB Memory/4 Vcpus</strong> ) that contains also 4 replicas of CTFD . The result is the following:</p>
+<p><img src="https://i.imgur.com/WVm0KA5.jpg" alt="ARCH"></p>
+<h2 id="issues-we-faced-">Issues We faced</h2>
+<h3 id="aws-rds-">AWS RDS</h3>
+<p>We are really thankful that this error occured 5 days before the CTF. Only 1 hour after the we launched the platform, we kept having internal server errors , after some debugging we discovered AWS RDS (mysql DBs in general) has an attribute <strong>max_connections</strong> which is set by default to a low value and once we exceeded that value CTFD couldn&rsquo;t connect to the database, but after changing the max_connections value and restarting things we kept having the 500 internal errors :( . After a lot of debugging and analysis I discovered that the containers couldn&rsquo;t resolve the database domain name which is really strange because AWS DNS server was running flawlessly. To make things shorter, docker swarm overlay network&rsquo;s IP range was overlapping with the physical network, so when the container try to resolve the DB domain name it didn&rsquo;t really send a request to AWS DNS , the solution was to launch the swarm with the following command:</p>
+<pre><code class="language-sh">sudo docker swarm init --default-addr-pool 192.168.0.0/16
+</code></pre>
+<p>it took us only 35 minutes to discover the problem and solve it, but it was the most stressful minutes in my life xD</p>
+<h3 id="common-problems-">Common problems</h3>
+<p><strong>Docker Swarm sticky sessions</strong></p>
+<p>Docker swarm doesn&rsquo;t have by default a layer 7  load balancer , so we had faced some problems related to sessions, the solution was easy, we only needed to add our own load balancer that supports sticky sessions (we used traefik instead of nginx and it did really great )</p>
+<p><strong>Other Issues</strong></p>
+<p>I needed to set <strong>SQLALCHEMY_MAX_OVERFLOW</strong> in CTFD to a high value in order to avoid some DB problems and I also had to add some code to CTFD in order to connect successfully to my S3 bucket (AWS Educate accounts have an extra parameter that need to be used and CTFD doesn&rsquo;t handle this case).</p>
+<h2 id="challenges-management-and-health-check-">Challenges Management and health check</h2>
+<p>For Web tasks every framework needs a custom docker-compose.yml file so every author took care of his task.
+For the other categories we used a t2.medium instance for each task and docker swarm to orchestrate the containers ( each task has 3 replicas) and to make sure that we will have no down time (if a container failed there is always two other containers running). this is an automated version where you only have to create a Dockerfile for the task (take a look at my github repo for examples):</p>
+<p><strong>Steps:</strong></p>
+<ul>
+<li>Put the following docker-compose.yml file in the same directory with the task:</li>
+</ul>
+<pre><code class="language-yaml">version: &quot;3.8&quot;
+services:
+  task:
+    image: 127.0.0.1:5000/task
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: taskName
+    deploy:
+      mode: replicated
+      replicas: 3
+    networks:
+      - isolated
+    ports:
+      - &quot;9999:1234&quot; #ToChange
+networks:
+  isolated:
+</code></pre>
+<ul>
+<li>Choose the port you want</li>
+<li>Run the following start.sh with root privileges</li>
+</ul>
+<pre><code class="language-sh">#!/bin/bash
+echo &quot;[!] Run me with sudo pleaaaaase!&quot;
+docker run -it --name registry -p 127.0.0.1:5000:5000 -d registry:2
+if [ $? -eq 0 ]; then
+echo &quot;[+] registry done!&quot;
+else
+    echo &quot;Failed&quot;
+fi
+docker-compose -f docker-compose.yml build
+docker-compose -f docker-compose.yml push
+if [ $? -eq 0 ]; then
+  echo &quot;[+] Image pushed!&quot;
+else
+    echo FAILED
+fi
+docker swarm init
+docker stack deploy --compose-file docker-compose-sample.yml task
+if [ $? -eq 0 ]; then
+echo &quot;[+] Done, Fword FTW&quot;
+else
+    echo FAILED
+fi
+</code></pre>
+<p><strong>NOTE:</strong> In case you faced any errors you have to leave the swarm and retry again (don&rsquo;t forget to use the last version of docker-compose)</p>
+<p>This was a quick solution to facilitate things during the CTF and it may be optimized, in fact I&rsquo;m thinking of releasing a tool that do everything for us but I&rsquo;m just too lazy.</p>
+<h3 id="mangement-">Mangement:</h3>
+<p>Some of you may be wondering how we could manage more than 22 servers, we used an awesome tool called <strong>
+<a href="https://termius.com/" target="_blank" rel="noopener">Termius</a></strong> (it&rsquo;s free in Github Student Pack) which is an SSH client with a lot of awesome features, it lets you organize the servers in groups and ssh to them with just a double click.</p>
+<p><img src="https://i.imgur.com/PFWeLl2.png" alt="TERMIUS"></p>
+<p><strong>Platform:</strong></p>
+<p><img src="https://i.imgur.com/6KvLoHv.png" alt="TERMIUS"></p>
+<h2 id="isolated-container-for-each-participant-in-bash-category-">Isolated Container for each participant in Bash category</h2>
+<p>I think that many people are waiting for this section, in bash category there were some tasks that required an SSH connection so to provide a better environment we came up with this solution and every player will be assigned to an isolated container.</p>
+<p><strong>Technical details:</strong></p>
+<p>The idea is simple, we firstly instanciate a manager which is a container running the SSH server and for each connection it will instanciates a new container (from the image of the task) and connects to it (docker inside docker).</p>
+<p>It may look simple but it took me a little bit of time to implement it and test it. Please take a look at this <strong>
+<a href="https://github.com/kahla-sec/FwordCTF-2020/tree/master/Bash/CapiCapi" target="_blank" rel="noopener">sample</a></strong> if you want to adapt this method.</p>
+<p><strong>Steps:</strong></p>
+<ol>
+<li>Run <code>docker-compose -f docker-compose-task.yml build</code></li>
+<li>Run <code>docker-compose -f docker-compose.yml up</code></li>
+</ol>
+<p>And Bingo you will have SSH listening on port 10000, you can create a cron job to kill the participants containers every period of time or optimize manage.sh script. Please feel free to contact me if you have any questions or optimizations.</p>
+<h2 id="next-edition--">Next edition ?</h2>
+<p>Personally, I prefer using kubernetes in the next edition and automate health checks for each task. Finding a solution to enable a separate environment for every participant in all categories is also a nice idea and finally develop our custom platform.</p>
+<h2 id="conclusion-">Conclusion</h2>
+<p>I&rsquo;m so happy this edition was concluded successfully and we got great feedbacks, I have definitely learned a lot from this opportunity, can&rsquo;t wait for the next edition ; it will be  more exciting !!
+For any questions you can contact me on twitter or facebook!</p>
+
+    </div>
+
+    
+
+
+
+
+
+
+
+<div class="share-box" aria-hidden="true">
+  <ul class="share">
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://twitter.com/intent/tweet?url=https://ahmed-belkahla.me/post/fwordctf_infrastructure/&amp;text=International%20CTF%20Infrastructure%20Management" target="_blank" rel="noopener" class="share-btn-twitter">
+          <i class="fab fa-twitter"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.facebook.com/sharer.php?u=https://ahmed-belkahla.me/post/fwordctf_infrastructure/&amp;t=International%20CTF%20Infrastructure%20Management" target="_blank" rel="noopener" class="share-btn-facebook">
+          <i class="fab fa-facebook"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="mailto:?subject=International%20CTF%20Infrastructure%20Management&amp;body=https://ahmed-belkahla.me/post/fwordctf_infrastructure/" target="_blank" rel="noopener" class="share-btn-email">
+          <i class="fas fa-envelope"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.linkedin.com/shareArticle?url=https://ahmed-belkahla.me/post/fwordctf_infrastructure/&amp;title=International%20CTF%20Infrastructure%20Management" target="_blank" rel="noopener" class="share-btn-linkedin">
+          <i class="fab fa-linkedin-in"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://web.whatsapp.com/send?text=International%20CTF%20Infrastructure%20Management%20https://ahmed-belkahla.me/post/fwordctf_infrastructure/" target="_blank" rel="noopener" class="share-btn-whatsapp">
+          <i class="fab fa-whatsapp"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://service.weibo.com/share/share.php?url=https://ahmed-belkahla.me/post/fwordctf_infrastructure/&amp;title=International%20CTF%20Infrastructure%20Management" target="_blank" rel="noopener" class="share-btn-weibo">
+          <i class="fab fa-weibo"></i>
+        </a>
+      </li>
+    
+  </ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+  
+  
+  
+    
+  
+  
+  
+  <div class="media author-card content-widget-hr">
+    
+      
+      <img class="avatar mr-3 avatar-circle" src="/authors/kahla/avatar_huac9af2fd1f181695ca5d7a1e646fb7d2_9022537_270x270_fill_lanczos_center_2.png" alt="Belkahla Ahmed">
+    
+
+    <div class="media-body">
+      <h5 class="card-title"><a href="https://ahmed-belkahla.me/">Belkahla Ahmed</a></h5>
+      <h6 class="card-subtitle">Cybersecurity Enthusiast - CTF Player @ Fword</h6>
+      <p class="card-text">Pentester, Security Enthusiast from Tunisia, I enjoy playing in hacking and pentesting competitions,i skip classes to play CTF.</p>
+      <ul class="network-icon" aria-hidden="true">
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="/#contact" >
+        <i class="fas fa-envelope"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://twitter.com/BelkahlaAhmed1" target="_blank" rel="noopener">
+        <i class="fab fa-twitter"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://github.com/kahla-sec" target="_blank" rel="noopener">
+        <i class="fab fa-github"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="/files/cv.pdf" >
+        <i class="ai ai-cv"></i>
+      </a>
+    </li>
+  
+</ul>
+
+    </div>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+  </div>
+</article>
+
+      
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js" integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js" integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+
+      
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin="anonymous"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/languages/r.min.js"></script>
+        
+      
+
+    
+
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.js" integrity="sha256-EErZamuLefUnbMBQbsEqu1USa+btR2oIlCpBJbyD4/g=" crossorigin="anonymous"></script>
+    
+
+    
+    
+    <script>const code_highlighting = true;</script>
+    
+
+    
+    
+    <script>const isSiteThemeDark = true;</script>
+    
+
+    
+    
+    
+    
+    
+    
+    <script>
+      const search_config = {"indexURI":"/index.json","minLength":1,"threshold":0.3};
+      const i18n = {"no_results":"No results found","placeholder":"Search...","results":"results found"};
+      const content_type = {
+        'post': "Posts",
+        'project': "Projects",
+        'publication' : "Publications",
+        'talk' : "Talks"
+        };
+    </script>
+    
+
+    
+    
+
+    
+    
+    <script id="search-hit-fuse-template" type="text/x-template">
+      <div class="search-hit" id="summary-{{key}}">
+      <div class="search-hit-content">
+        <div class="search-hit-name">
+          <a href="{{relpermalink}}">{{title}}</a>
+          <div class="article-metadata search-hit-type">{{type}}</div>
+          <p class="search-hit-description">{{snippet}}</p>
+        </div>
+      </div>
+      </div>
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+    
+
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    
+    
+    
+    <script src="/js/academic.min.37431be2d92d7fb0160054761ab79602.js"></script>
+
+    
+
+
+
+
+
+
+  
+  
+  <div class="container">
+    <footer class="site-footer">
+  
+
+  <p class="powered-by">
+    © Ahmed Belkahla, 2020 &middot; 
+
+    Powered by the
+    <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for
+    <a href="https://gohugo.io" target="_blank" rel="noopener">Hugo</a>.
+
+    
+    <span class="float-right" aria-hidden="true">
+      <a href="#" class="back-to-top">
+        <span class="button_icon">
+          <i class="fas fa-chevron-up fa-2x"></i>
+        </span>
+      </a>
+    </span>
+    
+  </p>
+</footer>
+
+  </div>
+  
+
+  
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cite</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre><code class="tex hljs"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary my-1 js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> Copy
+        </a>
+        <a class="btn btn-outline-primary my-1 js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> Download
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
