@@ -640,7 +640,7 @@
   <div class="article-container">
 
     <div class="article-style">
-      <h1 id="empire-total-1000pts-7-solves-"><strong>Empire Total (1000pts) (7 Solves)</strong></h1>
+      <h1 id="empire-total-1000pts-7-solves"><strong>Empire Total (1000pts) (7 Solves)</strong></h1>
 <p><img src="https://imgur.com/rGcoI7o.png" alt="TASK"></p>
 <p>This task was really so creative and i had so fun solving it , but i can&rsquo;t deny that it was painful :( after reading the description we can say that we aim to dump the database of the website (maybe SQL injection who knows) and fortunately we have the source code so let&rsquo;s download it and begin our trip xD</p>
 <p>After Visiting the website we find a tool based on Virus Total API , understanding the functionality of the website is really necessary for solving the task, we will cover it in details later, but as a first thought we give an ip address to the website and it will shows Virus Total stats about it</p>
@@ -693,7 +693,7 @@ the results from the database .</p>
           print(&quot;EXCEPTION: &quot;,e)
           self.resetSQL()
 </code></pre>
-<h2 id="exploitation-">Exploitation</h2>
+<h2 id="exploitation">Exploitation</h2>
 <p>So the idea is that if we go to VirusTotal website (<a href="https://www.virustotal.com/">https://www.virustotal.com/</a>) and scan a url ,and then go back to our challenge website and scan the url&rsquo;s ip
 we will find that the url we scanned in VirusTotal website will appear , it&rsquo;s pretty confusing i know so let&rsquo;s have an example</p>
 <ol>
@@ -710,7 +710,7 @@ we will find that the url we scanned in VirusTotal website will appear , it&rsqu
 <p>Yeeees ! it&rsquo;s appearing in the results so we now have the control over these values in the urls section of the results.</p>
 <p>Now here is our scenario , if we look to the vulnerable function <strong>persistURLs</strong> in VirusTotal.py we can notice the injection in this query (line 430)</p>
 <blockquote>
-<p>INSERT INTO &ldquo;+table_name+&rdquo; (ip_id,url,detections,scanned_time) VALUES ('&ldquo;+str(selected_ips[0][&lsquo;id&rsquo;])+&rdquo;','&ldquo;+url[&lsquo;URL&rsquo;]+&rdquo;','&ldquo;+url[&lsquo;Detections&rsquo;]+&rdquo;','&ldquo;+url[&lsquo;Scanned&rsquo;]+&rdquo;')</p>
+<p>INSERT INTO &ldquo;+table_name+&rdquo; (ip_id,url,detections,scanned_time) VALUES ('&quot;+str(selected_ips[0][&lsquo;id&rsquo;])+&quot;','&quot;+url[&lsquo;URL&rsquo;]+&quot;','&quot;+url[&lsquo;Detections&rsquo;]+&quot;','&quot;+url[&lsquo;Scanned&rsquo;]+&quot;')</p>
 </blockquote>
 <p>We have control over the <strong>url[&lsquo;URL&rsquo;]</strong> parameter (the url we scan in VirusTotal Website) so it&rsquo;s now an SQL injection in INSERT INTO values, but we have some constraints :</p>
 <ol>
@@ -721,7 +721,7 @@ we will find that the url we scanned in VirusTotal website will appear , it&rsqu
 <a href="https://github.com/kahla-sec/CTF-Writeups/blob/master/Securinets%20Prequals%202k20/Empire%20Total/test.py" target="_blank" rel="noopener">HERE</a></strong></p>
 <p>Finally I opted to this solution, here is the URL we will scan :</p>
 <blockquote>
-<p>http://100.26.206.184/?u=&rsquo;,(select/**/1),(select/**/2)),(&lsquo;102&rsquo;,&lsquo;a</p>
+<p>http://100.26.206.184/?u=',(select/**/1),(select/**/2)),(&lsquo;102&rsquo;,&lsquo;a</p>
 </blockquote>
 <p>The complete SQL query that will be executed is  :</p>
 <blockquote>
@@ -1100,7 +1100,7 @@ we will find that the url we scanned in VirusTotal website will appear , it&rsqu
   
 
   <p class="powered-by">
-    © Ahmed Belkahla, 2020 &middot; 
+    © Ahmed Belkahla, 2021 &middot; 
 
     Powered by the
     <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for

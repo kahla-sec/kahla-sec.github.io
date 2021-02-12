@@ -641,7 +641,7 @@
 
     <div class="article-style">
       <p>After a long week of work I decided to participate in CSICTF2k20 with my team Fword since I didn&rsquo;t participate for a long time :( We were among the top 30 teams and we managed to almost solve all Web exploitaion tasks with my teammate @Hera. However I enjoyed solving File Library and The Usual Suspects tasks.</p>
-<h1 id="file-library-497pts-40-solves-">File Library 497pts (40 solves)</h1>
+<h1 id="file-library-497pts-40-solves">File Library 497pts (40 solves)</h1>
 <p><img src="https://imgur.com/IRJZKbM.png" alt="TASK"></p>
 <p>We are given the source code of the task :</p>
 <pre><code class="language-js">const express = require('express');
@@ -714,17 +714,17 @@ console.log(&quot;format inside allowedfile is: &quot;+format);
 
 </code></pre>
 <p>I added some logging statements to facilitate things, as you can see when we visit <strong>/getfile</strong> we can provide in a get parameter a filename that will be displayed for us but there are some restrictions,
-we can&rsquo;t use whitespaces or &ldquo;/&quot;, there are only four extensions that are allowed (js|ts|c|cpp) .</p>
+we can&rsquo;t use whitespaces or &ldquo;/&rdquo;, there are only four extensions that are allowed (js|ts|c|cpp) .</p>
 <p><img src="https://imgur.com/ClTfqlL.png" alt="TASK"></p>
 <p>After reading carefully the source code, I was pretty sure that we will use http parameters pollution because there is no check concerning the type of get parameters so we can enter an array and try to exploit the misbehaviour that may occur.</p>
 <p>Let&rsquo;s imagine that we enter the following array :</p>
 <blockquote>
-<p>[&quot;../../&quot;,&quot;../../&quot;,&quot;../../&quot;,&quot;../../&quot;,&quot;../../proc/self/cwd/flag.txt&rdquo;,&quot;.&quot;,&ldquo;js&rdquo;]</p>
+<p>[&quot;../../&quot;,&quot;../../&quot;,&quot;../../&quot;,&quot;../../&quot;,&quot;../../proc/self/cwd/flag.txt&quot;,&quot;.&quot;,&ldquo;js&rdquo;]</p>
 </blockquote>
 <ul>
 <li><strong>1st Check</strong> : <code>if (file.includes(' ') || file.includes('/'))</code></li>
 </ul>
-<p>When includes is applied to an array it will check if there&rsquo;s a field that is equal to the passed parameter (&rdquo; &quot; and &ldquo;/&rdquo; in our case) which is false here so we can successfully pass this check</p>
+<p>When includes is applied to an array it will check if there&rsquo;s a field that is equal to the passed parameter (&quot; &quot; and &ldquo;/&rdquo; in our case) which is false here so we can successfully pass this check</p>
 <ul>
 <li><strong>2nd Check</strong> : <code>if (!allowedFileType(file))</code></li>
 </ul>
@@ -748,7 +748,7 @@ const format = file.slice(file.indexOf('.') + 1);
 </code></pre>
 <p>so our array will become:</p>
 <blockquote>
-<p>[&quot;../../&quot;,&quot;../../&quot;,&quot;../../&quot;,&quot;../../&quot;,&quot;../../proc/self/cwd/flag.txt&rdquo;]</p>
+<p>[&quot;../../&quot;,&quot;../../&quot;,&quot;../../&quot;,&quot;../../&quot;,&quot;../../proc/self/cwd/flag.txt&quot;]</p>
 </blockquote>
 <p>And finally after resolving the path returnedFile will contain /proc/self/cwd/flag.txt</p>
 <pre><code class="language-js">const returnedFile = path.resolve(__dirname + '/' + file);
@@ -759,13 +759,13 @@ const format = file.slice(file.indexOf('.') + 1);
 </code></pre>
 <p><img src="https://imgur.com/sdvZ1eL.png" alt="TASK"></p>
 <p>It was a really nice task so thanks to the author!</p>
-<h1 id="the-usual-suspects-499pts-32-solves-">The Usual Suspects 499pts (32 solves)</h1>
+<h1 id="the-usual-suspects-499pts-32-solves">The Usual Suspects 499pts (32 solves)</h1>
 <p><img src="https://imgur.com/qorhTCy.png" alt="TASK"></p>
 <p>Visiting the website, a well trained eye can directly notice the possibility of an SSTI attack in icecream parameter.</p>
 <p><img src="https://imgur.com/zbwADG6.png" alt="TASK"></p>
 <p>We thought that it was a typical SSTI task but unfortunately even after getting RCE using the usual jinja2 SSTI payloads we didn&rsquo;t find anything. The first payload we used:</p>
 <blockquote>
-<p>{{ &lsquo;'.<strong>class</strong>.<strong>mro</strong>[1].<strong>subclasses</strong>()[270](&lsquo;ls&rsquo;,shell=True,stdout=-1).communicate()}}</p>
+<p>{{ &lsquo;&rsquo;.<strong>class</strong>.<strong>mro</strong>[1].<strong>subclasses</strong>()[270](&lsquo;ls&rsquo;,shell=True,stdout=-1).communicate()}}</p>
 </blockquote>
 <p>After this step we really didn&rsquo;t know what to do, the server used here was Tornado, which is an asynchronous python web server so I started reading its documentation and I noticed that the Main class always inherits from <strong>tornado.web.RequestHandler</strong>.
 After some digging I got a nice idea , what if we list all the subclasses of Object ( The super class, it&rsquo;s the parent of all classes) Then we will list the subclasses of tornado.web.RequestHandler and finally we will check the globals of <strong>get</strong> function from MainHadnler class.</p>
@@ -773,13 +773,13 @@ After some digging I got a nice idea , what if we list all the subclasses of Obj
 <li>Get the RequestHandler class:</li>
 </ul>
 <blockquote>
-<p>{{ &lsquo;'.<strong>class</strong>.<strong>mro</strong>[1].<strong>subclasses</strong>()[363]}}</p>
+<p>{{ &lsquo;&rsquo;.<strong>class</strong>.<strong>mro</strong>[1].<strong>subclasses</strong>()[363]}}</p>
 </blockquote>
 <ul>
 <li>Get the MainHandler class which inherits from RequestHandler</li>
 </ul>
 <blockquote>
-<p>{{ &lsquo;'.<strong>class</strong>.<strong>mro</strong>[1].<strong>subclasses</strong>()[363].<strong>subclasses</strong>()[-1]}}</p>
+<p>{{ &lsquo;&rsquo;.<strong>class</strong>.<strong>mro</strong>[1].<strong>subclasses</strong>()[363].<strong>subclasses</strong>()[-1]}}</p>
 </blockquote>
 <p>And finally we will see the <strong>globals</strong> of get function ( <strong><strong>globals</strong></strong> is a reference to the dictionary that holds the function’s global variables ).
 Final payload:</p>
@@ -1125,7 +1125,7 @@ Final payload:</p>
   
 
   <p class="powered-by">
-    © Ahmed Belkahla, 2020 &middot; 
+    © Ahmed Belkahla, 2021 &middot; 
 
     Powered by the
     <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for

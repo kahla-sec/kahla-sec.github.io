@@ -640,14 +640,14 @@
   <div class="article-container">
 
     <div class="article-style">
-      <h1 id="web-rtc-450pts-39-solves-">Web RTC (450pts) 39 solves</h1>
+      <h1 id="web-rtc-450pts-39-solves">Web RTC (450pts) 39 solves</h1>
 <p><img src="https://imgur.com/KJrEEZl.png" alt="TASK"></p>
 <p>Last weekend,we have been a part  of the CSAW CTF 2020 and our team Fword ranked 4th in MENA region.
 We managed to solve all web challenges with my awesome teammates 
 <a href="https://twitter.com/Hera14165735" target="_blank" rel="noopener">@Hera</a> and 
 <a href="https://twitter.com/BahaBaghdadi" target="_blank" rel="noopener">@Noxious</a> and we have particularly enjoyed <strong>Web RTC</strong> .</p>
 <p><img src="https://i.imgur.com/X0z8wys.png" alt="SCOREBOARD"></p>
-<h2 id="tldl-">TL;DL</h2>
+<h2 id="tldl">TL;DL</h2>
 <ul>
 <li>
 <p>Exploiting CoTurn server in order to gain SSRF.</p>
@@ -656,13 +656,13 @@ We managed to solve all web challenges with my awesome teammates
 <p>Escalating SSRF to RCE using Redis.</p>
 </li>
 </ul>
-<h2 id="overview-">Overview</h2>
+<h2 id="overview">Overview</h2>
 <p>We have a Real Time Chat web app and we were provided with the source code / Dockerfile / supervisor.conf.</p>
 <p><img src="https://imgur.com/cBI0d2H.png" alt="TASK"></p>
 <p>Examining the source code didn&rsquo;t really bring something to the table.But we got some juicy stuff ,reading the Dockerfile / supervisor.conf.
 It turned out that the application is using TURN protocol to relay the network traffic between peers and Redis as a caching system.</p>
 <p><img src="https://imgur.com/thalPtZ.png" alt="TASK"></p>
-<h2 id="exploitation-">Exploitation</h2>
+<h2 id="exploitation">Exploitation</h2>
 <p>Since the application didn&rsquo;t seem vulnreable, we decide to focus basically on CoTURN server exploitation.
 After searching around we found the following 
 <a href="https://hackerone.com/reports/333419" target="_blank" rel="noopener">HackerOne report</a> which claims that it&rsquo;s possible to abuse the TURN Protocol to gain SSRF. In fact,
@@ -679,7 +679,7 @@ using <strong>0.0.0.0</strong> ip:</p>
 <p><img src="https://imgur.com/zQYbXit.png" alt="TASK"></p>
 <p><img src="https://imgur.com/gAqT0pL.png" alt="TASK"></p>
 <p>And Bingo we achieved the first part!</p>
-<h3 id="escalating-ssrf-to-rce-using-redis-">Escalating SSRF to RCE using Redis</h3>
+<h3 id="escalating-ssrf-to-rce-using-redis">Escalating SSRF to RCE using Redis</h3>
 <p>This part was somehow trivial but it took us some time to exploit Redis properly, we used  some instructions from this <strong>
 <a href="https://github.com/jas502n/Redis-RCE" target="_blank" rel="noopener">tool</a></strong> ( we fired a Rogue server from it) and executed the following commands:</p>
 <p><img src="https://i.imgur.com/jUFM1jt.jpg" alt="TASK"></p>
@@ -1032,7 +1032,7 @@ using <strong>0.0.0.0</strong> ip:</p>
   
 
   <p class="powered-by">
-    © Ahmed Belkahla, 2020 &middot; 
+    © Ahmed Belkahla, 2021 &middot; 
 
     Powered by the
     <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for

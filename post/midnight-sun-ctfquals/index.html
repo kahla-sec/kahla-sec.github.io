@@ -640,7 +640,7 @@
   <div class="article-container">
 
     <div class="article-style">
-      <h1 id="pwn170pts-"><strong>pwn1(70pts)</strong></h1>
+      <h1 id="pwn170pts"><strong>pwn1(70pts)</strong></h1>
 <p><img src="https://imgur.com/4fbyzFx.png" alt="TASK"></p>
 <p>It was a ret2libc task , but we had firstly to leak the libc base address using BOF (i leaked it through printf address) than we will return to main and perform our ret2 System :D
 here is my exploit, if you have any questions you can contact me on twitter @BelkahlaAhmed1</p>
@@ -675,7 +675,7 @@ p.interactive()
 </code></pre>
 <p><strong>NOTE:</strong> Check Task files ** 
 <a href="https://github.com/kahla-sec/CTF-Writeups/tree/master/Midnight%20Sun%20CTF%202020%20Quals/pwn1" target="_blank" rel="noopener">HERE</a> **</p>
-<h1 id="pwn280pts-"><strong>pwn2(80pts)</strong></h1>
+<h1 id="pwn280pts"><strong>pwn2(80pts)</strong></h1>
 <p><img src="https://imgur.com/lYjuGsS.png" alt="TASK"></p>
 <p>It was a really fun task , we had a format string vulnerability , so firstly i overwrited the GOT entry of the exit function with main address so we have now an infinite loop and the program will never exit , than using format string we leak the libc base address and than we overwrite the GOT entry of printf with the address of system :D
 Here is my exploit , if you have any questions you can contact me o twitter @BelkahlaAhmed1</p>
@@ -1071,7 +1071,7 @@ p.interactive()
   
 
   <p class="powered-by">
-    © Ahmed Belkahla, 2020 &middot; 
+    © Ahmed Belkahla, 2021 &middot; 
 
     Powered by the
     <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for

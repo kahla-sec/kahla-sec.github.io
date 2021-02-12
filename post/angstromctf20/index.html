@@ -642,7 +642,7 @@ And we can read the source code"><meta property="og:image" content="https://ahme
   <div class="article-container">
 
     <div class="article-style">
-      <h1 id="a-peculiar-query-180pts-73-solves-"><strong>A Peculiar Query (180pts) (73 Solves)</strong></h1>
+      <h1 id="a-peculiar-query-180pts-73-solves"><strong>A Peculiar Query (180pts) (73 Solves)</strong></h1>
 <p><img src="https://imgur.com/A6EHPkW.png" alt="TASK"></p>
 <p>I really liked this web task , we are given this web page that have a search functionality</p>
 <p><img src="https://imgur.com/gRutDcV.png" alt="TASK"></p>
@@ -707,7 +707,7 @@ app.listen(port, function() {
 });
 
 </code></pre>
-<h2 id="overview-">Overview</h2>
+<h2 id="overview">Overview</h2>
 <p>It&rsquo;s pretty obvious that we have an sql injection here ( we are concatenating the user input )</p>
 <blockquote>
 <p>const ret = await client.query(<code>SELECT name FROM Criminals WHERE name ILIKE '${q}%';</code>);</p>
@@ -738,7 +738,7 @@ const result = await query(q);
 res.render(&quot;home&quot;, {results: result.rows, err: &quot;&quot;});
 </code></pre>
 <p>Hmmm everything seems okay nah ? but it&rsquo;s a ctf web task we have to find some vulnerabilities ! let&rsquo;s pass to how i did to solve it now, enough boring things</p>
-<h2 id="exploitation-">Exploitation</h2>
+<h2 id="exploitation">Exploitation</h2>
 <p>The first thing i thinked about was http parameter pollution in express (read about it <strong>
 <a href="https://github.com/expressjs/express/issues/1824" target="_blank" rel="noopener">HERE</a></strong> if you want ) ,briefly when we enter a get parameter multiple times express
 has a weird interpretation , it will process this parameter as an array for example here, if we pass this in the query :</p>
@@ -748,19 +748,19 @@ has a weird interpretation , it will process this parameter as an array for exam
 <p><strong>req.query.q</strong> will be parsed as an array <strong>[&ldquo;hello&rdquo;,&ldquo;allo&rdquo;,&ldquo;fword&rdquo;]</strong> , so if we go further when we will be iterating of <strong>q</strong> variable we will be comparing each array field with the filters
 for example, if we pass this query :</p>
 <blockquote>
-<p>q=&quot;or 1=1 &ndash; -&amp;q=fword</p>
+<p>q=&ldquo;or 1=1 &ndash; -&amp;q=fword</p>
 </blockquote>
-<p>we will firstly compare <strong>&ldquo;or 1=1 &ndash; -</strong> and then the second field <strong>fword</strong> with these filtered chars <strong>[',-,&quot;,.]</strong> , they are not equal ! , Youupi we can get our flag now as we passed the check .</p>
+<p>we will firstly compare <strong>&ldquo;or 1=1 &ndash; -</strong> and then the second field <strong>fword</strong> with these filtered chars <strong>[',-,&rdquo;,.]</strong> , they are not equal ! , Youupi we can get our flag now as we passed the check .</p>
 <p>Unfortunately , it&rsquo;s not that easy ,have you forgot the substring function ? an array has not a built in substring function so when we reach the substring part this will raise an error so we won&rsquo;t execute the sql query :/
 Javascript weird behaviour will save us this time ! if we do <strong>[]+[]</strong> the result is a string , the sum of two arrays is a string so if we enter a <strong>&quot;</strong> in one query parameter
 we will enter this part</p>
 <pre><code class="language-javascript">censored = true;
 q = q.slice(0, i) + &quot;*&quot; + q.slice(i + 1, q.length);
 </code></pre>
-<p>and arrays have a built in slice function so the result of <strong>[]+&rdquo;*&ldquo;+[]</strong> will be a string , we can now enter our payload with <strong>q=&rsquo;</strong> in the end to ensure that our array will be a string when it reaches the substring part
+<p>and arrays have a built in slice function so the result of <strong>[]+&quot;*&quot;+[]</strong> will be a string , we can now enter our payload with <strong>q='</strong> in the end to ensure that our array will be a string when it reaches the substring part
 For example :</p>
 <blockquote>
-<p>q='or 1=1 &ndash; -&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=&rsquo;</p>
+<p>q=&lsquo;or 1=1 &ndash; -&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=&rsquo;</p>
 </blockquote>
 <p>will let us pass !</p>
 <p><strong>FILTERS BYPASSED SUCCESSFULLY</strong></p>
@@ -1115,7 +1115,7 @@ For example :</p>
   
 
   <p class="powered-by">
-    © Ahmed Belkahla, 2020 &middot; 
+    © Ahmed Belkahla, 2021 &middot; 
 
     Powered by the
     <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for

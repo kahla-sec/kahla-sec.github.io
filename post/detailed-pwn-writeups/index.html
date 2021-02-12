@@ -643,23 +643,23 @@
       <p>To make sure that i learned something well , i always want to write an article about that topic and it&rsquo;ll be an opportunity to do more researchs about it.
 The last two days our team Fword participated in two CTFs (UMD CTF and WPICTF) and we were among the top 20 teams in both CTFs so GJ guys &lt;3 anyway that&rsquo;s why i decided to choose the best pwn tasks and write these detailed writeups about them to be a great practical introduction for people who want to dive into binary exploitation .</p>
 <p><strong>Note:</strong> This article assumes that you have basic knowledge of assembly and C language</p>
-<h2 id="summary-">Summary</h2>
+<h2 id="summary">Summary</h2>
 <p>1- <strong>Jump Not Found</strong> From UMD CTF : heap based overflow</p>
 <p>2- <strong>Dorsia3</strong> From WPI CTF: Format string Vulnerability</p>
-<h2 id="jump-not-found-400pts-25-solves-">Jump Not Found 400pts (25 solves)</h2>
+<h2 id="jump-not-found-400pts-25-solves">Jump Not Found 400pts (25 solves)</h2>
 <p><img src="https://imgur.com/nerLXcA.png" alt="TASK"></p>
 <p><strong>Note:</strong> You can Download the binary 
 <a href="https://github.com/kahla-sec/CTF-Writeups/blob/master/UMDCTF%202020/Jump%20Not%20Found/JNF" target="_blank" rel="noopener">HERE</a>, give it a try alone before reading the writeup that&rsquo;s the best way to LEARN .</p>
-<h3 id="tldr-">TL;DR</h3>
+<h3 id="tldr">TL;DR</h3>
 <ul>
 <li>
 <p>Exploit a Heap based overflow to overwrite a function address with the Win function address</p>
 </li>
 <li>
-<p>Bypass a little problem of the presence of &ldquo;0x0a&rdquo;(&quot;\n&rdquo;) in the Win function address</p>
+<p>Bypass a little problem of the presence of &ldquo;0x0a&rdquo;(&quot;\n&quot;) in the Win function address</p>
 </li>
 </ul>
-<h3 id="introduction-">Introduction</h3>
+<h3 id="introduction">Introduction</h3>
 <p>Before diving into the exploitation part , let&rsquo;s talk about the heap section ,you have probably heard or used <strong>malloc</strong> or <strong>calloc</strong> functions in C ,
 these functions are used to allocate memory on the heap,it is a region of your computer&rsquo;s memory that is not managed automatically for you and used for dynamic memory allocation, unlike the stack which we dont have full control over it.</p>
 <p><img src="https://imgur.com/aVPbDZM.png" alt="SECTIONS"></p>
@@ -670,7 +670,7 @@ these functions are used to allocate memory on the heap,it is a region of your c
 </blockquote>
 <p>This was in a really abstract way , you can do more research alone if you are interested , there is a lot of ressources in the internet :D</p>
 <p><img src="https://imgur.com/7ewvjK7.png" alt="Allocation"></p>
-<h3 id="exploitation-">Exploitation</h3>
+<h3 id="exploitation">Exploitation</h3>
 <p>Let the fun begin now :D after downloading the binary let&rsquo;s do some basic reverse engineering and read carefully its code , i used ghidra for that purpose , you can download it from its official website.</p>
 <p><img src="https://imgur.com/Ra3YFyG.png" alt="CODE"></p>
 <p>Observing the main function , we can notice that it&rsquo;s allocation two chunks , the first one its size is 0x42 (66 bytes) where our input will be stored and a second chunk which holds an array of function pointers , and based on our input (1 or 2 or 3) the program will call the appropriate function from the heap .</p>
@@ -701,7 +701,7 @@ log.info(&quot;Found Flag ! &quot;)
 p.interactive()
 
 </code></pre>
-<p>The reason why i wrote *<em>OFFSET=&quot;1&quot;+&quot;A&rdquo;<em>79</em></em> is that if you have read the code carefully we will notice that the choice of the function that will be executed is loaded from the beginning of the chunk (which is logic) so i wanted to do it in one shot.</p>
+<p>The reason why i wrote *<em>OFFSET=&ldquo;1&rdquo;+&ldquo;A&rdquo;<em>79</em></em> is that if you have read the code carefully we will notice that the choice of the function that will be executed is loaded from the beginning of the chunk (which is logic) so i wanted to do it in one shot.</p>
 <pre><code class="language-C">        gets(local_20);
         lVar2 = strtol(local_20,&amp;local_28,10);
         *(short *)(local_20 + 0x40) = (short)lVar2;
@@ -721,16 +721,16 @@ Fortunately observing the assembly code of <strong>jumpToNaboo</strong> function
 <p>And Finally running the exploit will bring the flag for us :D</p>
 <p><img src="https://imgur.com/Hzqpy0X.png" alt="FLAG"></p>
 <p>That was a quite simple example of exploiting a heap based overflow thus it was only solved by 25 teams from 321 teams . Let&rsquo;s pass now to the second task which is a format string vulnerability.</p>
-<h2 id="dorsia3-250pts-55-solves-">Dorsia3 250pts (55 solves)</h2>
+<h2 id="dorsia3-250pts-55-solves">Dorsia3 250pts (55 solves)</h2>
 <p><img src="https://imgur.com/CkCR80H.png" alt="TASK"></p>
 <p><strong>Note:</strong> You can Download the binary 
 <a href="https://github.com/kahla-sec/CTF-Writeups/blob/master/WPI%20CTF%202020/dorsia3/nanoprint" target="_blank" rel="noopener">HERE</a> and the libc 
 <a href="https://github.com/kahla-sec/CTF-Writeups/blob/master/WPI%20CTF%202020/dorsia3/libc.so.6" target="_blank" rel="noopener">HERE</a>, give it a try alone before reading the writeup that&rsquo;s the best way to LEARN .</p>
-<h3 id="tldr--1">TL;DR</h3>
+<h3 id="tldr-1">TL;DR</h3>
 <ul>
 <li>Exploit a format string vulnerability to overwrite the return pointer + Libc one gadget</li>
 </ul>
-<h3 id="introduction--1">Introduction</h3>
+<h3 id="introduction-1">Introduction</h3>
 <p>As a quick introduction this is a brief explanation of the format string vulnerability :</p>
 <blockquote>
 <p>format string is a type of software vulnerability. Originally thought harmless, format string exploits can be used to crash a program or to execute harmful code. The problem stems from the use of unchecked user input as the format string parameter in certain C functions that perform formatting, such as printf(). A malicious user may use the %s and %x format tokens, among others, to print data from the call stack or possibly other locations in memory. One may also write arbitrary data to arbitrary locations using the %n format token, which commands printf() and similar functions to write the number of bytes formatted to an address stored on the stack.
@@ -739,7 +739,7 @@ Fortunately observing the assembly code of <strong>jumpToNaboo</strong> function
 <p>A quick Example :</p>
 <p><img src="https://imgur.com/1ImQ6zG.png" alt="FMT"></p>
 <p>If things are not clear for you you can search for more ressources about format string vulnerabilities . Let the hack begin now :D</p>
-<h3 id="exploitation--1">Exploitation</h3>
+<h3 id="exploitation-1">Exploitation</h3>
 <p>In this task we are given the source code of the task , the binary and the libc .</p>
 <p><img src="https://imgur.com/26HRSAR.png" alt="CODE"></p>
 <p>As you can see we can notice the format string vulnerability in the printf function and we have a leak of our buffer address in the stack and the system function.</p>
@@ -789,7 +789,7 @@ p.interactive()
 <p><img src="https://imgur.com/Ly6WJjh.png" alt="LIBC"></p>
 <p>After some debugging with gdb i figured that the constraints of this magic gadget are verified so we will use it in our exploit</p>
 <blockquote>
-<p>0x3d0e0 execve(&quot;/bin/sh&rdquo;, esp+0x40, environ)</p>
+<p>0x3d0e0 execve(&quot;/bin/sh&quot;, esp+0x40, environ)</p>
 </blockquote>
 <blockquote>
 <p>constraints:</p>
@@ -1176,7 +1176,7 @@ p.interactive()
   
 
   <p class="powered-by">
-    © Ahmed Belkahla, 2020 &middot; 
+    © Ahmed Belkahla, 2021 &middot; 
 
     Powered by the
     <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for

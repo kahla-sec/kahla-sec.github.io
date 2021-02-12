@@ -640,11 +640,11 @@
   <div class="article-container">
 
     <div class="article-style">
-      <h1 id="jwt-in-a-new-way-1000pts-0-solves-"><strong>JWT In a new way (1000pts) (0 Solves)</strong></h1>
+      <h1 id="jwt-in-a-new-way-1000pts-0-solves"><strong>JWT In a new way (1000pts) (0 Solves)</strong></h1>
 <p><img src="https://i.imgur.com/YuMeMZE.png" alt="TASK"></p>
 <p>And finally i&rsquo;m writing a writeup for this task xD i published this task in Securinets Mini CTF and NCSC2.0_CTF but unfortunately it had 0 solves (in fact no one managed to pass the first step) , it took me a lot of time to prepare this task so i hope you enjoy it :D
 However bring your coffee cup and let&rsquo;s begin the road . This Task has 3 steps , the first one is bypassing JWT token with a custom attack (not the regular ones) actually using an SQL injection in one of the token parameters , then we will have to exploit an ssrf to crypt the content of flag file (too much filters here haha)</p>
-<h2 id="1st-step--jwt-bypass-">1st Step : JWT Bypass</h2>
+<h2 id="1st-step--jwt-bypass">1st Step : JWT Bypass</h2>
 <p>After visiting the link we have a simple web page with a sign in and sign up page ;</p>
 <p><img src="https://i.imgur.com/y8vDSCL.png" alt="HOME"></p>
 <p>So after registering with random creds and signing in we check the cookies and as the task name refers we find a jwt token</p>
@@ -662,7 +662,7 @@ let&rsquo;s read again the description , we can notice a hint for SQL so maybe w
 <p>As we all know JWT token have 3 sections : Header + Payload + signature</p>
 <p>Header : typically consists of two parts: the type of the token, which is JWT, and the signing algorithm being used, such as HMAC SHA256 or RSA but here we have also the kid part which is optional</p>
 <p>Payload : it contains statements about an entity (typically, the user) and additional data .</p>
-<p>Signature : Simply if we are using HS256 the sig is : Signature= HMACSHA256(BASE64URL(HEADER)+&rsquo;.&lsquo;+BASE64URL(PAYLOAD))</p>
+<p>Signature : Simply if we are using HS256 the sig is : Signature= HMACSHA256(BASE64URL(HEADER)+'.'+BASE64URL(PAYLOAD))</p>
 <p>Be careful it&rsquo;s BASE64URL not a regular BASE64 you can read about it here : 
 <a href="https://fr.wikipedia.org/wiki/Base64#base64url" target="_blank" rel="noopener">LINK</a></p>
 <p>NOTE: you can use the php function hash_hmac(&lsquo;sha256&rsquo;, $msg, $key, true) to sign the token</p>
@@ -685,7 +685,7 @@ let&rsquo;s read again the description , we can notice a hint for SQL so maybe w
 <p>The final token used:</p>
 <p>eyJ0eXAiOiAiSldUIiwiYWxnIjogIkhTMjU2Iiwia2lkIjogIidVTmlPbiBTRWxFY1QgMSwnYWJjJyAtLSAtIn0.eyJ1c2VyIjogIiIsInR5cGUiOiAiYWRtaW4ifQ.3cOHXg1U7Mj_I3ag37oeg5KWJYA11T74bbD4NrcMC8A</p>
 <p>And yeeeeeeees we did it ! but WTF where is our flag ! we need to finish this step before</p>
-<h2 id="2nd-step--ssrf--decrypt-">2nd Step : SSRF + Decrypt</h2>
+<h2 id="2nd-step--ssrf--decrypt">2nd Step : SSRF + Decrypt</h2>
 <p><img src="https://imgur.com/BLjbHaj.png" alt="CRYPT"></p>
 <p>It&rsquo;s a web application that crypts a txt file and after some tries i figured that it only accepts urls that finish with .txt extension</p>
 <p><img src="https://imgur.com/9mPssf6.png" alt="CRYPT"></p>
@@ -1077,7 +1077,7 @@ that automates this and FINALLY we got The flag :</p>
   
 
   <p class="powered-by">
-    © Ahmed Belkahla, 2020 &middot; 
+    © Ahmed Belkahla, 2021 &middot; 
 
     Powered by the
     <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for
