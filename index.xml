@@ -78,6 +78,7 @@ end
 &lt;p&gt;And Bingo we got our flag&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/RQFlr3j.png&#34; alt=&#34;FLAG&#34;&gt;&lt;/p&gt;
 &lt;h2 id=&#34;nomnomnom&#34;&gt;nomnomnom&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://imgur.com/V2LXwDj.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;It was a client-side task, our goal is to leak the admin page&amp;rsquo;s source code in order to get the flag so we have to find a way and get an XSS. Reviewing the source code we can spot a possible injection sink in the &lt;strong&gt;share name&lt;/strong&gt; but unfortunately
 the page is protected with a strict CSP , the only way to execute javascript (as far as I know) is using the nonce value which is randomly generated on every request.&lt;/p&gt;
 &lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;app.get(&#39;/shares/:shareName&#39;, function(req, res) {
@@ -212,7 +213,7 @@ and the &lt;code&gt;/*&lt;/code&gt; to comment all the garbage between the two m
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/IO30QBL.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;Finally to report our page to the admin we had to manually add the report form and the script tag of the recaptcha. After visiting our page we receive the source code containing the flag:&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/s6TCqST.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
-&lt;h2 id=&#34;sea-of-quills-2-&#34;&gt;Sea of Quills 2  ##&lt;/h2&gt;
+&lt;h2 id=&#34;sea-of-quills-2&#34;&gt;Sea of Quills 2 ##&lt;/h2&gt;
 &lt;p&gt;&lt;img src=&#34;https://imgur.com/RjA6RVw.png&#34; alt=&#34;TASK&#34;&gt;&lt;/p&gt;
 &lt;p&gt;This was a second version of the first SQL injection task but with more strict filters, this is the most interesting part of the source code:&lt;/p&gt;
 &lt;pre&gt;&lt;code class=&#34;language-ruby&#34;&gt;

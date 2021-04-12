@@ -701,6 +701,7 @@ end
 <p>And Bingo we got our flag</p>
 <p><img src="https://imgur.com/RQFlr3j.png" alt="FLAG"></p>
 <h2 id="nomnomnom">nomnomnom</h2>
+<p><img src="https://imgur.com/V2LXwDj.png" alt="TASK"></p>
 <p>It was a client-side task, our goal is to leak the admin page&rsquo;s source code in order to get the flag so we have to find a way and get an XSS. Reviewing the source code we can spot a possible injection sink in the <strong>share name</strong> but unfortunately
 the page is protected with a strict CSP , the only way to execute javascript (as far as I know) is using the nonce value which is randomly generated on every request.</p>
 <pre><code class="language-javascript">app.get('/shares/:shareName', function(req, res) {
@@ -835,7 +836,7 @@ and the <code>/*</code> to comment all the garbage between the two modules and t
 <p><img src="https://imgur.com/IO30QBL.png" alt="TASK"></p>
 <p>Finally to report our page to the admin we had to manually add the report form and the script tag of the recaptcha. After visiting our page we receive the source code containing the flag:</p>
 <p><img src="https://imgur.com/s6TCqST.png" alt="TASK"></p>
-<h2 id="sea-of-quills-2-">Sea of Quills 2  ##</h2>
+<h2 id="sea-of-quills-2">Sea of Quills 2 ##</h2>
 <p><img src="https://imgur.com/RjA6RVw.png" alt="TASK"></p>
 <p>This was a second version of the first SQL injection task but with more strict filters, this is the most interesting part of the source code:</p>
 <pre><code class="language-ruby">
