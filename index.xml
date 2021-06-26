@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Empire Total - Securinets Quals20 | Ahmed Belkahla</title>
+    <title>Ahmed Belkahla</title>
     <link>https://ahmed-belkahla.me/</link>
       <atom:link href="https://ahmed-belkahla.me/index.xml" rel="self" type="application/rss+xml" />
-    <description>Empire Total - Securinets Quals20</description>
-    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>© Ahmed Belkahla, 2021</copyright><lastBuildDate>Sat, 21 Mar 2020 00:00:00 +0000</lastBuildDate>
+    <description>Ahmed Belkahla</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>© Ahmed Belkahla, 2021</copyright><lastBuildDate>Sun, 11 Apr 2021 00:20:00 +0000</lastBuildDate>
     <image>
-      <url>https://ahmed-belkahla.me/img/quals.jpg</url>
-      <title>Empire Total - Securinets Quals20</title>
+      <url>https://ahmed-belkahla.me/img/me.jpg</url>
+      <title>Ahmed Belkahla</title>
       <link>https://ahmed-belkahla.me/</link>
     </image>
     
