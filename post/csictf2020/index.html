@@ -212,8 +212,8 @@
   
 
   <link rel="manifest" href="/index.webmanifest">
-  <link rel="icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
-  <link rel="apple-touch-icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+  <link rel="icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_3.png">
+  <link rel="apple-touch-icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_3.png">
 
   <link rel="canonical" href="https://ahmed-belkahla.me/post/csictf2020/">
 
@@ -280,7 +280,7 @@
     "name": "Ahmed Belkahla",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://ahmed-belkahla.me/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
+      "url": "https://ahmed-belkahla.me/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_3.png"
     }
   },
   "description": "Web exploitation writeups of CSICTF 2k20 - File Library Task and The Unusual Suspects Web tasks"
@@ -765,7 +765,7 @@ const format = file.slice(file.indexOf('.') + 1);
 <p><img src="https://imgur.com/zbwADG6.png" alt="TASK"></p>
 <p>We thought that it was a typical SSTI task but unfortunately even after getting RCE using the usual jinja2 SSTI payloads we didn&rsquo;t find anything. The first payload we used:</p>
 <blockquote>
-<p>{{ &lsquo;&rsquo;.<strong>class</strong>.<strong>mro</strong>[1].<strong>subclasses</strong>()[270](&lsquo;ls&rsquo;,shell=True,stdout=-1).communicate()}}</p>
+<p>{{ &lsquo;&rsquo;.<strong>class</strong>.<strong>mro</strong>[1].<strong>subclasses</strong>()[270](&rsquo;ls&rsquo;,shell=True,stdout=-1).communicate()}}</p>
 </blockquote>
 <p>After this step we really didn&rsquo;t know what to do, the server used here was Tornado, which is an asynchronous python web server so I started reading its documentation and I noticed that the Main class always inherits from <strong>tornado.web.RequestHandler</strong>.
 After some digging I got a nice idea , what if we list all the subclasses of Object ( The super class, it&rsquo;s the parent of all classes) Then we will list the subclasses of tornado.web.RequestHandler and finally we will check the globals of <strong>get</strong> function from MainHadnler class.</p>
@@ -911,7 +911,7 @@ Final payload:</p>
   <div class="media author-card content-widget-hr">
     
       
-      <img class="avatar mr-3 avatar-circle" src="/authors/kahla/avatar_huac9af2fd1f181695ca5d7a1e646fb7d2_9022537_270x270_fill_lanczos_center_2.png" alt="Belkahla Ahmed">
+      <img class="avatar mr-3 avatar-circle" src="/authors/kahla/avatar_huac9af2fd1f181695ca5d7a1e646fb7d2_9022537_270x270_fill_lanczos_center_3.png" alt="Belkahla Ahmed">
     
 
     <div class="media-body">
@@ -1109,7 +1109,7 @@ Final payload:</p>
     
     
     
-    <script src="/js/academic.min.37431be2d92d7fb0160054761ab79602.js"></script>
+    <script src="/js/academic.min.1f97b17be6d67ca715feaf9deb10e550.js"></script>
 
     
 
@@ -1125,7 +1125,7 @@ Final payload:</p>
   
 
   <p class="powered-by">
-    © Ahmed Belkahla, 2021 &middot; 
+    © Ahmed Belkahla, 2022 &middot; 
 
     Powered by the
     <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for

@@ -212,8 +212,8 @@
   
 
   <link rel="manifest" href="/index.webmanifest">
-  <link rel="icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
-  <link rel="apple-touch-icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+  <link rel="icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_3.png">
+  <link rel="apple-touch-icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_3.png">
 
   <link rel="canonical" href="https://ahmed-belkahla.me/post/csaw2020-webrtc/">
 
@@ -280,7 +280,7 @@
     "name": "Ahmed Belkahla",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://ahmed-belkahla.me/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
+      "url": "https://ahmed-belkahla.me/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_3.png"
     }
   },
   "description": "Web RTC (450pts) 39 solves Last weekend,we have been a part of the CSAW CTF 2020 and our team Fword ranked 4th in MENA region. We managed to solve all web challenges with my awesome teammates @Hera and @Noxious and we have particularly enjoyed Web RTC ."
@@ -666,7 +666,8 @@ It turned out that the application is using TURN protocol to relay the network t
 <p>Since the application didn&rsquo;t seem vulnreable, we decide to focus basically on CoTURN server exploitation.
 After searching around we found the following 
 <a href="https://hackerone.com/reports/333419" target="_blank" rel="noopener">HackerOne report</a> which claims that it&rsquo;s possible to abuse the TURN Protocol to gain SSRF. In fact,
-the attacker may proxy TCP connections to the internal network by setting the <strong>XOR-PEER-ADDRESS</strong> of the TURN connect message (method 0x000A, <a href="https://tools.ietf.org/html/rfc6062#section-4.3">https://tools.ietf.org/html/rfc6062#section-4.3</a>) to a private IPv4 address.</p>
+the attacker may proxy TCP connections to the internal network by setting the <strong>XOR-PEER-ADDRESS</strong> of the TURN connect message (method 0x000A, 
+<a href="https://tools.ietf.org/html/rfc6062#section-4.3" target="_blank" rel="noopener">https://tools.ietf.org/html/rfc6062#section-4.3</a>) to a private IPv4 address.</p>
 <p>We used the following <strong>
 <a href="https://github.com/staaldraad/turner" target="_blank" rel="noopener">tool</a></strong> to exploit that issue.</p>
 <p><img src="https://imgur.com/M6NaeIz.png" alt="TASK"></p>
@@ -818,7 +819,7 @@ using <strong>0.0.0.0</strong> ip:</p>
   <div class="media author-card content-widget-hr">
     
       
-      <img class="avatar mr-3 avatar-circle" src="/authors/kahla/avatar_huac9af2fd1f181695ca5d7a1e646fb7d2_9022537_270x270_fill_lanczos_center_2.png" alt="Belkahla Ahmed">
+      <img class="avatar mr-3 avatar-circle" src="/authors/kahla/avatar_huac9af2fd1f181695ca5d7a1e646fb7d2_9022537_270x270_fill_lanczos_center_3.png" alt="Belkahla Ahmed">
     
 
     <div class="media-body">
@@ -1016,7 +1017,7 @@ using <strong>0.0.0.0</strong> ip:</p>
     
     
     
-    <script src="/js/academic.min.37431be2d92d7fb0160054761ab79602.js"></script>
+    <script src="/js/academic.min.1f97b17be6d67ca715feaf9deb10e550.js"></script>
 
     
 
@@ -1032,7 +1033,7 @@ using <strong>0.0.0.0</strong> ip:</p>
   
 
   <p class="powered-by">
-    © Ahmed Belkahla, 2021 &middot; 
+    © Ahmed Belkahla, 2022 &middot; 
 
     Powered by the
     <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for

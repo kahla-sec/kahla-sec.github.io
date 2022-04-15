@@ -213,8 +213,8 @@ And we can read the source code">
   
 
   <link rel="manifest" href="/index.webmanifest">
-  <link rel="icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
-  <link rel="apple-touch-icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+  <link rel="icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_3.png">
+  <link rel="apple-touch-icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_3.png">
 
   <link rel="canonical" href="https://ahmed-belkahla.me/post/angstromctf20/">
 
@@ -282,7 +282,7 @@ And we can read the source code"><meta property="og:image" content="https://ahme
     "name": "Ahmed Belkahla",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://ahmed-belkahla.me/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
+      "url": "https://ahmed-belkahla.me/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_3.png"
     }
   },
   "description": "A Peculiar Query (180pts) (73 Solves) I really liked this web task , we are given this web page that have a search functionality\nAnd we can read the source code"
@@ -712,7 +712,7 @@ app.listen(port, function() {
 <blockquote>
 <p>const ret = await client.query(<code>SELECT name FROM Criminals WHERE name ILIKE '${q}%';</code>);</p>
 </blockquote>
-<p>But as we can see some filters are here :'( these characters are filtered : [',-,&quot;,.] , after some tries i have figured that it will be impossible to bypass
+<p>But as we can see some filters are here :&rsquo;( these characters are filtered : [&rsquo;,-,&quot;,.] , after some tries i have figured that it will be impossible to bypass
 them so i started looking to some JS tricks.
 As we can see the filter function is looping over our input and checks if there are some prohibited characters and then it will replace
 them with &ldquo;*&rdquo; , For example if we type</p>
@@ -750,14 +750,14 @@ for example, if we pass this query :</p>
 <blockquote>
 <p>q=&ldquo;or 1=1 &ndash; -&amp;q=fword</p>
 </blockquote>
-<p>we will firstly compare <strong>&ldquo;or 1=1 &ndash; -</strong> and then the second field <strong>fword</strong> with these filtered chars <strong>[',-,&rdquo;,.]</strong> , they are not equal ! , Youupi we can get our flag now as we passed the check .</p>
+<p>we will firstly compare <strong>&ldquo;or 1=1 &ndash; -</strong> and then the second field <strong>fword</strong> with these filtered chars <strong>[&rsquo;,-,&rdquo;,.]</strong> , they are not equal ! , Youupi we can get our flag now as we passed the check .</p>
 <p>Unfortunately , it&rsquo;s not that easy ,have you forgot the substring function ? an array has not a built in substring function so when we reach the substring part this will raise an error so we won&rsquo;t execute the sql query :/
-Javascript weird behaviour will save us this time ! if we do <strong>[]+[]</strong> the result is a string , the sum of two arrays is a string so if we enter a <strong>&quot;</strong> in one query parameter
+Javascript weird behaviour will save us this time ! if we do <strong>[]+[]</strong> the result is a string , the sum of two arrays is a string so if we enter a <strong>&rdquo;</strong> in one query parameter
 we will enter this part</p>
 <pre><code class="language-javascript">censored = true;
 q = q.slice(0, i) + &quot;*&quot; + q.slice(i + 1, q.length);
 </code></pre>
-<p>and arrays have a built in slice function so the result of <strong>[]+&quot;*&quot;+[]</strong> will be a string , we can now enter our payload with <strong>q='</strong> in the end to ensure that our array will be a string when it reaches the substring part
+<p>and arrays have a built in slice function so the result of <strong>[]+&quot;*&quot;+[]</strong> will be a string , we can now enter our payload with <strong>q=&rsquo;</strong> in the end to ensure that our array will be a string when it reaches the substring part
 For example :</p>
 <blockquote>
 <p>q=&lsquo;or 1=1 &ndash; -&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=a&amp;q=&rsquo;</p>
@@ -901,7 +901,7 @@ For example :</p>
   <div class="media author-card content-widget-hr">
     
       
-      <img class="avatar mr-3 avatar-circle" src="/authors/kahla/avatar_huac9af2fd1f181695ca5d7a1e646fb7d2_9022537_270x270_fill_lanczos_center_2.png" alt="Belkahla Ahmed">
+      <img class="avatar mr-3 avatar-circle" src="/authors/kahla/avatar_huac9af2fd1f181695ca5d7a1e646fb7d2_9022537_270x270_fill_lanczos_center_3.png" alt="Belkahla Ahmed">
     
 
     <div class="media-body">
@@ -1099,7 +1099,7 @@ For example :</p>
     
     
     
-    <script src="/js/academic.min.37431be2d92d7fb0160054761ab79602.js"></script>
+    <script src="/js/academic.min.1f97b17be6d67ca715feaf9deb10e550.js"></script>
 
     
 
@@ -1115,7 +1115,7 @@ For example :</p>
   
 
   <p class="powered-by">
-    © Ahmed Belkahla, 2021 &middot; 
+    © Ahmed Belkahla, 2022 &middot; 
 
     Powered by the
     <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for

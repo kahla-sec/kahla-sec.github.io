@@ -212,8 +212,8 @@
   
 
   <link rel="manifest" href="/index.webmanifest">
-  <link rel="icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
-  <link rel="apple-touch-icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+  <link rel="icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_3.png">
+  <link rel="apple-touch-icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_3.png">
 
   <link rel="canonical" href="https://ahmed-belkahla.me/post/jwt-in-a-new-way/">
 
@@ -280,7 +280,7 @@
     "name": "Ahmed Belkahla",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://ahmed-belkahla.me/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
+      "url": "https://ahmed-belkahla.me/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_3.png"
     }
   },
   "description": "JWT In a new way (1000pts) (0 Solves) And finally i\u0026rsquo;m writing a writeup for this task xD i published this task in Securinets Mini CTF and NCSC2.0_CTF but unfortunately it had 0 solves (in fact no one managed to pass the first step) , it took me a lot of time to prepare this task so i hope you enjoy it :D However bring your coffee cup and let\u0026rsquo;s begin the road ."
@@ -656,13 +656,13 @@ that the kid parameter is used when the jwt token is signed using multiple keys 
 and when we have kid:2 we are using a different key to sign the jwt token) Hmmm things are getting interesting here, we can suppose that the keys are fetched from a database maybe ,
 let&rsquo;s read again the description , we can notice a hint for SQL so maybe we have an SQL injection ? Let&rsquo;s try to trigger an error by injecting this in the kid parameter</p>
 <blockquote>
-<p>' UNION SELECT 2 &ndash; -</p>
+<p>&rsquo; UNION SELECT 2 &ndash; -</p>
 </blockquote>
 <p>But Before you will have to fully understand how JWT tokens are forged, because there is no libraries that include the kid implementation so let&rsquo;s take some notes here :</p>
 <p>As we all know JWT token have 3 sections : Header + Payload + signature</p>
 <p>Header : typically consists of two parts: the type of the token, which is JWT, and the signing algorithm being used, such as HMAC SHA256 or RSA but here we have also the kid part which is optional</p>
 <p>Payload : it contains statements about an entity (typically, the user) and additional data .</p>
-<p>Signature : Simply if we are using HS256 the sig is : Signature= HMACSHA256(BASE64URL(HEADER)+'.'+BASE64URL(PAYLOAD))</p>
+<p>Signature : Simply if we are using HS256 the sig is : Signature= HMACSHA256(BASE64URL(HEADER)+&rsquo;.&rsquo;+BASE64URL(PAYLOAD))</p>
 <p>Be careful it&rsquo;s BASE64URL not a regular BASE64 you can read about it here : 
 <a href="https://fr.wikipedia.org/wiki/Base64#base64url" target="_blank" rel="noopener">LINK</a></p>
 <p>NOTE: you can use the php function hash_hmac(&lsquo;sha256&rsquo;, $msg, $key, true) to sign the token</p>
@@ -677,8 +677,8 @@ let&rsquo;s read again the description , we can notice a hint for SQL so maybe w
 <blockquote>
 <p>&lsquo;UNION SELECT 1,&lsquo;kahla&rsquo; &ndash; -</p>
 </blockquote>
-<p>Thus the key will be forced to be kahla BUT we still get the annoying page &ldquo;Here is your flag ! Just kidding &quot; :'( (What an evil author 3:) )</p>
-<p>I think there are some filters here :'( Let&rsquo;s try this payload in the kid parameter :</p>
+<p>Thus the key will be forced to be kahla BUT we still get the annoying page &ldquo;Here is your flag ! Just kidding &quot; :&rsquo;( (What an evil author 3:) )</p>
+<p>I think there are some filters here :&rsquo;( Let&rsquo;s try this payload in the kid parameter :</p>
 <blockquote>
 <p>&lsquo;UNiOn SElEcT 1,&lsquo;abc&rsquo; &ndash; -</p>
 </blockquote>
@@ -863,7 +863,7 @@ that automates this and FINALLY we got The flag :</p>
   <div class="media author-card content-widget-hr">
     
       
-      <img class="avatar mr-3 avatar-circle" src="/authors/kahla/avatar_huac9af2fd1f181695ca5d7a1e646fb7d2_9022537_270x270_fill_lanczos_center_2.png" alt="Belkahla Ahmed">
+      <img class="avatar mr-3 avatar-circle" src="/authors/kahla/avatar_huac9af2fd1f181695ca5d7a1e646fb7d2_9022537_270x270_fill_lanczos_center_3.png" alt="Belkahla Ahmed">
     
 
     <div class="media-body">
@@ -1061,7 +1061,7 @@ that automates this and FINALLY we got The flag :</p>
     
     
     
-    <script src="/js/academic.min.37431be2d92d7fb0160054761ab79602.js"></script>
+    <script src="/js/academic.min.1f97b17be6d67ca715feaf9deb10e550.js"></script>
 
     
 
@@ -1077,7 +1077,7 @@ that automates this and FINALLY we got The flag :</p>
   
 
   <p class="powered-by">
-    © Ahmed Belkahla, 2021 &middot; 
+    © Ahmed Belkahla, 2022 &middot; 
 
     Powered by the
     <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for

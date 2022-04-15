@@ -212,8 +212,8 @@
   
 
   <link rel="manifest" href="/index.webmanifest">
-  <link rel="icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
-  <link rel="apple-touch-icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+  <link rel="icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_3.png">
+  <link rel="apple-touch-icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_3.png">
 
   <link rel="canonical" href="https://ahmed-belkahla.me/post/2-methods-rce-0-day-in-goahead-webserver-pbctf-2021/">
 
@@ -280,7 +280,7 @@
     "name": "Ahmed Belkahla",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://ahmed-belkahla.me/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
+      "url": "https://ahmed-belkahla.me/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_3.png"
     }
   },
   "description": "2 methods RCE 0-Day in Goahead Webserver: PBCTF 2021 Last weekend I participated with my team Zer0pts in PBCTF 2021 and we got the 5th place, we were really close to secure a spot in the top 3 but an error in Wine while solving a shitty misc challenge prived us from this win :("
@@ -781,7 +781,7 @@ One idea I had faith in, was trying to find some misconsistency in the url decod
     }
     *(envp+n) = NULL;
 </code></pre>
-<p>The most trained eye noticed the filter that prohibits using the known LD_* env vars and some other sensible ones. Tl;DR we can only set arbitrary environement variables but with <code>CGI_</code> prefix. You can also notice that it&rsquo;s setting <code>wp-&gt;vars</code> content as env vars too (wp is Webs structure that is set in **http.c** as we mentioned in the beginning).</p>
+<p>The most trained eye noticed the filter that prohibits using the known LD_* env vars and some other sensible ones. Tl;DR we can only set arbitrary environement variables but with <code>CGI_</code> prefix. You can also notice that it&rsquo;s setting <code>wp-&gt;vars</code> content as env vars too (wp is Webs structure that is set in <strong>http.c</strong> as we mentioned in the beginning).</p>
 <p>Looking at <strong>http.c</strong> file again we can see at <strong>
 <a href="https://github.com/embedthis/goahead/blob/master/src/http.c#L1081" target="_blank" rel="noopener">L1081 </a></strong> how <code>wp-&gt;vars</code> is set:</p>
 <pre><code class="language-c=">        upperKey = sfmt(&quot;HTTP_%s&quot;, key);
@@ -1039,7 +1039,7 @@ static void before_main(void)
   <div class="media author-card content-widget-hr">
     
       
-      <img class="avatar mr-3 avatar-circle" src="/authors/kahla/avatar_huac9af2fd1f181695ca5d7a1e646fb7d2_9022537_270x270_fill_lanczos_center_2.png" alt="Belkahla Ahmed">
+      <img class="avatar mr-3 avatar-circle" src="/authors/kahla/avatar_huac9af2fd1f181695ca5d7a1e646fb7d2_9022537_270x270_fill_lanczos_center_3.png" alt="Belkahla Ahmed">
     
 
     <div class="media-body">
@@ -1237,7 +1237,7 @@ static void before_main(void)
     
     
     
-    <script src="/js/academic.min.37431be2d92d7fb0160054761ab79602.js"></script>
+    <script src="/js/academic.min.1f97b17be6d67ca715feaf9deb10e550.js"></script>
 
     
 
@@ -1253,7 +1253,7 @@ static void before_main(void)
   
 
   <p class="powered-by">
-    © Ahmed Belkahla, 2021 &middot; 
+    © Ahmed Belkahla, 2022 &middot; 
 
     Powered by the
     <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for

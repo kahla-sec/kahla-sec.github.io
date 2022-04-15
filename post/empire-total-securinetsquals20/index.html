@@ -212,8 +212,8 @@
   
 
   <link rel="manifest" href="/index.webmanifest">
-  <link rel="icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
-  <link rel="apple-touch-icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+  <link rel="icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_3.png">
+  <link rel="apple-touch-icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_3.png">
 
   <link rel="canonical" href="https://ahmed-belkahla.me/post/empire-total-securinetsquals20/">
 
@@ -280,7 +280,7 @@
     "name": "Ahmed Belkahla",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://ahmed-belkahla.me/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
+      "url": "https://ahmed-belkahla.me/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_3.png"
     }
   },
   "description": "Empire Total (1000pts) (7 Solves) This task was really so creative and i had so fun solving it , but i can\u0026rsquo;t deny that it was painful :( after reading the description we can say that we aim to dump the database of the website (maybe SQL injection who knows) and fortunately we have the source code so let\u0026rsquo;s download it and begin our trip xD"
@@ -648,7 +648,8 @@
 <p><img src="https://imgur.com/bjRXPJT.png" alt="TASK"></p>
 <p>After cloning the project here is its structure</p>
 <blockquote>
-<p>git clone <a href="https://github.com/mohamedaymenkarmous/virustotal-api-html">https://github.com/mohamedaymenkarmous/virustotal-api-html</a></p>
+<p>git clone 
+<a href="https://github.com/mohamedaymenkarmous/virustotal-api-html" target="_blank" rel="noopener">https://github.com/mohamedaymenkarmous/virustotal-api-html</a></p>
 </blockquote>
 <p><img src="https://imgur.com/alxzV41.png" alt="TASK"></p>
 <p>let&rsquo;s take a look at index.php , since the code is really too long i will only put the important parts, as we can see after some configurations and Recaptcha setting, all the SQL queries are prepared statements so there is no way to perform SQL injection but we can notice the execution of the
@@ -667,7 +668,7 @@ $output = shell_exec($command);
 </code></pre>
 <p>Let&rsquo;s proceed , it seems that the index.php is pretty safe ,let&rsquo;s take a look at the VirusTotal.py script</p>
 <p><img src="https://imgur.com/ytcYYQQ.png" alt="TASK"></p>
-<p>OMG :'( 499 lines , that was so discouraging @Emperors :( but we needed that flag to have the 10th place xD anyway after scrolling around and reading the code , we can somehow understand the behaviour of the website,
+<p>OMG :&rsquo;( 499 lines , that was so discouraging @Emperors :( but we needed that flag to have the 10th place xD anyway after scrolling around and reading the code , we can somehow understand the behaviour of the website,
 when we enter the ip address it asks the Virus Total API for the results and then there&rsquo;s the persistence functionality that saves the results in the database and then when we enter the same ip address again it will loads
 the results from the database .</p>
 <p>So if we can control the results maybe we will have the opportunity to perform an SQL injection ? I got stuck in this part for a long time and after the help of the admin ( Thank you @Emperors &lt;3 ) i found something interesting :D</p>
@@ -694,7 +695,8 @@ the results from the database .</p>
           self.resetSQL()
 </code></pre>
 <h2 id="exploitation">Exploitation</h2>
-<p>So the idea is that if we go to VirusTotal website (<a href="https://www.virustotal.com/">https://www.virustotal.com/</a>) and scan a url ,and then go back to our challenge website and scan the url&rsquo;s ip
+<p>So the idea is that if we go to VirusTotal website (
+<a href="https://www.virustotal.com/" target="_blank" rel="noopener">https://www.virustotal.com/</a>) and scan a url ,and then go back to our challenge website and scan the url&rsquo;s ip
 we will find that the url we scanned in VirusTotal website will appear , it&rsquo;s pretty confusing i know so let&rsquo;s have an example</p>
 <ol>
 <li>We go to Virus Total website and scan for any url for example :( in my case i launched a web server on my VPS and used it here )</li>
@@ -710,7 +712,7 @@ we will find that the url we scanned in VirusTotal website will appear , it&rsqu
 <p>Yeeees ! it&rsquo;s appearing in the results so we now have the control over these values in the urls section of the results.</p>
 <p>Now here is our scenario , if we look to the vulnerable function <strong>persistURLs</strong> in VirusTotal.py we can notice the injection in this query (line 430)</p>
 <blockquote>
-<p>INSERT INTO &ldquo;+table_name+&rdquo; (ip_id,url,detections,scanned_time) VALUES ('&quot;+str(selected_ips[0][&lsquo;id&rsquo;])+&quot;','&quot;+url[&lsquo;URL&rsquo;]+&quot;','&quot;+url[&lsquo;Detections&rsquo;]+&quot;','&quot;+url[&lsquo;Scanned&rsquo;]+&quot;')</p>
+<p>INSERT INTO &ldquo;+table_name+&rdquo; (ip_id,url,detections,scanned_time) VALUES (&rsquo;&quot;+str(selected_ips[0][&lsquo;id&rsquo;])+&quot;&rsquo;,&rsquo;&quot;+url[&lsquo;URL&rsquo;]+&quot;&rsquo;,&rsquo;&quot;+url[&lsquo;Detections&rsquo;]+&quot;&rsquo;,&rsquo;&quot;+url[&lsquo;Scanned&rsquo;]+&quot;&rsquo;)</p>
 </blockquote>
 <p>We have control over the <strong>url[&lsquo;URL&rsquo;]</strong> parameter (the url we scan in VirusTotal Website) so it&rsquo;s now an SQL injection in INSERT INTO values, but we have some constraints :</p>
 <ol>
@@ -721,7 +723,7 @@ we will find that the url we scanned in VirusTotal website will appear , it&rsqu
 <a href="https://github.com/kahla-sec/CTF-Writeups/blob/master/Securinets%20Prequals%202k20/Empire%20Total/test.py" target="_blank" rel="noopener">HERE</a></strong></p>
 <p>Finally I opted to this solution, here is the URL we will scan :</p>
 <blockquote>
-<p>http://100.26.206.184/?u=',(select/**/1),(select/**/2)),(&lsquo;102&rsquo;,&lsquo;a</p>
+<p>http://100.26.206.184/?u=&rsquo;,(select/**/1),(select/**/2)),(&lsquo;102&rsquo;,&lsquo;a</p>
 </blockquote>
 <p>The complete SQL query that will be executed is  :</p>
 <blockquote>
@@ -886,7 +888,7 @@ we will find that the url we scanned in VirusTotal website will appear , it&rsqu
   <div class="media author-card content-widget-hr">
     
       
-      <img class="avatar mr-3 avatar-circle" src="/authors/kahla/avatar_huac9af2fd1f181695ca5d7a1e646fb7d2_9022537_270x270_fill_lanczos_center_2.png" alt="Belkahla Ahmed">
+      <img class="avatar mr-3 avatar-circle" src="/authors/kahla/avatar_huac9af2fd1f181695ca5d7a1e646fb7d2_9022537_270x270_fill_lanczos_center_3.png" alt="Belkahla Ahmed">
     
 
     <div class="media-body">
@@ -1084,7 +1086,7 @@ we will find that the url we scanned in VirusTotal website will appear , it&rsqu
     
     
     
-    <script src="/js/academic.min.37431be2d92d7fb0160054761ab79602.js"></script>
+    <script src="/js/academic.min.1f97b17be6d67ca715feaf9deb10e550.js"></script>
 
     
 
@@ -1100,7 +1102,7 @@ we will find that the url we scanned in VirusTotal website will appear , it&rsqu
   
 
   <p class="powered-by">
-    © Ahmed Belkahla, 2021 &middot; 
+    © Ahmed Belkahla, 2022 &middot; 
 
     Powered by the
     <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for
